@@ -21,12 +21,15 @@ DEL_FILES=$(EXE_FILES)
 #                                 Rules                                       #
 ###############################################################################
 
-.PHONY: all clean
+.PHONY: all clean test
 
 all: $(EXE_FILES)
 
 %: %.cc $(HDR_FILES)
 	$(CC) $(CFLAGS) -I$(INCLUDE_PATH) $(LIBS) -o $@ $<
+
+test: all
+	for i in ${EXE_FILES} ; do ./$${i} ; done
 
 clean:
 	rm -f $(DEL_FILES)
