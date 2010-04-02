@@ -13,6 +13,7 @@ LIBS=-lboost_unit_test_framework
 
 SRC_FILES=$(wildcard *.cc)
 EXE_FILES=$(patsubst %.cc, %, $(SRC_FILES))
+HDR_FILES=$(wildcard ../include/knihovna/*)
 
 DEL_FILES=$(EXE_FILES)
 
@@ -24,8 +25,8 @@ DEL_FILES=$(EXE_FILES)
 
 all: $(EXE_FILES)
 
-%: %.cc
-	$(CC) $(CFLAGS) -I$(INCLUDE_PATH) $(LIBS) -o $@ $^
+%: %.cc $(HDR_FILES)
+	$(CC) $(CFLAGS) -I$(INCLUDE_PATH) $(LIBS) -o $@ $<
 
 clean:
 	rm -f $(DEL_FILES)
