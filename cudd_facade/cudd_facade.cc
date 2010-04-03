@@ -1,16 +1,21 @@
 // Standard library headers
 #include <stdexcept>
 
-// Log4cpp headers
-#include <log4cpp/Category.hh>
+// Knihovna headers
+#include <knihovna/cudd_facade.hh>
+#include <knihovna/knihovna.hh>
+#include <knihovna/convert.hh>
 
 // CUDD headers
 #include <util.h>
 #include <cudd.h>
 #include <cuddInt.h>
 
-// Knihovna headers
-#include <knihovna/cudd_facade.hh>
+using Knihovna::Private::Convert;
+
+
+const char* Knihovna::Private::CUDDFacade::LOG_CATEGORY_NAME = "cudd_facade";
+
 
 Knihovna::Private::CUDDFacade::CUDDFacade() : manager_(static_cast<DdManager*>(0))
 {
@@ -27,12 +32,10 @@ Knihovna::Private::CUDDFacade::~CUDDFacade()
 	assert(manager_ != static_cast<DdManager*>(0));
 
 	// Check for nodes with non-zero reference count
-	int unreffed = 0;
-	if ((unreffed = Cudd_CheckZeroRef(manager_)) != 0)
-	{
-		log4cpp::Category::getInstance("pokus").warn(__FILE__ ":" "CUDDFacade: Ahoj" _FILE__);
-		//std::cout << "Still " << unreffed << " unreffed!" << std::endl;
-		// TODO: do something
+	int unrefed = 0;
+	if ((unrefed = Cudd_CheckZeroRef(manager_)) != 0)
+	{	// in case there are still some nodes unreferenced
+		KNIHOVNA_LOGGER_WARN("Still " + Convert::ToString(unrefed) + " nodes unreferenced!");
 	}
 
 	// Delete the manager

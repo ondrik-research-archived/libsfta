@@ -13,12 +13,14 @@ struct DdManager;
 
 class Knihovna::Private::CUDDFacade
 {
-private:	// Data members
+private:	// Private data members
+
 	DdManager* manager_;
 
 
-public:
+public:	// Public data members
 
+	static const char* LOG_CATEGORY_NAME;
 
 private:
 
