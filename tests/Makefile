@@ -20,20 +20,25 @@ CFLAGS         += -finline-functions
 # Where to search for include files
 INCLUDE_PATHS   =
 INCLUDE_PATHS  += ../include
-INCLUDE_PATHS  += ../../diplomka_programy/cudd/include
+INCLUDE_PATHS  += $(CUDD_PATH)/include
 
 # Compiler parameters for include files paths
 INC             = $(patsubst %, -I%, $(INCLUDE_PATHS))
 
 # Which libraries to link
-LIBS =
-LIBS +=-lboost_unit_test_framework
+LIBS            =
+LIBS           += -lboost_unit_test_framework
+LIBS           += -llog4cpp
 
-SRC_FILES=$(wildcard *.cc)
-EXE_FILES=$(patsubst %.cc, %, $(SRC_FILES))
-HDR_FILES=$(wildcard ../include/knihovna/*)
+# Static libraries
+ST_LIBS         =
+ST_LIBS        += ../cudd_facade/libcudd_facade.a
 
-DEL_FILES=$(EXE_FILES)
+SRC_FILES       = $(wildcard *.cc)
+EXE_FILES       = $(patsubst %.cc, %, $(SRC_FILES))
+HDR_FILES       = $(wildcard ../include/knihovna/*)
+
+DEL_FILES       = $(EXE_FILES)
 
 ###############################################################################
 #                                 Rules                                       #
@@ -41,14 +46,22 @@ DEL_FILES=$(EXE_FILES)
 
 .PHONY: all clean test
 
-all: $(EXE_FILES)
+all: cudd_facade $(EXE_FILES)
 
-%: %.cc $(HDR_FILES)
-	$(CC) $(CFLAGS) $(INC) $(LIBS) -o $@ $<
+cudd_facade:
+	cd ../cudd_facade ; make
+
+%: %.cc $(HDR_FILES) $(ST_LIBS)
+	$(CC) $(CFLAGS) $(INC) $(LIBS) -o $@ $< $(ST_LIBS) 
 
 test: all
-	@for i in ${EXE_FILES} ; do \
+	@echo ; \
+	for i in ${EXE_FILES} ; do \
+		echo "##################################### Test #####################################" ; \
+		echo "# " $${i} ; \
+		echo "################################################################################" ; \
 		./$${i} ; \
+		echo ; \
 	done
 
 clean:
