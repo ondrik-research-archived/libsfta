@@ -36,7 +36,7 @@ ST_LIBS        += ../cudd_facade/libcudd_facade.a
 
 SRC_FILES       = $(wildcard *.cc)
 EXE_FILES       = $(patsubst %.cc, %, $(SRC_FILES))
-HDR_FILES       = $(wildcard ../include/knihovna/*)
+HDR_FILES       = $(wildcard ../include/sfta/*)
 
 DEL_FILES       = $(EXE_FILES)
 

@@ -5,7 +5,7 @@
 #include <string>
 #include <sstream>
 
-namespace Knihovna
+namespace SFTA
 {
 	namespace Private
 	{
@@ -20,7 +20,7 @@ namespace Knihovna
  *  This is a static class that constains useful methods for various
  *  conversions.
  */
-class Knihovna::Private::Convert
+class SFTA::Private::Convert
 {
 	private:
 

@@ -1,12 +1,12 @@
-#include <knihovna/cudd_shared_mtbdd.hh>
-
 #define BOOST_TEST_DYN_LINK
-#define BOOST_TEST_MODULE CuddSharedMTBDD
+#define BOOST_TEST_MODULE CUDDSharedMTBDD
 #include <boost/test/unit_test.hpp>
+
+#include <sfta/cudd_shared_mtbdd.hh>
 
 BOOST_AUTO_TEST_CASE(constructors)
 {
-	Knihovna::CUDDSharedMTBDD<unsigned, unsigned, unsigned, unsigned> c();
+	SFTA::CUDDSharedMTBDD<unsigned, unsigned, unsigned, unsigned> c();
 }
 
 BOOST_AUTO_TEST_CASE(setters_and_getters_test)

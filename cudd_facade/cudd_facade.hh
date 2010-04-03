@@ -1,5 +1,5 @@
 
-namespace Knihovna
+namespace SFTA
 {
 	namespace Private
 	{
@@ -10,8 +10,9 @@ namespace Knihovna
 // Declaration of structures from CUDD... We don't want to include CUDD header
 // files into a header file, because they are horrible.
 struct DdManager;
+struct DdNode;
 
-class Knihovna::Private::CUDDFacade
+class SFTA::Private::CUDDFacade
 {
 private:	// Private data members
 
@@ -22,6 +23,8 @@ public:	// Public data members
 
 	static const char* LOG_CATEGORY_NAME;
 
+	typedef unsigned ValueType;
+
 private:
 
 	CUDDFacade(const CUDDFacade& facade);
@@ -29,6 +32,16 @@ private:
 
 public:
 	CUDDFacade();
+
+	DdNode* AddIthVar(int i);
+	DdNode* AddCmpl(DdNode* node);
+	DdNode* AddConst(ValueType value);
+	void Ref(DdNode* node);
+	DdNode* ReadBackground();
+	void SetBackground(DdNode* bck);
+	void RecursiveDeref(DdNode* node);
+	DdNode* Times(DdNode* lsh, DdNode* rhs);
+
 
 	~CUDDFacade();
 
