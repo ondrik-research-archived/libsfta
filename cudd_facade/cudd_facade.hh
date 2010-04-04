@@ -114,7 +114,7 @@ public:  // Public methods
 	 *
 	 * Adds a variable on the i-th index to the MTBDD.
 	 *
-	 * @see  AddConst(ValueType value)
+	 * @see  AddConst()
 	 *
 	 * @param[in]  i  Index of the variable
 	 *
@@ -128,7 +128,7 @@ public:  // Public methods
 	 *
 	 * For variable \f$ x \f$ generates the complement of \f$ x \f$: \f$ \neg x \f$.
 	 *
-	 * @see  AddIthVar(int i)
+	 * @see  AddIthVar()
 	 *
 	 * @param[in]  node  Node of the variable to be complemented
 	 *
@@ -142,7 +142,7 @@ public:  // Public methods
 	 * This function creates a new sink node of the MTBDD of type ValueType and
 	 * returns pointer to it.
 	 *
-	 * @see  addIthVar(int i)
+	 * @see  AddIthVar()
 	 *
 	 * @param[in]  value  Value of the constant
 	 *
@@ -158,7 +158,7 @@ public:  // Public methods
 	 * counter is used for garbage collection of nodes when the nodes are
 	 * dereferenced by RecursiveDeref(Node* node).
 	 *
-	 * @see  RecursiveDeref(Node* node)
+	 * @see  RecursiveDeref()
 	 *
 	 * @param[in]  node  The node to be referenced
 	 */
@@ -172,7 +172,7 @@ public:  // Public methods
 	 * Ref(Node* node) and recursively executes the same step on all other nodes
 	 * pointed by the node.
 	 *
-	 * @see  Ref(Node* node)
+	 * @see  Ref()
 	 *
 	 * @param[in]  node  The node to be recursively dereferenced
 	 */
@@ -199,7 +199,7 @@ public:  // Public methods
 	 * Reads the node with the background value of MTBDD set previously by
 	 * SetBackground(Node* bck).
 	 *
-	 * @see  SetBackground(Node* bck)
+	 * @see  SetBackground()
 	 *
 	 * @returns  The background value of MTBDD
 	 */
