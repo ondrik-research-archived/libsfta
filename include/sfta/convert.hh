@@ -1,3 +1,13 @@
+/*****************************************************************************
+ *  Symbolic Finite Tree Automata Library
+ *
+ *  Copyright (c) 2010  Ondra Lengal <ondra@lengal.net>
+ *
+ *  Description:
+ *    Convert class declaration.
+ *
+ *****************************************************************************/
+
 #ifndef _CONVERT_HH_
 #define _CONVERT_HH_
 
@@ -28,8 +38,8 @@ class SFTA::Private::Convert
 		// them private
 		Convert();
 		~Convert();
-		Convert(const Convert &);
-		Convert & operator=(const Convert &);
+		Convert(const Convert&);
+		Convert& operator=(const Convert&);
 
 	public:
 
@@ -40,7 +50,8 @@ class SFTA::Private::Convert
 		 * operator into a string
 		 *
 		 * @param[in]  n  The object for the conversion
-		 * @returns    The string representation of the object
+		 *
+		 * @returns  The string representation of the object
 		 */
 		template <typename T>
 		static std::string ToString(const T& n)
@@ -58,7 +69,7 @@ class SFTA::Private::Convert
 		 * Static method for conversion of a pointer to a string
 		 *
 		 * @param[in]  ptr  The pointer for the conversion
-		 * @returns    The string representation of the pointer
+		 * @returns  The string representation of the pointer
 		 */
 		template <typename T>
 		static std::string PointerToString(const T* ptr)
@@ -68,7 +79,6 @@ class SFTA::Private::Convert
 
 			return oss.str();             // return the string
 		}
-
 };
 
 #endif
