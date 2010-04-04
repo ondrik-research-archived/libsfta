@@ -34,7 +34,7 @@ public:
 
 			log4cpp::Category::getInstance(cat_name).setAdditivity(false);
 			log4cpp::Category::getInstance(cat_name).setAppender(app);
-			log4cpp::Category::getInstance(cat_name).setPriority(log4cpp::Priority::DEBUG);
+			log4cpp::Category::getInstance(cat_name).setPriority(log4cpp::Priority::NOTSET);
 		}
 	}
 
