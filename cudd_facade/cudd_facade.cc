@@ -175,6 +175,9 @@ CUDDFacade::~CUDDFacade()
 	// Assertions
 	assert(manager_ != static_cast<Manager*>(0));
 
+	// Derefence the background
+	RecursiveDeref(ReadBackground());
+
 	// Check for nodes with non-zero reference count
 	int unrefed = 0;
 	if ((unrefed = Cudd_CheckZeroRef(toCUDD(manager_))) != 0)
