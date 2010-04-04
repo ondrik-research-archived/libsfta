@@ -2,7 +2,12 @@
  *  Symbolic Finite Tree Automata Library
  *
  *  Copyright (c) 2010  Ondra Lengal <ondra@lengal.net>
- ****************************************************************************/
+ *
+ *  Description:
+ *    Header file of CUDDFacade. This file defines the interface of the facad
+ *    for the outside world and hides everything related to CUDD.
+ *
+ *****************************************************************************/
 
 
 // insert the class into proper namespace

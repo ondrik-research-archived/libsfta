@@ -2,7 +2,13 @@
  *  Symbolic Finite Tree Automata Library
  *
  *  Copyright (c) 2010  Ondra Lengal <ondra@lengal.net>
- ****************************************************************************/
+ *
+ *  Description:
+ *    Implementation file of CUDDFacade. This file uses directly CUDD
+ *    functions and provides their actions through the interface of
+ *    CUDDFacade.
+ *
+ *****************************************************************************/
 
 
 // Standard library headers
@@ -32,6 +38,8 @@ namespace SFTA
 	namespace Private
 	{
 		/**
+		 * @brief  Converts manager from CUDD format
+		 *
 		 * Converts a pointer to manager from DdManager type to
 		 * CUDDFacade::Manager type.
 		 *
@@ -46,6 +54,8 @@ namespace SFTA
 
 
 		/**
+		 * @brief  Converts node from CUDD format
+		 *
 		 * Converts a pointer to manager from DdNode type to
 		 * CUDDFacade::Node type.
 		 *
@@ -60,6 +70,8 @@ namespace SFTA
 
 
 		/**
+		 * @brief  Converts manager to CUDD format
+		 *
 		 * Converts a pointer to manager from CUDDFacade::Manager type to
 		 * DdManager type.
 		 *
@@ -74,6 +86,8 @@ namespace SFTA
 
 
 		/**
+		 * @brief  Converts node to CUDD format
+		 *
 		 * Converts a pointer to manager from CUDDFacade::Node type to
 		 * DdNode type.
 		 *
