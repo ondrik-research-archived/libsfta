@@ -4,7 +4,7 @@
  *  Copyright (c) 2010  Ondra Lengal <ondra@lengal.net>
  *
  *  Description:
- *    Header file for AbstractSharedMTBDD.
+ *    Header file for AbstractSharedMTBDD class.
  *
  *****************************************************************************/
 
@@ -31,8 +31,8 @@ namespace SFTA
  * @author  Ondra Lengal <ondra@lengal.net>
  * @date    2010
  *
- * Abstract class that defines interface for classes implementing shared
- * multi-terminal BDD (MTBDD).
+ * Abstract class that defines a high-level interface for classes implementing
+ * shared multi-terminal BDD (MTBDD).
  *
  * @tparam  RootType                The type for the root of a MTBDD. Is used
  *                                  to reference the root.
