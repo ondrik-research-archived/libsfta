@@ -1,3 +1,14 @@
+/*****************************************************************************
+ *  Symbolic Finite Tree Automata Library
+ *
+ *  Copyright (c) 2010  Ondra Lengal <ondra@lengal.net>
+ *
+ *  Description:
+ *    Header file with global declarations. It contains:
+ *      * macros for easy logging
+ *
+ *****************************************************************************/
+
 // Log4cpp headers
 #include <log4cpp/Category.hh>
 
