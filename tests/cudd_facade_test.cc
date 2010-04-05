@@ -1,54 +1,29 @@
+/*****************************************************************************
+ *  Symbolic Finite Tree Automata Library
+ *
+ *  Copyright (c) 2010  Ondra Lengal <ondra@lengal.net>
+ *
+ *  Description:
+ *    Test suite for CUDDFacade class.
+ *
+ *****************************************************************************/
+
+// SFTA headers
 #include <sfta/cudd_facade.hh>
 using SFTA::Private::CUDDFacade;
-using SFTA::Private::CUDDFacade;
 
-#include <log4cpp/Category.hh>
-#include <log4cpp/OstreamAppender.hh>
-#include <log4cpp/BasicLayout.hh>
-
+// Boost headers
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE CUDDFacade
 #include <boost/test/unit_test.hpp>
+
+// testing headers
+#include "log_fixture.hh"
 
 
 /******************************************************************************
  *                                  Fixtures                                  *
  ******************************************************************************/
-
-class LogFixture
-{
-
-private:
-
-	static bool logInitialized_;
-
-public:
-
-	LogFixture()
-	{
-		if (!logInitialized_)
-		{
-			logInitialized_ = true;
-
-			// Create the appender
-			log4cpp::Appender* app = new log4cpp::OstreamAppender("ClogAppender", &std::clog);
-
-			// Set the data layout of the appender
-			log4cpp::Layout* layout = new log4cpp::BasicLayout();
-			app->setLayout(layout);
-
-			std::string cat_name = SFTA::Private::CUDDFacade::LOG_CATEGORY_NAME;
-
-			log4cpp::Category::getInstance(cat_name).setAdditivity(false);
-			log4cpp::Category::getInstance(cat_name).addAppender(app);
-			log4cpp::Category::getInstance(cat_name).setPriority(log4cpp::Priority::NOTSET);
-		}
-	}
-
-};
-
-bool LogFixture::logInitialized_ = false;
-
 
 class CUDDFacadeFixture : public LogFixture
 {
