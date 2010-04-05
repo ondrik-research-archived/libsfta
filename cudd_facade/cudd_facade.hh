@@ -9,6 +9,9 @@
  *
  *****************************************************************************/
 
+#ifndef _CUDD_FACADE_HH_
+#define _CUDD_FACADE_HH_
+
 
 // insert the class into proper namespace
 namespace SFTA { namespace Private { class CUDDFacade; } }
@@ -232,3 +235,5 @@ public:  // Public methods
 	 */
 	~CUDDFacade();
 };
+
+#endif
