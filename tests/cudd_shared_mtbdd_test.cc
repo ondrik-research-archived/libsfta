@@ -35,7 +35,14 @@ struct MyLeafAllocator
 {
 public:
 	typedef Leaf LeafType;
+	typedef Handle HandleType;
 protected:
+
+	HandleType createLeaf(const LeafType& leaf)
+	{
+		return leaf;
+	}
+
 	~MyLeafAllocator() { }
 };
 
@@ -52,40 +59,57 @@ template
 >
 struct MyRootAllocator<unsigned, Handle>
 {
-private:
-
+public:
 	typedef Handle HandleType;
 
-	std::vector<HandleType> arr;
-	size_t next_index;
+private:
+
+	std::vector<HandleType> arr_;
+	size_t next_index_;
 
 protected:
 
 	typedef typename std::vector<HandleType>::iterator Iterator;
 
-	MyRootAllocator() : arr(INITIAL_VECTOR_SIZE), next_index(0)
+	MyRootAllocator() : arr_(INITIAL_VECTOR_SIZE), next_index_(0)
 	{
 	}
 
-	unsigned AllocateRoot(Handle& handle)
+	unsigned allocateRoot(const HandleType& handle)
 	{
-		if (next_index >= arr.size())
+		if (next_index_ >= arr_.size())
 		{
-			arr.resize(2 * arr.size());
+			arr_.resize(2 * arr_.size());
 		}
 
-		arr[next_index] = handle;
-		return next_index++;
+		arr_[next_index_] = handle;
+		return next_index_++;
 	}
 
-	Iterator Begin()
+	Iterator begin()
 	{
-		return arr.begin();
+		return arr_.begin();
 	}
 
-	Iterator End()
+	Iterator end()
 	{
-		return arr.begin() + next_index;
+		return arr_.begin() + next_index_;
+	}
+
+	const HandleType& getHandleOfRoot(unsigned root)
+	{
+		// Assertions
+		assert(root < arr_.size());
+
+		return arr_[root];
+	}
+
+	void changeHandleOfRoot(unsigned root, const HandleType& handle)
+	{
+		// Assertions
+		assert(root < arr_.size());
+
+		arr_[root] = handle;
 	}
 
 	~MyRootAllocator() { }
@@ -93,6 +117,46 @@ protected:
 public:
 
 	const static size_t INITIAL_VECTOR_SIZE = 8;
+};
+
+
+struct MyVariableAssignment
+{
+private:
+
+	unsigned vars_;
+
+public:
+	enum
+	{
+		ONE,
+		ZERO,
+		DONT_CARE
+	};
+
+	MyVariableAssignment(unsigned value)
+		: vars_(value)
+	{}
+
+
+	int GetIthVariableValue(unsigned i)
+	{
+		if (!((vars_ >> i) & 1))
+		{
+			return ONE;
+		}
+		else
+		{
+			return ZERO;
+		}
+	}
+
+
+	size_t Size() const
+	{
+		return 8*sizeof(unsigned);
+	}
+
 };
 
 
@@ -109,7 +173,7 @@ private:
 
 protected:
 
-	typedef AbstractSharedMTBDD<unsigned, unsigned, unsigned> ASMTBDD;
+	typedef AbstractSharedMTBDD<unsigned, unsigned, MyVariableAssignment> ASMTBDD;
 
 	ASMTBDD* mtbdd;
 
@@ -118,7 +182,7 @@ public:
 	CUDDSharedMTBDDFixture()
 		: mtbdd(static_cast<ASMTBDD*>(0))
 	{
-		mtbdd = new SFTA::CUDDSharedMTBDD<unsigned, unsigned, unsigned,
+		mtbdd = new SFTA::CUDDSharedMTBDD<unsigned, unsigned, MyVariableAssignment,
 			MyLeafAllocator, MyRootAllocator>();
 	}
 
@@ -139,6 +203,13 @@ BOOST_FIXTURE_TEST_SUITE(suite, CUDDSharedMTBDDFixture)
 BOOST_AUTO_TEST_CASE(setters_and_getters_test)
 {
 	unsigned root = mtbdd->CreateRoot();
+
+	unsigned value_added = 7;
+
+	MyVariableAssignment asgn(5);
+	mtbdd->SetValue(root, asgn, value_added);
+
+	BOOST_CHECK(value_added == mtbdd->GetValue(root, asgn));
 
 }
 
