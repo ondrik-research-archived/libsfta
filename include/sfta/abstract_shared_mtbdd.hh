@@ -72,13 +72,13 @@ public:  // Public methods
 	 *
 	 * @see  GetValue()
 	 *
-	 * @param[in]  root      The root of the MTBDD in which the method works
-	 * @param[in]  position  The position of the leaf given by the assignment to
-	 *                       Boolean variables of the MTBDD
-	 * @param[in]  value     The value of the leaf to be set
+	 * @param[in]  root   The root of the MTBDD in which the method works
+	 * @param[in]  asgn   The position of the leaf given by the assignment to
+	 *                    Boolean variables of the MTBDD
+	 * @param[in]  value  The value of the leaf to be set
 	 */
 	virtual void SetValue(const RootType& root,
-		const VariableAssignmentType& position, const LeafType& value) = 0;
+		const VariableAssignmentType& asgn, const LeafType& value) = 0;
 
 
 	/**
@@ -88,14 +88,14 @@ public:  // Public methods
 	 *
 	 * @see  SetValue()
 	 *
-	 * @param[in]  root      The root of the MTBDD in which the method works
-	 * @param[in]  position  The position of the leaf given by the assignment to
-	 *                       Boolean variables of the MTBDD
+	 * @param[in]  root   The root of the MTBDD in which the method works
+	 * @param[in]  asgn   The position of the leaf given by the assignment to
+	 *                    Boolean variables of the MTBDD
 	 *
 	 * @returns  Reference to the leaf at given position of given MTBDD
 	 */
 	virtual LeafType& GetValue(const RootType& root,
-		const VariableAssignmentType& position) = 0;
+		const VariableAssignmentType& asgn) = 0;
 
 
 	/**
