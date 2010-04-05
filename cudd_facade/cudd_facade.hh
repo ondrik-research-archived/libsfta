@@ -329,6 +329,7 @@ public:  // Public methods
 
 	Node* Apply(Node* lhs, Node* rhs, ApplyCallbackParameters* cbParams) const;
 
+	Node* MonadicApply(Node* root, MonadicApplyCallbackParameters* cbParams) const;
 
 	/**
 	 * @brief  The destructor

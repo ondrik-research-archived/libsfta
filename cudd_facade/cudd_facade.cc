@@ -310,6 +310,24 @@ CUDDFacade::Node* CUDDFacade::Apply(Node* lhs, Node* rhs,
 }
 
 
+CUDDFacade::Node* CUDDFacade::MonadicApply(Node* root,
+	MonadicApplyCallbackParameters* cbParams) const
+{
+	// Assertions
+	assert(manager_ != static_cast<Manager*>(0));
+	assert(root != static_cast<Node*>(0));
+	assert(cbParams != static_cast<MonadicApplyCallbackParameters*>(0));
+
+	Node* res = fromCUDD(Cudd_addMonadicApplyWithData(
+		toCUDD(manager_), monadicApplyCallback, toCUDD(root), cbParams));
+
+	// check the return value
+	assert(res != static_cast<Node*>(0));
+
+	return res;
+}
+
+
 CUDDFacade::~CUDDFacade()
 {
 	// Assertions
