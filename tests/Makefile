@@ -26,20 +26,41 @@ INCLUDE_PATHS  += $(CUDD_PATH)/include
 # Compiler parameters for include files paths
 INC             = $(patsubst %, -I%, $(INCLUDE_PATHS))
 
+# Static library for tests
+TESTS_LIB       = libtests.a
+
 # Which libraries to link
 LIBS            =
 LIBS           += -lboost_unit_test_framework
 LIBS           += -llog4cpp
 
+# Local object files
+OBJ             = log_fixture.o
+
 # Static libraries
 ST_LIBS         =
 ST_LIBS        += ../cudd_facade/libcudd_facade.a
+ST_LIBS        += $(TESTS_LIB)
 
-SRC_FILES       = $(wildcard *.cc)
+SRC_FILES       = $(wildcard *_test.cc)
 EXE_FILES       = $(patsubst %.cc, %, $(SRC_FILES))
-HDR_FILES       = $(wildcard ../include/sfta/*)
 
-DEL_FILES       = $(EXE_FILES)
+# Header files
+HDR_FILES       =
+HDR_FILES      += $(wildcard ../include/sfta/*)
+HDR_FILES      += log_fixture.hh
+
+DEL_FILES       = $(EXE_FILES) $(OBJ) $(TESTS_LIB)
+
+# Archiver
+AR              = ar
+
+#Archiver flags
+AR_CREATE_FLAGS = r
+AR_EXTRACT_FLAGS= x
+
+# Archiver indexer
+RANLIB          = ranlib
 
 ###############################################################################
 #                                 Rules                                       #
@@ -52,8 +73,15 @@ all: cudd_facade $(EXE_FILES)
 cudd_facade:
 	cd ../cudd_facade ; make
 
-%: %.cc $(HDR_FILES) $(ST_LIBS)
-	$(CC) $(CFLAGS) $(INC) $(LIBS) -o $@ $< $(ST_LIBS) 
+$(TESTS_LIB): $(OBJ)
+	$(AR) $(AR_CREATE_FLAGS) $@ $^
+	$(RANLIB) $@
+
+%.o: %.cc
+	$(CC) -c $(CFLAGS) $(INC) -o $@ $<
+
+%_test: %_test.cc $(HDR_FILES) $(ST_LIBS)
+	$(CC) $(CFLAGS) $(INC) $(LIBS) -o $@ $< $(ST_LIBS)
 
 test: all
 	@echo ; \
