@@ -36,11 +36,30 @@ struct MyLeafAllocator
 public:
 	typedef Leaf LeafType;
 	typedef Handle HandleType;
+
+private:
+
+	std::map<HandleType, LeafType> asoc_arr_;
+
+	HandleType next_index_;
+
 protected:
+
+	MyLeafAllocator()
+		: asoc_arr_(), next_index_(0)
+	{
+	}
 
 	HandleType createLeaf(const LeafType& leaf)
 	{
-		return leaf;
+		asoc_arr_[next_index_] = leaf;
+		++next_index_;
+		return next_index_ - 1;
+	}
+
+	LeafType& getLeafOfHandle(const HandleType& handle)
+	{
+		return asoc_arr_[handle];
 	}
 
 	~MyLeafAllocator() { }
@@ -83,7 +102,8 @@ protected:
 		}
 
 		arr_[next_index_] = handle;
-		return next_index_++;
+		++next_index_;
+		return next_index_ - 1;
 	}
 
 	Iterator begin()
@@ -209,7 +229,16 @@ BOOST_AUTO_TEST_CASE(setters_and_getters_test)
 	MyVariableAssignment asgn(5);
 	mtbdd->SetValue(root, asgn, value_added);
 
-	BOOST_CHECK(value_added == mtbdd->GetValue(root, asgn));
+	unsigned value_read = mtbdd->GetValue(root, asgn);
+
+	BOOST_CHECK(value_added == value_read);
+
+	value_added = 15;
+	asgn = 3;
+	mtbdd->SetValue(root, asgn, value_added);
+	value_read = mtbdd->GetValue(root, asgn);
+
+	BOOST_CHECK(value_added == value_read);
 
 }
 
