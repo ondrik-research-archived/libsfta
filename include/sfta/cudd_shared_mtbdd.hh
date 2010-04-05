@@ -61,29 +61,34 @@ namespace SFTA
  */
 template
 <
-	typename RootType,
-	typename LeafType,
+	typename Root,
+	typename Leaf,
 	class VariableAssignmentType,
 	template <typename, typename> class LeafAllocator,
 	template <typename, typename> class RootAllocator>
 class SFTA::CUDDSharedMTBDD
 	: public AbstractSharedMTBDD
 		<
-			RootType,
-			LeafType,
+			Root,
+			Leaf,
 			VariableAssignmentType
 		>,
 		protected LeafAllocator
 		<
-			LeafType,
+			Leaf,
 			SFTA::Private::CUDDFacade::ValueType
 		>,
 		protected RootAllocator
 		<
-			RootType,
+			Root,
 			SFTA::Private::CUDDFacade::Node*
 		>
 {
+public:    // Public data types
+
+	typedef Leaf LeafType;
+	typedef Root RootType;
+
 private:   // Private data types
 
 	/**
@@ -134,6 +139,16 @@ private:   // Private data types
 	typedef SFTA::Private::CUDDFacade CUDDFacade;
 
 
+	class ApplyFunctions
+	{
+	public:
+		static typename LA::HandleType overwriteByRight(typename LA::HandleType /*lhs*/, typename LA::HandleType rhs, void* /*data*/)
+		{
+			return rhs;
+		}
+	};
+
+
 private:  // Private data members
 
 	/**
@@ -147,6 +162,27 @@ private:  // Private data members
 	SFTA::Private::CUDDFacade cudd;
 
 
+private:  // Private methods
+
+	RootType createMTBDDForVariableAssignment(const VariableAssignmentType& vars, const LeafType& value)
+	{
+		CUDDFacade::ValueType leaf = LA::createLeaf(value);
+		CUDDFacade::Node* node = cudd.AddConst(leaf);
+		cudd.Ref(node);
+		for (unsigned i = 0; i < vars.Size(); ++i)
+		{
+			CUDDFacade::Node* var = cudd.AddIthVar(i);
+			cudd.Ref(var);
+			CUDDFacade::Node* tmp = cudd.Times(node, var);
+			cudd.Ref(tmp);
+			cudd.RecursiveDeref(node);
+			cudd.RecursiveDeref(var);
+			node = tmp;
+		}
+
+		return RA::allocateRoot(node);
+	}
+
 public:   // Public methods
 
 	/**
@@ -158,8 +194,17 @@ public:   // Public methods
 	{ }
 
 
-	virtual void SetValue(const RootType& /*root*/, const VariableAssignmentType& /*position*/, const LeafType& /*value*/)
+	virtual void SetValue(const RootType& root, const VariableAssignmentType& asgn, const LeafType& value)
 	{
+		RootType mtbddAsgn = createMTBDDForVariableAssignment(asgn, value);
+		CUDDFacade::ApplyCallbackParameters params(ApplyFunctions::overwriteByRight, static_cast<void*>(this));
+		CUDDFacade::Node* res = cudd.Apply(RA::getHandleOfRoot(root), RA::getHandleOfRoot(mtbddAsgn), &params);
+
+		// get rid of the old MTBDD
+		cudd.RecursiveDeref(RA::getHandleOfRoot(root));
+
+		// substitute the new MTBDD for the old one
+		RA::changeHandleOfRoot(root, res);
 	}
 
 
@@ -181,7 +226,7 @@ public:   // Public methods
 		CUDDFacade::Node* node = cudd.ReadBackground();
 		cudd.Ref(node);
 
-		return RA::AllocateRoot(node);
+		return RA::allocateRoot(node);
 	}
 
 
@@ -193,9 +238,12 @@ public:   // Public methods
 
 	virtual ~CUDDSharedMTBDD()
 	{
-		for (typename RA::Iterator it = RA::Begin(); it != RA::End(); ++it)
+		for (typename RA::Iterator it = RA::begin(); it != RA::end(); ++it)
 		{	// traverse all roots
-			cudd.RecursiveDeref(*it);
+			if (*it != static_cast<CUDDFacade::Node*>(0))
+			{	// in case the root has not been deleted
+				cudd.RecursiveDeref(*it);
+			}
 		}
 	}
 };
