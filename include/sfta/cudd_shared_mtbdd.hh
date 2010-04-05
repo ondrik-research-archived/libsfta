@@ -76,15 +76,15 @@ class SFTA::CUDDSharedMTBDD
 		protected LeafAllocator
 		<
 			LeafType,
-			unsigned
+			SFTA::Private::CUDDFacade::ValueType
 		>,
 		protected RootAllocator
 		<
 			RootType,
-			SFTA::Private::CUDDFacade::Manager*
+			SFTA::Private::CUDDFacade::Node*
 		>
 {
-public:   // Public data types
+private:   // Private data types
 
 	/**
 	 * @brief  The type of the parent class
@@ -98,6 +98,40 @@ public:   // Public data types
 		VariableAssignmentType
 	>
 	ParentClass;
+
+
+	/**
+	 * @brief  The type of the leaf allocator
+	 *
+	 * The type of the leaf allocator class with correct template instantiation.
+	 */
+	typedef LeafAllocator
+	<
+		LeafType,
+		SFTA::Private::CUDDFacade::ValueType
+	>
+	LA;
+
+
+	/**
+	 * @brief  The type of the root allocator
+	 *
+	 * The type of the root allocator class with correct template instantiation.
+	 */
+	typedef RootAllocator
+	<
+		RootType,
+		SFTA::Private::CUDDFacade::Node*
+	>
+	RA;
+
+
+	/**
+	 * @brief  The type of the CUDD facade
+	 *
+	 * The type of the CUDD facade.
+	 */
+	typedef SFTA::Private::CUDDFacade CUDDFacade;
 
 
 private:  // Private data members
@@ -144,7 +178,10 @@ public:   // Public methods
 
 	virtual RootType CreateRoot()
 	{
-		return RootType();
+		CUDDFacade::Node* node = cudd.ReadBackground();
+		cudd.Ref(node);
+
+		return RA::AllocateRoot(node);
 	}
 
 
@@ -156,6 +193,10 @@ public:   // Public methods
 
 	virtual ~CUDDSharedMTBDD()
 	{
+		for (typename RA::Iterator it = RA::Begin(); it != RA::End(); ++it)
+		{	// traverse all roots
+			cudd.RecursiveDeref(*it);
+		}
 	}
 };
 
