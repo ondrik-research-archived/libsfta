@@ -170,7 +170,11 @@ void CUDDFacade::SetBackground(Node* bck)
 
 CUDDFacade::Node* CUDDFacade::ReadBackground()
 {
-	return fromCUDD(Cudd_ReadBackground(toCUDD(manager_)));
+	Node* node = fromCUDD(Cudd_ReadBackground(toCUDD(manager_)));
+
+	assert(node != static_cast<Node*>(0));
+
+	return node;
 }
 
 
