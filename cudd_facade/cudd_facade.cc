@@ -249,9 +249,40 @@ DdNode* applyCallback(DdManager* dd, DdNode** f, DdNode** g, void* data)
 		DdNode* res = cuddUniqueConst(dd,
 			params.Op(cuddV(F), cuddV(G), params.Data));
 
+		// check the return value
 		assert(res != static_cast<DdNode*>(0));
 
 		return res;
+	}
+	else
+	{	// in case we are not at leaves
+		return static_cast<DdNode*>(0);
+	}
+}
+
+
+DdNode* monadicApplyCallback(DdManager* dd, DdNode * f, void* data)
+{
+	// Assertions
+	assert(dd   != static_cast<DdManager*>(0));
+	assert(f    != static_cast<DdNode*>(0));
+	assert(data != static_cast<void*>(0));
+
+	// get callback parameters from the data container
+	CUDDFacade::MonadicApplyCallbackParameters& params =
+		*(static_cast<CUDDFacade::MonadicApplyCallbackParameters*>(data));
+
+	// Even further assertions
+	assert(params.Op != static_cast<CUDDFacade::MonadicApplyOperationType>(0));
+
+	if (cuddIsConstant(f))
+	{	// in case we are at leaves
+		DdNode* res = cuddUniqueConst(dd, params.Op(cuddV(f), params.Data));
+
+		// check the return value
+		assert(res != static_cast<DdNode*>(0));
+
+		return(res);
 	}
 	else
 	{	// in case we are not at leaves

@@ -70,11 +70,20 @@ public:  // Public types
 
 
 	/**
-	 * @brief  Wrapper for callback function parameters
+	 * @brief  Type of operations passed to monadic Apply
+	 *
+	 * Type of operations passed to monadic Apply function. All need to be of
+	 * this type.
+	 */
+	typedef ValueType (*MonadicApplyOperationType)(ValueType, void*);
+
+
+	/**
+	 * @brief  Wrapper for Apply callback function parameters
 	 *
 	 * This structure is a wrapper that contains all necessary parameters that
-	 * are needed for the callback to work. In fact, it serves as an envelope
-	 * that we send to ourselves.
+	 * are needed for the Apply callback to work. In fact, it serves as an
+	 * envelope that we send to ourselves.
 	 */
 	struct ApplyCallbackParameters
 	{
@@ -110,6 +119,47 @@ public:  // Public types
 
 	};
 
+
+	/**
+	 * @brief  Wrapper for monadic Apply callback function parameters
+	 *
+	 * This structure is a wrapper that contains all necessary parameters that
+	 * are needed for the monadic Apply callback to work. In fact, it serves as
+	 * an envelope that we send to ourselves.
+	 */
+	struct MonadicApplyCallbackParameters
+	{
+	public:   // Public data members
+
+		/**
+		 * @brief  Pointer to the operation
+		 *
+		 * Pointer to the function that carries out the operation on a sink node of
+		 * the MTBDD.
+		 */
+		MonadicApplyOperationType Op;
+
+
+		/**
+		 * @brief  Arbitrary data
+		 *
+		 * Arbitrary data which will be used in the function that carries out the
+		 * operation.
+		 */
+		void* Data;
+
+	public:   // Public methods
+
+		/**
+		 * @brief  Constructor
+		 *
+		 * The constructor of the structure.
+		 */
+		MonadicApplyCallbackParameters(MonadicApplyOperationType op, void* data)
+			: Op(op), Data(data)
+		{ }
+
+	};
 
 public:  // Public data members
 
