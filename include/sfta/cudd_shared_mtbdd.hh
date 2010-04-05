@@ -16,13 +16,19 @@
 
 // SFTA headers
 #include <sfta/abstract_shared_mtbdd.hh>
+#include <sfta/cudd_facade.hh>
 
 
 namespace SFTA
 {
-	template <typename RootType,
+	template
+	<
+		typename RootType,
+		typename LeafType,
 		class VariableAssignmentType,
-		class LeafAllocator>
+		template <typename, typename> class LeafAllocator,
+		template <typename, typename> class RootAllocator
+	>
 	class CUDDSharedMTBDD;
 }
 
@@ -40,6 +46,7 @@ namespace SFTA
  *
  * @tparam  RootType                The type for the root of a MTBDD. Is used
  *                                  to reference the root.
+ * @tparam  LeafType                The type of a leaf of a MTBDD.
  * @tparam  VariableAssignmentType  The type that is used for representation
  *                                  of Boolean variable assignment, i.e.
  *                                  representation of a path in the BDD.
@@ -50,14 +57,32 @@ namespace SFTA
  *                                  allocator should behave in such a way,
  *                                  that for leafs that are equal should
  *                                  generate handles that are also equal.
+ * @tparam  RootAllocator           The allocator for root nodes of MTBDDs.
  */
-template <typename RootType,
+template
+<
+	typename RootType,
+	typename LeafType,
 	class VariableAssignmentType,
-	class LeafAllocator>
+	template <typename, typename> class LeafAllocator,
+	template <typename, typename> class RootAllocator>
 class SFTA::CUDDSharedMTBDD
-	: public AbstractSharedMTBDD<RootType,
-		VariableAssignmentType,
-		LeafAllocator>
+	: public AbstractSharedMTBDD
+		<
+			RootType,
+			LeafType,
+			VariableAssignmentType
+		>,
+		protected LeafAllocator
+		<
+			LeafType,
+			unsigned
+		>,
+		protected RootAllocator
+		<
+			RootType,
+			SFTA::Private::CUDDFacade::Manager*
+		>
 {
 public:   // Public data types
 
@@ -66,15 +91,26 @@ public:   // Public data types
 	 *
 	 * The data type of the parent class with correct template instantiation.
 	 */
-	typedef AbstractSharedMTBDD<RootType,
-		VariableAssignmentType,
-		LeafAllocator>
+	typedef AbstractSharedMTBDD
+	<
+		RootType,
+		LeafType,
+		VariableAssignmentType
+	>
 	ParentClass;
 
 
 private:  // Private data members
 
-	int smeti_;
+	/**
+	 * @brief  Interface to CUDD
+	 *
+	 * Interface to CUDD. Object of this class encapsulates one CUDD manager and
+	 * its associated MTBDDs.
+	 *
+	 * @see SFTA::Private::CUDDFacade
+	 */
+	SFTA::Private::CUDDFacade cudd;
 
 
 public:   // Public methods
@@ -84,25 +120,23 @@ public:   // Public methods
 	 *
 	 * The constructor of CUDDSharedMTBDD.
 	 */
-	CUDDSharedMTBDD() : smeti_(0)
-	{
-		//assert(false);
-
-	}
+	CUDDSharedMTBDD() : cudd()
+	{ }
 
 
-	virtual void SetValue(const RootType& /*root*/, const VariableAssignmentType& /*position*/, const typename LeafAllocator::LeafType& /*value*/)
+	virtual void SetValue(const RootType& /*root*/, const VariableAssignmentType& /*position*/, const LeafType& /*value*/)
 	{
 	}
 
 
-	virtual typename LeafAllocator::LeafType& GetValue(const RootType& /*root*/, const VariableAssignmentType& /*position*/)
+	virtual LeafType& GetValue(const RootType& /*root*/, const VariableAssignmentType& /*position*/)
 	{
-		return reinterpret_cast<typename LeafAllocator::LeafType&>(smeti_);
+		static int smeti;
+		return reinterpret_cast<LeafType&>(smeti);
 	}
 
 
-	virtual RootType Apply(const RootType& /*lhs*/, const RootType& /*rhs*/, const ApplyFunctionType& /*func*/)
+	virtual RootType Apply(const RootType& /*lhs*/, const RootType& /*rhs*/, const typename ParentClass::ApplyFunctionType& /*func*/)
 	{
 		return RootType();
 	}
@@ -114,7 +148,7 @@ public:   // Public methods
 	}
 
 
-	virtual string Serialize() const
+	virtual std::string Serialize() const
 	{
 		return "";
 	}

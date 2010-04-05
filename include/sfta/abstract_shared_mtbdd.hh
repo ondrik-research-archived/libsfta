@@ -14,14 +14,16 @@
 
 // Standard library headers
 #include <string>
-using std::string;
 
 
 namespace SFTA
 {
-	template <typename RootType,
-		class VariableAssignmentType,
-		class LeafAllocator>
+	template
+	<
+		typename RootType,
+		typename LeafType,
+		class VariableAssignmentType
+	>
 	class AbstractSharedMTBDD;
 }
 
@@ -34,22 +36,19 @@ namespace SFTA
  * Abstract class that defines a high-level interface for classes implementing
  * shared multi-terminal BDD (MTBDD).
  *
- * @tparam  RootType                The type for the root of a MTBDD. Is used
+ * @tparam  RootType                The type of the root of a MTBDD. Is used
  *                                  to reference the root.
+ * @tparam  LeafType                The type of a leaf of a MTBDD.
  * @tparam  VariableAssignmentType  The type that is used for representation
  *                                  of Boolean variable assignment, i.e.
  *                                  representation of a path in the BDD.
- * @tparam  LeafAllocator           The allocator that is used to allocate
- *                                  memory for leafs and (in case it is
- *                                  necessary) provide binding between the
- *                                  leafs and handles stored in the MTBDD. The
- *                                  allocator should behave in such a way,
- *                                  that for leafs that are equal should
- *                                  generate handles that are also equal.
  */
-template <typename RootType,
-	class VariableAssignmentType,
- 	class LeafAllocator>
+template
+<
+	typename RootType,
+	typename LeafType,
+	class VariableAssignmentType
+>
 class SFTA::AbstractSharedMTBDD
 {
 public:  // Public data types
@@ -60,8 +59,7 @@ public:  // Public data types
 	 * Data type for function pointers for functions that carry out the Apply
 	 * operation on the MTBDD.
 	 */
-	typedef typename LeafAllocator::LeafType (*ApplyFunctionType)(
-		typename LeafAllocator::LeafType, typename LeafAllocator::LeafType);
+	typedef LeafType (*ApplyFunctionType)(LeafType, LeafType);
 
 
 public:  // Public methods
@@ -79,7 +77,8 @@ public:  // Public methods
 	 *                       Boolean variables of the MTBDD
 	 * @param[in]  value     The value of the leaf to be set
 	 */
-	virtual void SetValue(const RootType& root, const VariableAssignmentType& position, const typename LeafAllocator::LeafType& value) = 0;
+	virtual void SetValue(const RootType& root,
+		const VariableAssignmentType& position, const LeafType& value) = 0;
 
 
 	/**
@@ -95,7 +94,8 @@ public:  // Public methods
 	 *
 	 * @returns  Reference to the leaf at given position of given MTBDD
 	 */
-	virtual typename LeafAllocator::LeafType& GetValue(const RootType& root, const VariableAssignmentType& position) = 0;
+	virtual LeafType& GetValue(const RootType& root,
+		const VariableAssignmentType& position) = 0;
 
 
 	/**
@@ -112,7 +112,8 @@ public:  // Public methods
 	 *
 	 * @returns  Root of a MTBDD with the result of the operation
 	 */
-	virtual RootType Apply(const RootType& lhs, const RootType& rhs, const ApplyFunctionType& func) = 0;
+	virtual RootType Apply(const RootType& lhs, const RootType& rhs,
+		const ApplyFunctionType& func) = 0;
 
 
 	/**
@@ -133,7 +134,7 @@ public:  // Public methods
 	 *
 	 * @returns  String that represents the data contained in the MTBDD
 	 */
-	virtual string Serialize() const = 0;
+	virtual std::string Serialize() const = 0;
 
 
 	/**
