@@ -16,6 +16,7 @@ CFLAGS         += -Wctor-dtor-privacy
 CFLAGS         += -Weffc++
 CFLAGS         += -Woverloaded-virtual
 CFLAGS         += -finline-functions
+CFLAGS         += -g
 
 # Where to search for include files
 INCLUDE_PATHS   =
