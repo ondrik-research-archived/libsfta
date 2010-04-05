@@ -117,74 +117,165 @@ CUDDFacade::CUDDFacade()
 }
 
 
-CUDDFacade::Node* CUDDFacade::AddIthVar(int i)
+CUDDFacade::Node* CUDDFacade::AddIthVar(int i) const
 {
 	// Assertions
+	assert(manager_ != static_cast<Manager*>(0));
 	assert(i >= 0);
 
-	return fromCUDD(Cudd_addIthVar(toCUDD(manager_), i));
+	Node* res = fromCUDD(Cudd_addIthVar(toCUDD(manager_), i));
+
+	// check the return value
+	assert(res != static_cast<Node*>(0));
+
+	return res;
 }
 
 
-SFTA::Private::CUDDFacade::Node* CUDDFacade::AddCmpl(Node* node)
+SFTA::Private::CUDDFacade::Node* CUDDFacade::AddCmpl(Node* node) const
 {
 	// Assertions
+	assert(manager_ != static_cast<Manager*>(0));
 	assert(node != static_cast<Node*>(0));
 
-	return fromCUDD(Cudd_addCmpl(toCUDD(manager_), toCUDD(node)));
+	Node* res = fromCUDD(Cudd_addCmpl(toCUDD(manager_), toCUDD(node)));
+
+	// check the return value
+	assert(res != static_cast<Node*>(0));
+
+	return res;
 }
 
 
-CUDDFacade::Node* CUDDFacade::AddConst(CUDDFacade::ValueType value)
-{
-	return fromCUDD(Cudd_addConst(toCUDD(manager_), value));
-}
-
-
-void CUDDFacade::Ref(Node* node)
+CUDDFacade::Node* CUDDFacade::AddConst(CUDDFacade::ValueType value) const
 {
 	// Assertions
+	assert(manager_ != static_cast<Manager*>(0));
+
+	Node* res = fromCUDD(Cudd_addConst(toCUDD(manager_), value));
+
+	// check the return value
+	assert(res != static_cast<Node*>(0));
+
+	return res;
+}
+
+
+void CUDDFacade::Ref(Node* node) const
+{
+	// Assertions
+	assert(manager_ != static_cast<Manager*>(0));
 	assert(node != static_cast<Node*>(0));
 
 	Cudd_Ref(toCUDD(node));
 }
 
 
-void CUDDFacade::RecursiveDeref(Node* node)
+void CUDDFacade::RecursiveDeref(Node* node) const
 {
 	// Assertions
+	assert(manager_ != static_cast<Manager*>(0));
 	assert(node != static_cast<Node*>(0));
 
 	Cudd_RecursiveDeref(toCUDD(manager_), toCUDD(node));
 }
 
 
-void CUDDFacade::SetBackground(Node* bck)
+void CUDDFacade::SetBackground(Node* bck) const
 {
 	// Assertions
+	assert(manager_ != static_cast<Manager*>(0));
 	assert(bck != static_cast<Node*>(0));
 
 	Cudd_SetBackground(toCUDD(manager_), toCUDD(bck));
 }
 
 
-CUDDFacade::Node* CUDDFacade::ReadBackground()
+CUDDFacade::Node* CUDDFacade::ReadBackground() const
 {
-	Node* node = fromCUDD(Cudd_ReadBackground(toCUDD(manager_)));
+	// Assertions
+	assert(manager_ != static_cast<Manager*>(0));
 
-	assert(node != static_cast<Node*>(0));
+	Node* res = fromCUDD(Cudd_ReadBackground(toCUDD(manager_)));
 
-	return node;
+	// check the return value
+	assert(res != static_cast<Node*>(0));
+
+	return res;
 }
 
 
-CUDDFacade::Node* CUDDFacade::Times(Node* lhs, Node* rhs)
+CUDDFacade::Node* CUDDFacade::Times(Node* lhs, Node* rhs) const
 {
 	// Assertions
+	assert(manager_ != static_cast<Manager*>(0));
 	assert(!(cuddIsConstant(toCUDD(lhs)) && cuddIsConstant(toCUDD(rhs))));
 
-	return fromCUDD(Cudd_addApply(toCUDD(manager_), Cudd_addTimes,
+	Node* res = fromCUDD(Cudd_addApply(toCUDD(manager_), Cudd_addTimes,
 		toCUDD(lhs), toCUDD(rhs)));
+
+	// check the return value
+	assert(res != static_cast<Node*>(0));
+
+	return res;
+}
+
+
+DdNode* applyCallback(DdManager* dd, DdNode** f, DdNode** g, void* data)
+{
+	// Assertions
+	assert(dd   != static_cast<DdManager*>(0));
+	assert(f    != static_cast<DdNode**>(0));
+	assert(g    != static_cast<DdNode**>(0));
+	assert(data != static_cast<void*>(0));
+
+	// get values of the nodes
+	DdNode* F = *f;
+	DdNode* G = *g;
+
+	// Further assertions
+	assert(F    != static_cast<DdNode*>(0));
+	assert(G    != static_cast<DdNode*>(0));
+
+	// get callback parameters from the data container
+	CUDDFacade::ApplyCallbackParameters& params =
+		*(static_cast<CUDDFacade::ApplyCallbackParameters*>(data));
+
+	// Even further assertions
+	assert(params.Op != static_cast<CUDDFacade::ApplyOperationType>(0));
+
+	if (cuddIsConstant(F) && cuddIsConstant(G))
+	{	// in case we are at leaves
+		DdNode* res = cuddUniqueConst(dd,
+			params.Op(cuddV(F), cuddV(G), params.Data));
+
+		assert(res != static_cast<DdNode*>(0));
+
+		return res;
+	}
+	else
+	{	// in case we are not at leaves
+		return static_cast<DdNode*>(0);
+	}
+}
+
+
+CUDDFacade::Node* CUDDFacade::Apply(Node* lhs, Node* rhs,
+	ApplyCallbackParameters* cbParams) const
+{
+	// Assertions
+	assert(manager_ != static_cast<Manager*>(0));
+	assert(lhs != static_cast<Node*>(0));
+	assert(rhs != static_cast<Node*>(0));
+	assert(cbParams != static_cast<ApplyCallbackParameters*>(0));
+
+	Node* res = fromCUDD(Cudd_addApplyWithData(
+		toCUDD(manager_), applyCallback, toCUDD(lhs), toCUDD(rhs), cbParams));
+
+	// check the return value
+	assert(res != static_cast<Node*>(0));
+
+	return res;
 }
 
 
@@ -207,3 +298,6 @@ CUDDFacade::~CUDDFacade()
 	Cudd_Quit(toCUDD(manager_));
 	manager_ = static_cast<Manager*>(0);
 }
+
+
+

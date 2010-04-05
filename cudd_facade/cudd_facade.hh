@@ -61,6 +61,56 @@ public:  // Public types
 	struct Node;
 
 
+	/**
+	 * @brief  Type of operations passed to Apply
+	 *
+	 * Type of operations passed to Apply function. All need to be of this type.
+	 */
+	typedef ValueType (*ApplyOperationType)(ValueType, ValueType, void*);
+
+
+	/**
+	 * @brief  Wrapper for callback function parameters
+	 *
+	 * This structure is a wrapper that contains all necessary parameters that
+	 * are needed for the callback to work. In fact, it serves as an envelope
+	 * that we send to ourselves.
+	 */
+	struct ApplyCallbackParameters
+	{
+	public:   // Public data members
+
+		/**
+		 * @brief  Pointer to the operation
+		 *
+		 * Pointer to the function that carries out the operation on sink nodes of
+		 * the MTBDD.
+		 */
+		ApplyOperationType Op;
+
+
+		/**
+		 * @brief  Arbitrary data
+		 *
+		 * Arbitrary data which will be used in the function that carries out the
+		 * operation.
+		 */
+		void* Data;
+
+	public:   // Public methods
+
+		/**
+		 * @brief  Constructor
+		 *
+		 * The constructor of the structure.
+		 */
+		ApplyCallbackParameters(ApplyOperationType op, void* data)
+			: Op(op), Data(data)
+		{ }
+
+	};
+
+
 public:  // Public data members
 
 	/**
@@ -123,7 +173,7 @@ public:  // Public methods
 	 *
 	 * @returns  Node representing the variable
 	 */
-	Node* AddIthVar(int i);
+	Node* AddIthVar(int i) const;
 
 
 	/**
@@ -137,7 +187,7 @@ public:  // Public methods
 	 *
 	 * @returns  Complement of \p node
 	 */
-	Node* AddCmpl(Node* node);
+	Node* AddCmpl(Node* node) const;
 
 	/**
 	 * @brief  Adds a new constant
@@ -151,7 +201,7 @@ public:  // Public methods
 	 *
 	 * @returns  Pointer to the node that contains the value
 	 */
-	Node* AddConst(ValueType value);
+	Node* AddConst(ValueType value) const;
 
 
 	/**
@@ -165,7 +215,7 @@ public:  // Public methods
 	 *
 	 * @param[in]  node  The node to be referenced
 	 */
-	void Ref(Node* node);
+	void Ref(Node* node) const;
 
 
 	/**
@@ -179,7 +229,7 @@ public:  // Public methods
 	 *
 	 * @param[in]  node  The node to be recursively dereferenced
 	 */
-	void RecursiveDeref(Node* node);
+	void RecursiveDeref(Node* node) const;
 
 
 	/**
@@ -193,7 +243,7 @@ public:  // Public methods
 	 *
 	 * @param[in]  bck  The background value
 	 */
-	void SetBackground(Node* bck);
+	void SetBackground(Node* bck) const;
 
 
 	/**
@@ -206,7 +256,7 @@ public:  // Public methods
 	 *
 	 * @returns  The background value of MTBDD
 	 */
-	Node* ReadBackground();
+	Node* ReadBackground() const;
 
 
 	/**
@@ -224,7 +274,10 @@ public:  // Public methods
 	 *
 	 * @returns  The node with the product
 	 */
-	Node* Times(Node* lhs, Node* rhs);
+	Node* Times(Node* lhs, Node* rhs) const;
+
+
+	Node* Apply(Node* lhs, Node* rhs, ApplyCallbackParameters* cbParams) const;
 
 
 	/**
