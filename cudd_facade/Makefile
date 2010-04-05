@@ -20,6 +20,7 @@ CFLAGS         += -Wctor-dtor-privacy
 CFLAGS         += -Weffc++
 CFLAGS         += -Woverloaded-virtual
 CFLAGS         += -finline-functions
+CFLAGS         += -g
 
 # Path to CUDD library
 CUDD_PATH       = ../../diplomka_programy/cudd
