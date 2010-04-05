@@ -40,12 +40,11 @@ public:
 			std::string cat_name = SFTA::Private::CUDDFacade::LOG_CATEGORY_NAME;
 
 			log4cpp::Category::getInstance(cat_name).setAdditivity(false);
-			log4cpp::Category::getInstance(cat_name).setAppender(app);
+			log4cpp::Category::getInstance(cat_name).addAppender(app);
 			log4cpp::Category::getInstance(cat_name).setPriority(log4cpp::Priority::NOTSET);
 		}
 	}
 
-	virtual ~LogFixture() { }
 };
 
 bool LogFixture::logInitialized_ = false;
