@@ -28,6 +28,7 @@ LogFixture::LogFixture()
 
 		// Create the appender
 		log4cpp::Appender* app = new log4cpp::OstreamAppender("ClogAppender", &std::clog);
+		log4cpp::Appender* app2 = new log4cpp::OstreamAppender("ClogAppender", &std::clog);
 
 		// Set the data layout of the appender
 		log4cpp::Layout* layout = new log4cpp::BasicLayout();
@@ -42,7 +43,7 @@ LogFixture::LogFixture()
 		cat_name = "cudd_shared_mtbdd";
 
 		log4cpp::Category::getInstance(cat_name).setAdditivity(false);
-		log4cpp::Category::getInstance(cat_name).addAppender(app);
+		log4cpp::Category::getInstance(cat_name).addAppender(app2);
 		log4cpp::Category::getInstance(cat_name).setPriority(log4cpp::Priority::DEBUG);
 	}
 }
