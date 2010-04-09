@@ -313,6 +313,16 @@ public:  // Public methods
 
 
 	/**
+	 * @brief  Gets the count of variables of MTBDD
+	 *
+	 * Returns the number of variables of MTBDD.
+	 *
+	 * @returns  The number of variables of MTBDD
+	 */
+	unsigned GetVarCount() const;
+
+
+	/**
 	 * @brief  Multiplication of two nodes
 	 *
 	 * Performs either:
@@ -339,8 +349,8 @@ public:  // Public methods
 
 
 	void DumpDot(const std::vector<Node*>& nodes,
-		const std::vector<std::string>& inames,
-		const std::vector<std::string>& onames,
+		const std::vector<std::string>& rootNames,
+		const std::vector<std::string>& sinkNames,
 		const std::string& filename) const;
 
 
