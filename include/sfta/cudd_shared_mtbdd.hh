@@ -246,6 +246,9 @@ public:   // Public methods
 
 	virtual void SetValue(const RootType& root, const VariableAssignmentType& asgn, const LeafType& value)
 	{
+		SFTA_LOGGER_DEBUG("Setting value at " + SFTA::Private::Convert::ToString(asgn)
+			+ " to " + SFTA::Private::Convert::ToString(value));
+
 		RootType mtbddAsgn = createMTBDDForVariableAssignment(asgn, value);
 		CUDDFacade::ApplyCallbackParameters params(ApplyFunctions::overwriteByRight, static_cast<void*>(this));
 		CUDDFacade::Node* res = cudd.Apply(RA::getHandleOfRoot(root), RA::getHandleOfRoot(mtbddAsgn), &params);
@@ -306,6 +309,35 @@ public:   // Public methods
 	}
 
 
+	virtual void DumpToDotFile(const std::string& filename)
+	{
+		std::vector<RootType> roots = RA::getAllRoots();
+
+		std::vector<SFTA::Private::CUDDFacade::Node*> nodes(roots.size());
+		std::vector<std::string> rootNames(roots.size());
+
+		for (unsigned i = 0; i < roots.size(); ++i)
+		{
+			nodes[i] = RA::getHandleOfRoot(i);
+		}
+
+		for (unsigned i = 0; i < roots.size(); ++i)
+		{
+			rootNames[i] = SFTA::Private::Convert::ToString(i);
+		}
+
+		std::vector<SFTA::Private::CUDDFacade::ValueType> sinks = LA::getAllHandles();
+
+		std::vector<std::string> sinkNames;
+		for (unsigned i = 0; i < sinks.size(); ++i)
+		{
+			sinkNames.push_back(SFTA::Private::Convert::ToString(LA::getLeafOfHandle(sinks[i])));
+		}
+
+		cudd.DumpDot(nodes, rootNames, sinkNames, filename);
+	}
+
+
 	virtual ~CUDDSharedMTBDD()
 	{
 		for (typename RA::Iterator it = RA::begin(); it != RA::end(); ++it)
@@ -318,6 +350,8 @@ public:   // Public methods
 	}
 };
 
+
+// Setting the logging category name for Log4cpp
 template
 <
 	typename Root,

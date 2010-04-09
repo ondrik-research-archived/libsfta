@@ -138,6 +138,18 @@ public:  // Public methods
 
 
 	/**
+	 * @brief  Dumps the MTBDD into a Dot file
+	 *
+	 * Dumps MTBDD into a file in Dot format. This file can then be used to
+	 * generate a diagram using GraphViz (http://www.graphviz.org/) Dot tool.
+	 *
+	 * @param[in]  filename  Name of the output file (preferably with .dot
+	 *                       extension
+	 */
+	virtual void DumpToDotFile(const std::string& filename) = 0;
+
+
+	/**
 	 * @brief  Destructor
 	 *
 	 * The destructor of the MTBDD. Releases all allocated resources.
