@@ -62,6 +62,18 @@ protected:
 		return asoc_arr_[handle];
 	}
 
+	std::vector<HandleType> getAllHandles() const
+	{
+		std::vector<HandleType> result;
+
+		for (typename std::map<HandleType, LeafType>::const_iterator it = asoc_arr_.begin(); it != asoc_arr_.end(); ++it)
+		{
+			result.push_back(it->first);
+		}
+
+		return result;
+	}
+
 	~MyLeafAllocator() { }
 };
 
@@ -116,7 +128,7 @@ protected:
 		return arr_.begin() + next_index_;
 	}
 
-	const HandleType& getHandleOfRoot(unsigned root)
+	const HandleType& getHandleOfRoot(unsigned root) const
 	{
 		// Assertions
 		assert(root < arr_.size());
@@ -130,6 +142,18 @@ protected:
 		assert(root < arr_.size());
 
 		arr_[root] = handle;
+	}
+
+	std::vector<unsigned> getAllRoots() const
+	{
+		std::vector<unsigned> result;
+		
+		for (unsigned i = 0; i < next_index_; ++i)
+		{
+			result.push_back(i);
+		}
+
+		return result;
 	}
 
 	~MyRootAllocator() { }
@@ -171,12 +195,20 @@ public:
 		}
 	}
 
-
 	size_t Size() const
 	{
 		return 8*sizeof(unsigned);
 	}
 
+	std::string ToString() const
+	{
+		return SFTA::Private::Convert::ToString(vars_);
+	}
+
+	friend std::ostream& operator<<(std::ostream& os, const MyVariableAssignment asgn)
+	{
+		return (os << asgn.ToString());
+	}
 };
 
 
@@ -240,6 +272,12 @@ BOOST_AUTO_TEST_CASE(setters_and_getters_test)
 
 	BOOST_CHECK(value_added == value_read);
 
+	mtbdd->DumpToDotFile("pokus.dot");
+
+	value_added = 7;
+	asgn = 5;
+	value_read = mtbdd->GetValue(root, asgn);
+	BOOST_CHECK(value_added == value_read);
 }
 
 BOOST_AUTO_TEST_CASE(serialization)
