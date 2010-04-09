@@ -12,6 +12,9 @@
 #ifndef _CUDD_FACADE_HH_
 #define _CUDD_FACADE_HH_
 
+#include <vector>
+#include <string>
+
 
 // insert the class into proper namespace
 namespace SFTA { namespace Private { class CUDDFacade; } }
@@ -327,9 +330,19 @@ public:  // Public methods
 	Node* Times(Node* lhs, Node* rhs) const;
 
 
-	Node* Apply(Node* lhs, Node* rhs, ApplyCallbackParameters* cbParams) const;
+	Node* Apply(Node* lhs, Node* rhs,
+		ApplyCallbackParameters* cbParams) const;
 
-	Node* MonadicApply(Node* root, MonadicApplyCallbackParameters* cbParams) const;
+
+	Node* MonadicApply(Node* root,
+		MonadicApplyCallbackParameters* cbParams) const;
+
+
+	void DumpDot(const std::vector<Node*>& nodes,
+		const std::vector<std::string>& inames,
+		const std::vector<std::string>& onames,
+		const std::string& filename) const;
+
 
 	/**
 	 * @brief  The destructor

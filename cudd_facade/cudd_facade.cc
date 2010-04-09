@@ -328,6 +328,119 @@ CUDDFacade::Node* CUDDFacade::MonadicApply(Node* root,
 }
 
 
+void CUDDFacade::DumpDot(const std::vector<Node*>& nodes,
+		const std::vector<std::string>& inames,
+		const std::vector<std::string>& onames,
+		const std::string& filename) const
+{
+	// Assertions
+	assert(manager_ != static_cast<Manager*>(0));
+	assert((inames.size() == 0) || (nodes.size() == inames.size()));
+	assert((onames.size() == 0) || (nodes.size() == onames.size()));
+
+	// arrays to be passed to the CUDD function
+	DdNode** arrNodes = static_cast<DdNode**>(0);
+	char** arrInames = static_cast<char**>(0);
+	char** arrOnames = static_cast<char**>(0);
+
+	// the number of nodes
+	unsigned size = nodes.size();
+
+	SFTA_LOGGER_DEBUG("Dumping a diagram with "
+		+ Convert::ToString(size) + " nodes");
+
+	// the file that the BDD should be dumped to
+	FILE* outfile = static_cast<FILE*>(0);
+
+	try
+	{	// try block due to possible memory errors
+		if ((outfile = fopen(filename.c_str(), "w")) == static_cast<FILE*>(0))
+		{	// in case the file could not be open
+			throw std::runtime_error("Could not open file!");
+		}
+
+		// create the array of nodes
+		arrNodes = new DdNode*[size];
+		for (unsigned i = 0; i < size; ++i)
+		{	// insert the nodes to the array
+			arrNodes[i] = toCUDD(nodes[i]);
+		}
+
+		if (inames.size() > 0)
+		{	// if there are names of roots
+			arrInames = new char*[size];
+
+			for (unsigned i = 0; i < size; ++i)
+			{	// copy names of roots
+				arrInames[i] = const_cast<char*>(inames[i].c_str());
+			}
+		}
+
+		if (inames.size() > 0)
+		{	// if there are names of sink nodes
+			arrOnames = new char*[size];
+
+			for (unsigned i = 0; i < size; ++i)
+			{	// copy names of sink nodes
+				arrOnames[i] = const_cast<char*>(onames[i].c_str());
+			}
+		}
+
+		if (!(Cudd_DumpDot(
+			toCUDD(manager_), size, arrNodes, arrInames, arrOnames, outfile)))
+		{	// in case there was a problem with dumping the file
+			throw std::runtime_error("Could not dump BDD!");
+		}
+
+		// delete the arrays
+		delete [] arrNodes;
+		arrNodes = static_cast<DdNode**>(0);
+		delete [] arrInames;
+		arrInames = static_cast<char**>(0);
+		delete [] arrOnames;
+		arrOnames = static_cast<char**>(0);
+
+		if (!(fclose(outfile)))
+		{	// in case everything was alright
+			outfile = static_cast<FILE*>(0);
+		}
+		else
+		{	// in case there was a problem with closing the file
+			outfile = static_cast<FILE*>(0);
+			throw std::runtime_error("Could not close the dump file!");
+		}
+	}
+	catch (const std::exception& e)
+	{	// in case an exception appears, we only log it
+		if (outfile != static_cast<FILE*>(0))
+		{	// in case the file has not been closed yet
+			fclose(outfile);
+			outfile = static_cast<FILE*>(0);
+		}
+
+		if (arrNodes != static_cast<DdNode**>(0))
+		{	// in case the array of nodes is still allocated
+			delete [] arrNodes;
+			arrNodes = static_cast<DdNode**>(0);
+		}
+
+		if (arrInames != static_cast<char**>(0))
+		{	// in case the array of root nodes' names is still allocated
+			delete [] arrInames;
+			arrInames = static_cast<char**>(0);
+		}
+
+		if (arrOnames != static_cast<char**>(0))
+		{	// in case the array of sink nodes' names is still allocated
+			delete [] arrOnames;
+			arrOnames = static_cast<char**>(0);
+		}
+
+		SFTA_LOGGER_ERROR("Error while dumping BDD to file \"" + filename + "\": " + e.what());
+	}
+}
+
+
 CUDDFacade::~CUDDFacade()
 {
 	// Assertions
@@ -347,6 +460,3 @@ CUDDFacade::~CUDDFacade()
 	Cudd_Quit(toCUDD(manager_));
 	manager_ = static_cast<Manager*>(0);
 }
-
-
-
