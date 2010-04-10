@@ -39,7 +39,9 @@ public:
 
 private:
 
-	std::map<HandleType, LeafType> asoc_arr_;
+	typedef std::map<HandleType, LeafType> LeafContainer;
+
+	LeafContainer asoc_arr_;
 
 	HandleType next_index_;
 
@@ -59,7 +61,28 @@ protected:
 
 	LeafType& getLeafOfHandle(const HandleType& handle)
 	{
-		return asoc_arr_[handle];
+		// try to find given leaf
+		typename LeafContainer::iterator it = asoc_arr_.find(handle);
+		if (it == asoc_arr_.end())
+		{	// in case it couldn't be found
+			throw std::runtime_error("Trying to access leaf \""
+				+ SFTA::Private::Convert::ToString(handle) + "\" that is not managed.");
+		}
+
+		return it->second;
+	}
+
+	const LeafType& getLeafOfHandle(const HandleType& handle) const
+	{
+		// try to find given leaf
+		typename LeafContainer::const_iterator it = asoc_arr_.find(handle);
+		if (it == asoc_arr_.end())
+		{	// in case it couldn't be found
+			throw std::runtime_error("Trying to access leaf \""
+				+ SFTA::Private::Convert::ToString(handle) + "\" that is not managed.");
+		}
+
+		return it->second;
 	}
 
 	std::vector<HandleType> getAllHandles() const
@@ -92,68 +115,97 @@ struct MyRootAllocator<unsigned, Handle>
 {
 public:
 	typedef Handle HandleType;
+	typedef unsigned RootType;
 
 private:
 
-	std::vector<HandleType> arr_;
+	typedef std::map<unsigned, HandleType> HandleContainer;
+
+public:
+	typedef typename HandleContainer::iterator Iterator;
+
+private:
+
+	HandleContainer arr_;
 	size_t next_index_;
 
 protected:
 
-	typedef typename std::vector<HandleType>::iterator Iterator;
-
-	MyRootAllocator() : arr_(INITIAL_VECTOR_SIZE), next_index_(0)
+	MyRootAllocator() : arr_(), next_index_(0)
 	{
 	}
 
 	unsigned allocateRoot(const HandleType& handle)
 	{
-		if (next_index_ >= arr_.size())
-		{
-			arr_.resize(2 * arr_.size());
-		}
-
 		arr_[next_index_] = handle;
 		++next_index_;
 		return next_index_ - 1;
 	}
 
-	Iterator begin()
-	{
-		return arr_.begin();
-	}
-
-	Iterator end()
-	{
-		return arr_.begin() + next_index_;
-	}
-
 	const HandleType& getHandleOfRoot(unsigned root) const
 	{
-		// Assertions
-		assert(root < arr_.size());
+		// try to find given root
+		typename HandleContainer::const_iterator it = arr_.find(root);
+		if (it == arr_.end())
+		{	// in case it couldn't be found
+			assert(false);
+			throw std::runtime_error("Trying to access root \""
+				+ SFTA::Private::Convert::ToString(root) + "\" that is not managed.");
+		}
 
-		return arr_[root];
+		return it->second;
 	}
 
 	void changeHandleOfRoot(unsigned root, const HandleType& handle)
 	{
-		// Assertions
-		assert(root < arr_.size());
+		// try to find given root
+		typename HandleContainer::iterator it = arr_.find(root);
+		if (it == arr_.end())
+		{	// in case it couldn't be found
+			throw std::runtime_error("Trying to change value of root \""
+				+ SFTA::Private::Convert::ToString(root) + "\" that is not managed.");
+		}
 
-		arr_[root] = handle;
+		it->second = handle;
 	}
 
 	std::vector<unsigned> getAllRoots() const
 	{
-		std::vector<unsigned> result;
-		
-		for (unsigned i = 0; i < next_index_; ++i)
+		std::vector<RootType> res(0);
+
+		for (typename HandleContainer::const_iterator it = arr_.begin();
+			it != arr_.end(); ++it)
 		{
-			result.push_back(i);
+			res.push_back(it->first);
 		}
 
-		return result;
+		return res;
+	}
+
+	std::vector<HandleType> getAllRootHandles() const
+	{
+		std::vector<HandleType> res(0);
+
+		for (typename HandleContainer::const_iterator it = arr_.begin();
+			it != arr_.end(); ++it)
+		{
+			res.push_back(it->second);
+		}
+
+		return res;
+	}
+
+	void eraseRoot(unsigned root)
+	{
+		// try to find given root
+		typename HandleContainer::iterator it = arr_.find(root);
+		if (it == arr_.end())
+		{	// in case it couldn't be found
+			throw std::runtime_error("Trying to erase root \""
+				+ SFTA::Private::Convert::ToString(root) + "\" that is not managed.");
+		}
+
+		arr_.erase(it);
 	}
 
 	~MyRootAllocator() { }
@@ -183,21 +235,22 @@ public:
 	{}
 
 
-	int GetIthVariableValue(unsigned i)
+	inline int GetIthVariableValue(unsigned i) const
 	{
 		if (!((vars_ >> i) & 1))
 		{
-			return ONE;
+			return ZERO;
 		}
 		else
 		{
-			return ZERO;
+			return ONE;
 		}
 	}
 
 	size_t Size() const
 	{
-		return 8*sizeof(unsigned);
+		//return 8*sizeof(unsigned);
+		return 8;
 	}
 
 	std::string ToString() const
@@ -263,16 +316,16 @@ BOOST_AUTO_TEST_CASE(setters_and_getters_test)
 
 	unsigned value_read = mtbdd->GetValue(root, asgn);
 
+
 	BOOST_CHECK(value_added == value_read);
 
 	value_added = 15;
 	asgn = 3;
 	mtbdd->SetValue(root, asgn, value_added);
+	mtbdd->DumpToDotFile("pokus.dot");
 	value_read = mtbdd->GetValue(root, asgn);
 
 	BOOST_CHECK(value_added == value_read);
-
-	mtbdd->DumpToDotFile("pokus.dot");
 
 	value_added = 7;
 	asgn = 5;
