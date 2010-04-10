@@ -315,6 +315,9 @@ CUDDFacade::Node* CUDDFacade::Apply(Node* lhs, Node* rhs,
 	// check the return value
 	assert(res != static_cast<Node*>(0));
 
+	// reference the result
+	Ref(res);
+
 	return res;
 }
 
@@ -332,6 +335,9 @@ CUDDFacade::Node* CUDDFacade::MonadicApply(Node* root,
 
 	// check the return value
 	assert(res != static_cast<Node*>(0));
+
+	// reference the result
+	Ref(res);
 
 	return res;
 }
