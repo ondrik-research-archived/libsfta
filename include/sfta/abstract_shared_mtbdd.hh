@@ -146,7 +146,7 @@ public:  // Public methods
 	 * @param[in]  filename  Name of the output file (preferably with .dot
 	 *                       extension
 	 */
-	virtual void DumpToDotFile(const std::string& filename) = 0;
+	virtual void DumpToDotFile(const std::string& filename) const = 0;
 
 
 	/**
