@@ -143,26 +143,104 @@ private:   // Private data types
 	typedef SFTA::Private::CUDDFacade CUDDFacade;
 
 
+	/**
+	 * @brief  The type of the Convert class
+	 *
+	 * The type of the Convert class.
+	 */
+	typedef SFTA::Private::Convert Convert;
+
+
+	/**
+	 * @brief  The type for an array of variables
+	 *
+	 * The type for storage of an array of variables.
+	 */
+	typedef std::vector<CUDDFacade::Node*> VariableArrayType;
+
+
+	/**
+	 * @brief  The type for an array of roots
+	 *
+	 * The type that represents an array of roots.
+	 */
+	typedef std::vector<typename RA::RootType> RootArray;
+
+
+	/**
+	 * @brief  The type for an array of root handles
+	 *
+	 * The type that represents an array of root handles.
+	 */
+	typedef std::vector<typename RA::HandleType> RootHandleArray;
+
+
+	/**
+	 * @brief   Static class with apply functions for MTBDD
+	 *
+	 * Static class that is used to provide a separate namespace for apply
+	 * functions for MTBDD. Note that a namespace cannot be declared inside
+	 * a class in C++, that is why a static class is used.
+	 */
 	class ApplyFunctions
 	{
+	private:
+
+		// private constructors etc. that disable creating an instance of the
+		// class
+		ApplyFunctions();
+		ApplyFunctions(const ApplyFunctions&);
+		ApplyFunctions& operator=(const ApplyFunctions&);
+		~ApplyFunctions();
+
+
 	public:
-		static typename LA::HandleType overwriteByRight(typename LA::HandleType /*lhs*/, typename LA::HandleType rhs, void* /*data*/)
+
+		/**
+		 * @brief  Overwrites not-0 nodes with their right equivalent
+		 *
+		 * This is an Apply operation that substitutes each sink node in the
+		 * left-hand side MTBDD by the respective sink node in the right-hand side
+		 * MTBDD in case it is not bottom.
+		 *
+		 * @see  SFTA::Private::CUDDFacade::Apply()
+		 *
+		 * @param[in]  lhs   Left-hand side MTBDD sink node
+		 * @param[in]  rhs   Right-hand side MTBDD sink node
+		 * @param[in]  data  Pointer to data (not used, pass 0 pointer)
+		 *
+		 * @returns  Sink node after the operation
+		 */
+		static typename LA::HandleType overwriteByRight(
+			typename LA::HandleType lhs, typename LA::HandleType rhs, void* /*data*/)
 		{
-			return rhs;
+			return (rhs == BOTTOM)? lhs : rhs;
 		}
 
-		static typename LA::HandleType projectByRight(typename LA::HandleType lhs, typename LA::HandleType rhs, void* /*data*/)
+
+		/**
+		 * @brief  Creates a projection according to the right MTBDD
+		 *
+		 * This is an Apply operation that creates a projection according to the
+		 * right-hand side MTBDD. Places where there is a zero in the right-hand
+		 * side MTBDD are removed (that is bottom is assigned to them).
+		 *
+		 * @see  SFTA::Private::CUDDFacade::Apply()
+		 *
+		 * @param[in]  lhs   Left-hand side MTBDD sink node
+		 * @param[in]  rhs   Right-hand side MTBDD sink node
+		 * @param[in]  data  Pointer to data (not used, pass 0 pointer)
+		 *
+		 * @returns  Sink node after the operation
+		 */
+		static typename LA::HandleType projectByRight(
+			typename LA::HandleType lhs, typename LA::HandleType rhs, void* /*data*/)
 		{
-			if (rhs == 0)
-			{
-				return 0;
-			}
-			else
-			{
-				return lhs;
-			}
+			return (rhs == BOTTOM)? BOTTOM : lhs;
 		}
 
+
+		// TODO: fix
 		static typename LA::HandleType collectLeaves(typename LA::HandleType node, void* data)
 		{
 			std::vector<unsigned>& vec = *(static_cast<std::vector<unsigned>*>(data));
@@ -187,48 +265,208 @@ private:  // Private data members
 	 *
 	 * @see SFTA::Private::CUDDFacade
 	 */
-	SFTA::Private::CUDDFacade cudd;
+	CUDDFacade cudd_;
 
+
+	/**
+	 * @brief  The name of the Log4cpp category for logging
+	 *
+	 * The name of the Log4cpp category used for logging messages from this
+	 * class.
+	 */
 	static const char* LOG_CATEGORY_NAME;
+
+
+	/**
+	 * @brief  Array of variables
+	 *
+	 * An array that stores saved variables so that they don't need be always
+	 * recreated.
+	 */
+	VariableArrayType varArray_;
+
+
+	/**
+	 * @brief  Array of negated variables
+	 *
+	 * An array that stores saved negated variables so that they don't need be
+	 * always recreated.
+	 */
+	VariableArrayType varArrayNot_;
+
+	/**
+	 * @brief  The value of the bottom of the MTBDD
+	 *
+	 * The value which denotes the @em bottom of the MTBDD.
+	 */
+	static const typename LA::HandleType BOTTOM = 0;
+
 
 private:  // Private methods
 
-	RootType createMTBDDForVariableAssignment(const VariableAssignmentType& vars, const LeafType& value)
+	/**
+	 * @brief  Gets the i-th variable
+	 *
+	 * Returns the @f$i@f$-th variable of the MTBDD.
+	 *
+	 * @see  getIthVariableNot()
+	 *
+	 * @param[in]  i  The index of the variable
+	 *
+	 * @returns  The variable
+	 */
+	CUDDFacade::Node* getIthVariable(unsigned i)
+	{
+		while (i >= varArray_.size())
+		{	// while we do not have large enough collection of variables
+			CUDDFacade::Node* node = cudd_.AddIthVar(i);
+			cudd_.Ref(node);
+			varArray_.push_back(node);
+		}
+
+		return varArray_[i];
+	}
+
+
+	/**
+	 * @brief  Gets complement of the i-th variable
+	 *
+	 * Returns complement of the @f$i@f$-th variable of the MTBDD.
+	 *
+	 * @see  getIthVariable()
+	 *
+	 * @param[in]  i  The index of the variable
+	 *
+	 * @returns  Complement of the variable
+	 */
+	CUDDFacade::Node* getIthVariableNot(unsigned i)
+	{
+		while (i >= varArrayNot_.size())
+		{	// while we do not have large enough collection of negated variables
+
+			// get proper variable
+			CUDDFacade::Node* node = getIthVariable(i);
+			// and complement it
+			node = cudd_.AddCmpl(node);
+			cudd_.Ref(node);
+			varArrayNot_.push_back(node);
+		}
+
+		return varArrayNot_[i];
+	}
+
+
+	/**
+	 * @brief  Creates a new MTBDD for a variable assignment
+	 *
+	 * Creates a new MTBDD in the shared MTBDD for given variable assignment
+	 * @c vars = @f$(x_1, x_2, \dots, x_n)@f$ equal to given value and returns
+	 * the root of the MTBDD.
+	 *
+	 * @param[in]  vars   Variable assignment
+	 * @param[in]  value  Value for given variable assignment
+	 *
+	 * @returns  Root of created MTBDD
+	 */
+	RootType createMTBDDForVariableAssignment(
+		const VariableAssignmentType& vars, const LeafType& value)
 	{
 		CUDDFacade::ValueType leaf = LA::createLeaf(value);
-		CUDDFacade::Node* node = cudd.AddConst(leaf);
-		cudd.Ref(node);
+		CUDDFacade::Node* node = cudd_.AddConst(leaf);
+		cudd_.Ref(node);
+
 		for (unsigned i = 0; i < vars.Size(); ++i)
-		{
-			CUDDFacade::Node* var = cudd.AddIthVar(i);
-			cudd.Ref(var);
-			CUDDFacade::Node* tmp = cudd.Times(node, var);
-			cudd.Ref(tmp);
-			cudd.RecursiveDeref(node);
-			cudd.RecursiveDeref(var);
+		{	// for all variables
+			CUDDFacade::Node* var = static_cast<CUDDFacade::Node*>(0);
+			if (vars.GetIthVariableValue(i) == VariableAssignmentType::ONE)
+			{	// in case the variable has value '1'
+				var = getIthVariable(i);
+			}
+			else if (vars.GetIthVariableValue(i) == VariableAssignmentType::ZERO)
+			{	// in case the variable has value '0'
+				var = getIthVariableNot(i);
+			}
+			else if (vars.GetIthVariableValue(i) == VariableAssignmentType::DONT_CARE)
+			{	// in case the variable is not in the assignment
+				continue;
+			}
+			else
+			{	// in case something else occured
+				throw std::runtime_error("Invalid variable assignment type returned "
+					"by VariableAssignmentType::GetIthVariableValue()!");
+			}
+
+			CUDDFacade::Node* tmp = cudd_.Times(node, var);
+			cudd_.Ref(tmp);
+			cudd_.RecursiveDeref(node);
 			node = tmp;
 		}
 
 		return RA::allocateRoot(node);
 	}
 
+
+	/**
+	 * @brief  Creates a projection MTBDD for a variable assignment
+	 *
+	 * Creates a new MTBDD in the shared MTBDD for a projection according to
+	 * given variable assignment @c vars = @f$(x_1, x_2, \dots, x_n)@f$. This
+	 * MTBDD has value @c 1 in sink nodes which are to be part of the
+	 * projection.
+	 *
+	 * @param[in]  vars   Variable assignment
+	 *
+	 * @returns  Root of projection MTBDD
+	 */
 	RootType createMTBDDForVariableProjection(const VariableAssignmentType& vars)
 	{
-		CUDDFacade::Node* node = cudd.AddConst(1);
-		cudd.Ref(node);
+		CUDDFacade::Node* node = cudd_.AddConst(1);
+		cudd_.Ref(node);
+
 		for (unsigned i = 0; i < vars.Size(); ++i)
-		{
-			CUDDFacade::Node* var = cudd.AddIthVar(i);
-			cudd.Ref(var);
-			CUDDFacade::Node* tmp = cudd.Times(node, var);
-			cudd.Ref(tmp);
-			cudd.RecursiveDeref(node);
-			cudd.RecursiveDeref(var);
+		{	// for all variables
+			CUDDFacade::Node* var = static_cast<CUDDFacade::Node*>(0);
+			if (vars.GetIthVariableValue(i) == VariableAssignmentType::ONE)
+			{	// in case the variable has value '1'
+				var = getIthVariable(i);
+			}
+			else if (vars.GetIthVariableValue(i) == VariableAssignmentType::ZERO)
+			{	// in case the variable has value '0'
+				var = getIthVariableNot(i);
+			}
+			else if (vars.GetIthVariableValue(i) == VariableAssignmentType::DONT_CARE)
+			{	// in case the variable is not in the assignment
+				continue;
+			}
+			else
+			{	// in case something else occured
+				throw std::runtime_error("Invalid variable assignment type returned "
+					"by VariableAssignmentType::GetIthVariableValue()!");
+			}
+
+			CUDDFacade::Node* tmp = cudd_.Times(node, var);
+			cudd_.Ref(tmp);
+			cudd_.RecursiveDeref(node);
 			node = tmp;
 		}
 
 		return RA::allocateRoot(node);
 	}
+
+
+	/**
+	 * @brief  Erases a root
+	 *
+	 * Erases given root and dereferences proper MTBDD
+	 *
+	 * @param[in]  root  The root of the MTBDD to be erased
+	 */
+	void eraseRoot(RootType root)
+	{
+		cudd_.RecursiveDeref(RA::getHandleOfRoot(root));
+		RA::eraseRoot(root);
+	}
+
 
 public:   // Public methods
 
@@ -237,49 +475,86 @@ public:   // Public methods
 	 *
 	 * The constructor of CUDDSharedMTBDD.
 	 */
-	CUDDSharedMTBDD() : cudd()
+	CUDDSharedMTBDD() : cudd_(), varArray_(0), varArrayNot_(0)
 	{
 		// TODO: fix this
 		LA::createLeaf(0);
 	}
 
 
-	virtual void SetValue(const RootType& root, const VariableAssignmentType& asgn, const LeafType& value)
+	/**
+	 * @brief  Sets the value of a sink node
+	 *
+	 * This method sets the value of a sink node of given MTBDD at variable
+	 * assignment denoted by @c asgn to given value.
+	 *
+	 * @see  GetValue()
+	 *
+	 * @param[in]  root   Root of the MTBDD in which the value is to be changed
+	 * @param[in]  asgn   Variable assignment determining the sink node
+	 * @param[in]  value  Value to which the sink node is to be changed
+	 */
+	virtual void SetValue(const RootType& root,
+		const VariableAssignmentType& asgn, const LeafType& value)
 	{
-		SFTA_LOGGER_DEBUG("Setting value at " + SFTA::Private::Convert::ToString(asgn)
-			+ " to " + SFTA::Private::Convert::ToString(value));
+		SFTA_LOGGER_DEBUG("Setting value at " + Convert::ToString(asgn)
+			+ " to " + Convert::ToString(value));
 
+		// create the MTBDD with given value at given position
 		RootType mtbddAsgn = createMTBDDForVariableAssignment(asgn, value);
-		CUDDFacade::ApplyCallbackParameters params(ApplyFunctions::overwriteByRight, static_cast<void*>(this));
-		CUDDFacade::Node* res = cudd.Apply(RA::getHandleOfRoot(root), RA::getHandleOfRoot(mtbddAsgn), &params);
+		// create parameters of Apply function that pass correct callback function
+		CUDDFacade::ApplyCallbackParameters params(
+			ApplyFunctions::overwriteByRight, static_cast<void*>(this));
+		// carry out the Apply operation
+		CUDDFacade::Node* res = cudd_.Apply(RA::getHandleOfRoot(root),
+			RA::getHandleOfRoot(mtbddAsgn), &params);
 
-		// get rid of the old MTBDD
-		cudd.RecursiveDeref(RA::getHandleOfRoot(root));
+		// remove the temporary MTBDD
+		eraseRoot(mtbddAsgn);
+
+		// get rid of the old MTBDD for the function
+		cudd_.RecursiveDeref(RA::getHandleOfRoot(root));
 
 		// substitute the new MTBDD for the old one
 		RA::changeHandleOfRoot(root, res);
 	}
 
 
-	virtual LeafType& GetValue(const RootType& root, const VariableAssignmentType& asgn)
+	virtual LeafType& GetValue(const RootType& root,
+		const VariableAssignmentType& asgn)
 	{
-		RootType mtbddAsgn = createMTBDDForVariableProjection(asgn);
-		CUDDFacade::ApplyCallbackParameters params(ApplyFunctions::projectByRight, static_cast<void*>(this));
-		CUDDFacade::Node* res = cudd.Apply(RA::getHandleOfRoot(root), RA::getHandleOfRoot(mtbddAsgn), &params);
+		SFTA_LOGGER_DEBUG("Reading value at " + Convert::ToString(asgn));
 
+		// create the projection MTBDD for given variable assignment
+		RootType mtbddAsgn = createMTBDDForVariableProjection(asgn);
+		// create parameters of Apply function that pass correct callback function
+		CUDDFacade::ApplyCallbackParameters params(
+			ApplyFunctions::projectByRight, static_cast<void*>(this));
+		// carry out the Apply operation
+		CUDDFacade::Node* res = cudd_.Apply(RA::getHandleOfRoot(root),
+			RA::getHandleOfRoot(mtbddAsgn), &params);
+
+		// remove the temporary MTBDD
+		eraseRoot(mtbddAsgn);
+
+		// TODO: do something with this
 		std::vector<unsigned> vec;
 		CUDDFacade::MonadicApplyCallbackParameters paramsMon(ApplyFunctions::collectLeaves, static_cast<void*>(&vec));
-		cudd.MonadicApply(res, &paramsMon);
+		CUDDFacade::Node* monRes = cudd_.MonadicApply(res, &paramsMon);
+
+		// remove the temporary MTBDD
+		cudd_.RecursiveDeref(res);
+		cudd_.RecursiveDeref(monRes);
 
 
 		std::string pokus = "";
 		for (unsigned i = 0; i < vec.size(); ++i)
 		{
-			pokus += SFTA::Private::Convert::ToString(LA::getLeafOfHandle(vec[i])) + "; ";
+			pokus += Convert::ToString(LA::getLeafOfHandle(vec[i])) + "; ";
 		}
 
 		SFTA_LOGGER_DEBUG("Elements in vector: "
-			+ SFTA::Private::Convert::ToString(vec.size()));
+			+ Convert::ToString(vec.size()));
 		SFTA_LOGGER_DEBUG("Values of elements in vector: " + pokus);
 
 		assert(vec.size() > 0);
@@ -290,14 +565,15 @@ public:   // Public methods
 
 	virtual RootType Apply(const RootType& /*lhs*/, const RootType& /*rhs*/, const typename ParentClass::ApplyFunctionType& /*func*/)
 	{
+		// TODO:
 		return RootType();
 	}
 
 
 	virtual RootType CreateRoot()
 	{
-		CUDDFacade::Node* node = cudd.ReadBackground();
-		cudd.Ref(node);
+		CUDDFacade::Node* node = cudd_.ReadBackground();
+		cudd_.Ref(node);
 
 		return RA::allocateRoot(node);
 	}
@@ -305,47 +581,60 @@ public:   // Public methods
 
 	virtual std::string Serialize() const
 	{
+		// TODO:
 		return "";
 	}
 
 
-	virtual void DumpToDotFile(const std::string& filename)
+	virtual void DumpToDotFile(const std::string& filename) const
 	{
-		std::vector<RootType> roots = RA::getAllRoots();
-
-		std::vector<SFTA::Private::CUDDFacade::Node*> nodes(roots.size());
+		// the array of roots
+		RootArray roots = RA::getAllRoots();
+		// the array of root nodes
+		std::vector<CUDDFacade::Node*> nodes(roots.size());
+		// the array of root names
 		std::vector<std::string> rootNames(roots.size());
 
 		for (unsigned i = 0; i < roots.size(); ++i)
-		{
-			nodes[i] = RA::getHandleOfRoot(i);
+		{	// insert all root nodes and respective names
+			nodes[i] = RA::getHandleOfRoot(roots[i]);
+			rootNames[i] = Convert::ToString(roots[i]);
 		}
 
-		for (unsigned i = 0; i < roots.size(); ++i)
-		{
-			rootNames[i] = SFTA::Private::Convert::ToString(i);
-		}
+		// array of sink nodes
+		std::vector<CUDDFacade::ValueType> sinks = LA::getAllHandles();
+		// array of sink node names
+		std::vector<std::string> sinkNames(sinks.size());
 
-		std::vector<SFTA::Private::CUDDFacade::ValueType> sinks = LA::getAllHandles();
-
-		std::vector<std::string> sinkNames;
 		for (unsigned i = 0; i < sinks.size(); ++i)
-		{
-			sinkNames.push_back(SFTA::Private::Convert::ToString(LA::getLeafOfHandle(sinks[i])));
+		{	// insert all sink nodes' names
+			sinkNames[i] = Convert::ToString(LA::getLeafOfHandle(sinks[i]));
 		}
 
-		cudd.DumpDot(nodes, rootNames, sinkNames, filename);
+		// create the Dot file
+		cudd_.DumpDot(nodes, rootNames, sinkNames, filename);
 	}
 
 
 	virtual ~CUDDSharedMTBDD()
 	{
-		for (typename RA::Iterator it = RA::begin(); it != RA::end(); ++it)
+		RootHandleArray roots = RA::getAllRootHandles();
+		for (typename RootHandleArray::const_iterator it = roots.begin();
+			it != roots.end(); ++it)
 		{	// traverse all roots
-			if (*it != static_cast<CUDDFacade::Node*>(0))
-			{	// in case the root has not been deleted
-				cudd.RecursiveDeref(*it);
-			}
+			cudd_.RecursiveDeref(*it);
+		}
+
+		for (VariableArrayType::iterator it = varArray_.begin();
+			it != varArray_.end(); ++it)
+		{	// traverse all variables and dereference them
+			cudd_.RecursiveDeref(*it);
+		}
+
+		for (VariableArrayType::iterator it = varArrayNot_.begin();
+			it != varArrayNot_.end(); ++it)
+		{	// traverse all negated variables and dereference them
+			cudd_.RecursiveDeref(*it);
 		}
 	}
 };
@@ -354,12 +643,13 @@ public:   // Public methods
 // Setting the logging category name for Log4cpp
 template
 <
-	typename Root,
-	typename Leaf,
-	class VariableAssignmentType,
-	template <typename, typename> class LeafAllocator,
-	template <typename, typename> class RootAllocator
+	typename R,
+	typename L,
+	class VAT,
+	template <typename, typename> class LA,
+	template <typename, typename> class RA
 >
-const char* SFTA::CUDDSharedMTBDD<Root, Leaf, VariableAssignmentType, LeafAllocator, RootAllocator>::LOG_CATEGORY_NAME = "cudd_shared_mtbdd";
+const char* SFTA::CUDDSharedMTBDD<R, L, VAT, LA, RA>::LOG_CATEGORY_NAME
+	= "cudd_shared_mtbdd";
 
 #endif
