@@ -340,14 +340,56 @@ public:  // Public methods
 	Node* Times(Node* lhs, Node* rhs) const;
 
 
+	/**
+	 * @brief  Apply operation
+	 *
+	 * Performs the Apply operation passed as a callback function in @c cbParams
+	 * on two MTBDDs.
+	 *
+	 * @see  ApplyCallbackParameters
+	 * @see  MonadicApply()
+	 *
+	 * @param[in]  lhs       Left-hand side MTBDD of Apply operation
+	 * @param[in]  rhs       Right-hand side MTBDD of Apply operation 
+	 * @param[in]  cbParams  Callback parameters
+	 *
+	 * @returns  The resulting MTBDD
+	 */
 	Node* Apply(Node* lhs, Node* rhs,
 		ApplyCallbackParameters* cbParams) const;
 
 
+	/**
+	 * @brief  Monadic Apply operation
+	 *
+	 * Performs the monadic Apply operation passed as a callback function in @c
+	 * cbParams on two MTBDDs.
+	 *
+	 * @see  ApplyCallbackParameters
+	 * @see  Apply()
+	 *
+	 * @param[in]  root      Root of the MTBDD of monadic Apply operation
+	 * @param[in]  cbParams  Callback parameters
+	 *
+	 * @returns  The resulting MTBDD
+	 */
 	Node* MonadicApply(Node* root,
 		MonadicApplyCallbackParameters* cbParams) const;
 
 
+	/**
+	 * @brief  Dumps the MTBDD in Dot format
+	 *
+	 * Creates a Dot (http://www.graphviz.org) file with a representation of the MTBDD.
+	 *
+	 * @param[in]  nodes      Array of root nodes to be output to the file
+	 * @param[in]  rootNames  Array of names of root nodes
+	 * @param[in]  sinkNames  Array of names of sink nodes; these needs to be in
+	 *                        such an order that if the value stored in a sink
+	 *                        node is @f$i@f$, then the name of the node is at
+	 *                        the @f$i@f$-th element of the array
+	 * @param[in]  filename   The name of the output file
+	 */
 	void DumpDot(const std::vector<Node*>& nodes,
 		const std::vector<std::string>& rootNames,
 		const std::vector<std::string>& sinkNames,
