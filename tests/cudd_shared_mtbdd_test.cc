@@ -13,7 +13,7 @@
 using SFTA::AbstractSharedMTBDD;
 using SFTA::CUDDSharedMTBDD;
 
-#include <sfta/root_allocator.hh>
+#include <sfta/map_root_allocator.hh>
 
 // Boost headers
 #define BOOST_TEST_DYN_LINK
