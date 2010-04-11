@@ -69,7 +69,7 @@ public:  // Public types
 	 *
 	 * Type of operations passed to Apply function. All need to be of this type.
 	 */
-	typedef ValueType (*ApplyOperationType)(ValueType, ValueType, void*);
+	typedef ValueType (*ApplyOperationType)(const ValueType&, const ValueType&, void*);
 
 
 	/**
@@ -78,7 +78,7 @@ public:  // Public types
 	 * Type of operations passed to monadic Apply function. All need to be of
 	 * this type.
 	 */
-	typedef ValueType (*MonadicApplyOperationType)(ValueType, void*);
+	typedef ValueType (*MonadicApplyOperationType)(const ValueType&, void*);
 
 
 	/**
