@@ -715,9 +715,9 @@ public:   // Public methods
 
 
 	/**
-	 * @brief  \copybrief  SFTA::AbstractSharedMTBDD::Apply()
+	 * @brief  @copybrief  SFTA::AbstractSharedMTBDD::Apply()
 	 *
-	 * \copydetails  SFTA::AbstractSharedMTBDD::Apply()
+	 * @copydetails  SFTA::AbstractSharedMTBDD::Apply()
 	 */
 	virtual RootType Apply(const RootType& lhs, const RootType& rhs, const typename ParentClass::ApplyFunctionType& func)
 	{

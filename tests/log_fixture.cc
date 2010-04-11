@@ -53,7 +53,7 @@ LogFixture::LogFixture()
 		log4cpp::Category::getInstance(cat_name).addAppender(app2);
 		log4cpp::Category::getInstance(cat_name).setPriority(log4cpp::Priority::DEBUG);
 
-		cat_name = "my_leaf_allocator";
+		cat_name = "map_leaf_allocator";
 
 		log4cpp::Category::getInstance(cat_name).setAdditivity(false);
 		log4cpp::Category::getInstance(cat_name).addAppender(app3);

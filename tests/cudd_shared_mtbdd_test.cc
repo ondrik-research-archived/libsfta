@@ -14,6 +14,7 @@ using SFTA::AbstractSharedMTBDD;
 using SFTA::CUDDSharedMTBDD;
 
 #include <sfta/map_root_allocator.hh>
+#include <sfta/map_leaf_allocator.hh>
 
 // Boost headers
 #define BOOST_TEST_DYN_LINK
@@ -27,136 +28,6 @@ using SFTA::CUDDSharedMTBDD;
 /******************************************************************************
  *                                User classes                                *
  ******************************************************************************/
-
-template
-<
-	typename Leaf,
-	typename Handle
->
-struct MyLeafAllocator
-{
-public:
-	typedef Leaf LeafType;
-	typedef Handle HandleType;
-
-private:
-
-	typedef std::map<HandleType, LeafType> LeafContainer;
-
-
-	typedef SFTA::Private::Convert Convert;
-
-	LeafContainer asocArr_;
-
-	HandleType nextIndex_;
-
-	/*
-	 * @brief  The name of the Log4cpp category for logging
-	 *
-	 * The name of the Log4cpp category used for logging messages from this
-	 * class.
-	 */
-	static const char* LOG_CATEGORY_NAME;
-
-protected:
-	static const HandleType BOTTOM;
-
-protected:
-
-	static HandleType leafReleaser(const HandleType& node, void* data)
-	{
-		// Assertions
-		assert(static_cast<MyLeafAllocator*>(data)
-			!= static_cast<MyLeafAllocator*>(0));
-
-		return node;
-	}
-
-	MyLeafAllocator()
-		: asocArr_(), nextIndex_(1)
-	{
-		asocArr_[BOTTOM] = LeafType();
-	}
-
-	void setBottom(const LeafType& leaf)
-	{
-		asocArr_[BOTTOM] = leaf;
-	}
-
-	HandleType createLeaf(const LeafType& leaf)
-	{
-		for (typename LeafContainer::const_iterator it = asocArr_.begin();
-			it != asocArr_.end(); ++it)
-		{	// try to find the leaf in already created leaves
-			if (it->second == leaf)
-			{	// in case we found it
-				return it->first;
-			}
-		}
-
-		// otherwise create a new leaf
-		asocArr_[nextIndex_] = leaf;
-		++nextIndex_;
-		return nextIndex_ - 1;
-	}
-
-	LeafType& getLeafOfHandle(const HandleType& handle)
-	{
-		// try to find given leaf
-		typename LeafContainer::iterator it = asocArr_.find(handle);
-		if (it == asocArr_.end())
-		{	// in case it couldn't be found
-			throw std::runtime_error("Trying to access leaf \""
-				+ SFTA::Private::Convert::ToString(handle) + "\" that is not managed.");
-		}
-
-		return it->second;
-	}
-
-	const LeafType& getLeafOfHandle(const HandleType& handle) const
-	{
-		// try to find given leaf
-		typename LeafContainer::const_iterator it = asocArr_.find(handle);
-		if (it == asocArr_.end())
-		{	// in case it couldn't be found
-			throw std::runtime_error("Trying to access leaf \""
-				+ SFTA::Private::Convert::ToString(handle) + "\" that is not managed.");
-		}
-
-		return it->second;
-	}
-
-	std::vector<HandleType> getAllHandles() const
-	{
-		std::vector<HandleType> result;
-
-		for (typename std::map<HandleType, LeafType>::const_iterator it
-			= asocArr_.begin(); it != asocArr_.end(); ++it)
-		{
-			result.push_back(it->first);
-		}
-
-		return result;
-	}
-
-	~MyLeafAllocator() { }
-};
-
-// Setting the logging category name for Log4cpp
-template
-<
-	typename L,
-	typename H
->
-const char* MyLeafAllocator<L, H>::LOG_CATEGORY_NAME = "my_leaf_allocator";
-
-
-template
-<
-	typename L,
-	typename H
->
-const typename MyLeafAllocator<L, H>::HandleType MyLeafAllocator<L, H>::BOTTOM = 0;
 
 
 struct MyVariableAssignment
@@ -233,7 +104,7 @@ public:
 		: mtbdd(static_cast<ASMTBDD*>(0))
 	{
 		mtbdd = new SFTA::CUDDSharedMTBDD<unsigned, std::vector<unsigned>, MyVariableAssignment,
-			MyLeafAllocator, SFTA::Private::MapRootAllocator>();
+			SFTA::Private::MapLeafAllocator, SFTA::Private::MapRootAllocator>();
 	}
 
 	~CUDDSharedMTBDDFixture()
@@ -285,6 +156,8 @@ BOOST_AUTO_TEST_CASE(setters_and_getters_test)
 	value_added.push_back(3);
 	value_added.push_back(5);
 	asgn = 7;
+	mtbdd->SetValue(root, asgn, value_added);
+	asgn = 1;
 	mtbdd->SetValue(root, asgn, value_added);
 	ASMTBDD::LeafContainer leaves = mtbdd->GetValue(root, asgn);
 

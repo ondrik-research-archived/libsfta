@@ -4,12 +4,12 @@
  *  Copyright (c) 2010  Ondra Lengal <ondra@lengal.net>
  *
  *  Description:
- *    File with RootAllocator policies for CUDDSharedMTBDD
+ *    File with MapRootAllocator policie for CUDDSharedMTBDD
  *
  *****************************************************************************/
 
-#ifndef _ROOT_ALLOCATOR_HH_
-#define _ROOT_ALLOCATOR_HH_
+#ifndef _MAP_ROOT_ALLOCATOR_HH_
+#define _MAP_ROOT_ALLOCATOR_HH_
 
 
 // insert the class into proper namespace
