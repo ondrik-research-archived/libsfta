@@ -50,8 +50,6 @@ private:
 
 	HandleType nextIndex_;
 
-	static const HandleType BOTTOM_INDEX;
-
 	/*
 	 * @brief  The name of the Log4cpp category for logging
 	 *
@@ -59,6 +57,9 @@ private:
 	 * class.
 	 */
 	static const char* LOG_CATEGORY_NAME;
+
+protected:
+	static const HandleType BOTTOM;
 
 protected:
 
@@ -74,12 +75,12 @@ protected:
 	MyLeafAllocator()
 		: asocArr_(), nextIndex_(1)
 	{
-		asocArr_[BOTTOM_INDEX] = LeafType();
+		asocArr_[BOTTOM] = LeafType();
 	}
 
 	void setBottom(const LeafType& leaf)
 	{
-		asocArr_[BOTTOM_INDEX] = leaf;
+		asocArr_[BOTTOM] = leaf;
 	}
 
 	HandleType createLeaf(const LeafType& leaf)
@@ -155,7 +156,7 @@ template
 	typename L,
 	typename H
 >
-const typename MyLeafAllocator<L, H>::HandleType MyLeafAllocator<L, H>::BOTTOM_INDEX = 0;
+const typename MyLeafAllocator<L, H>::HandleType MyLeafAllocator<L, H>::BOTTOM = 0;
 
 
 struct MyVariableAssignment

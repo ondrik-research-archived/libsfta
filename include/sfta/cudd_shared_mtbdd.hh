@@ -284,7 +284,7 @@ private:   // Private data types
 			// Assertions
 			assert(data == data);  // just to make the compiler happy
 
-			return (rhs == BOTTOM)? lhs : rhs;
+			return (rhs == LA::BOTTOM)? lhs : rhs;
 		}
 
 
@@ -310,7 +310,7 @@ private:   // Private data types
 			// Assertions
 			assert(data == data);  // just to make the compiler happy
 
-			return (rhs == BOTTOM)? BOTTOM : lhs;
+			return (rhs == LA::BOTTOM)? rhs : lhs;
 		}
 
 
@@ -337,7 +337,7 @@ private:   // Private data types
 			// cast the data to proper data type
 			LeafHandleArray& leaves = *(static_cast<LeafHandleArray*>(data));
 
-			if (node != BOTTOM)
+			if (node != LA::BOTTOM)
 			{	// in case we haven't hit the bottom
 				leaves.push_back(node);
 			}
@@ -431,13 +431,6 @@ private:  // Private data members
 	 * always recreated.
 	 */
 	VariableArrayType varArrayNot_;
-
-	/**
-	 * @brief  The value of the bottom of the MTBDD
-	 *
-	 * The value which denotes the @em bottom of the MTBDD.
-	 */
-	static const typename LA::HandleType BOTTOM;
 
 
 private:  // Private methods
@@ -633,7 +626,7 @@ public:   // Public methods
 		// set the bottom
 		LA::setBottom(LeafType());
 
-		CUDDFacade::Node* btm = cudd_.AddConst(BOTTOM);
+		CUDDFacade::Node* btm = cudd_.AddConst(LA::BOTTOM);
 		cudd_.Ref(btm);
 		cudd_.SetBackground(btm);
 	}
@@ -836,18 +829,6 @@ template
 const char* SFTA::CUDDSharedMTBDD<R, L, VAT, LA, RA>::LOG_CATEGORY_NAME
 	= "cudd_shared_mtbdd";
 
-
-// Setting the bottom value
-template
-<
-	typename R,
-	typename L,
-	class VAT,
-	template <typename, typename> class LA,
-	template <typename, typename> class RA
->
-const typename SFTA::CUDDSharedMTBDD<R, L, VAT, LA, RA>::LA::HandleType
-	SFTA::CUDDSharedMTBDD<R, L, VAT, LA, RA>::BOTTOM = 0;
 
 
 #endif
