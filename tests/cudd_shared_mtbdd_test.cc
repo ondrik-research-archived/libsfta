@@ -43,11 +43,22 @@ private:
 
 	typedef std::map<HandleType, LeafType> LeafContainer;
 
+
+	typedef SFTA::Private::Convert Convert;
+
 	LeafContainer asocArr_;
 
 	HandleType nextIndex_;
 
 	static const HandleType BOTTOM_INDEX;
+
+	/*
+	 * @brief  The name of the Log4cpp category for logging
+	 *
+	 * The name of the Log4cpp category used for logging messages from this
+	 * class.
+	 */
+	static const char* LOG_CATEGORY_NAME;
 
 protected:
 
@@ -130,6 +141,14 @@ protected:
 	~MyLeafAllocator() { }
 };
 
+// Setting the logging category name for Log4cpp
+template
+<
+	typename L,
+	typename H
+>
+const char* MyLeafAllocator<L, H>::LOG_CATEGORY_NAME = "my_leaf_allocator";
+
 
 template
 <
@@ -160,7 +179,7 @@ public:
 
 	inline int GetIthVariableValue(unsigned i) const
 	{
-		if (!((vars_ >> i) & 1))
+		if (!((vars_ >> (Size() - 1 - i)) & 1))
 		{
 			return ZERO;
 		}
@@ -201,7 +220,7 @@ private:
 
 public:
 
-	typedef AbstractSharedMTBDD<unsigned, unsigned, MyVariableAssignment> ASMTBDD;
+	typedef AbstractSharedMTBDD<unsigned, std::vector<unsigned>, MyVariableAssignment> ASMTBDD;
 
 protected:
 
@@ -212,7 +231,7 @@ public:
 	CUDDSharedMTBDDFixture()
 		: mtbdd(static_cast<ASMTBDD*>(0))
 	{
-		mtbdd = new SFTA::CUDDSharedMTBDD<unsigned, unsigned, MyVariableAssignment,
+		mtbdd = new SFTA::CUDDSharedMTBDD<unsigned, std::vector<unsigned>, MyVariableAssignment,
 			MyLeafAllocator, SFTA::Private::MapRootAllocator>();
 	}
 
@@ -224,9 +243,22 @@ public:
 };
 
 
-unsigned leaf_addition(const unsigned& lhs, const unsigned& rhs)
+std::vector<unsigned> leaf_addition(const std::vector<unsigned>& lhs, const std::vector<unsigned>& rhs)
 {
-	return lhs + rhs;
+	std::vector<unsigned> res(lhs.size() + rhs.size());
+
+	size_t i = 0;
+	for (i = 0; i < lhs.size(); ++i)
+	{
+		res[i] = lhs[i];
+	}
+
+	for (size_t j = 0; j < rhs.size(); ++j)
+	{
+		res[i+j] = rhs[j];
+	}
+
+	return res;
 }
 
 /******************************************************************************
@@ -239,39 +271,57 @@ BOOST_AUTO_TEST_CASE(setters_and_getters_test)
 {
 	unsigned root = mtbdd->CreateRoot();
 
-	unsigned value_added = 7;
+	std::vector<unsigned> value_added(0);
+	MyVariableAssignment asgn(0);
 
-	MyVariableAssignment asgn(5);
+//	for (unsigned i = 1; i <= 255; ++i)
+//	{
+//		value_added.push_back(i);
+//		asgn = i;
+//		mtbdd->SetValue(root, asgn, value_added);
+//	}
+
+	value_added.push_back(3);
+	value_added.push_back(5);
+	asgn = 7;
 	mtbdd->SetValue(root, asgn, value_added);
-
 	ASMTBDD::LeafContainer leaves = mtbdd->GetValue(root, asgn);
 
 	BOOST_CHECK((leaves.size() == 1) && (value_added == *(leaves[0])));
 
-	value_added = 17;
+	value_added[0] = 17;
+	value_added[1] = 15;
 	asgn = 3;
 	mtbdd->SetValue(root, asgn, value_added);
 	leaves = mtbdd->GetValue(root, asgn);
 
 	BOOST_CHECK((leaves.size() == 1) && (value_added == *(leaves[0])));
 
-	value_added = 7;
+	value_added[0] = 1;
+	value_added[1] = 2;
 	asgn = 5;
+	mtbdd->SetValue(root, asgn, value_added);
 	leaves = mtbdd->GetValue(root, asgn);
 	BOOST_CHECK((leaves.size() == 1) && (value_added == *(leaves[0])));
 
 	unsigned root2 = mtbdd->CreateRoot();
-	value_added = 13;
-	asgn = 11;
+	value_added[0] = 11;
+	value_added[1] = 19;
+	asgn = 4;
 	mtbdd->SetValue(root2, asgn, value_added);
 
-	value_added = 11;
+	value_added[0] = 7;
+	value_added[1] = 9;
 	asgn = 3;
 	mtbdd->SetValue(root2, asgn, value_added);
 
 	unsigned root3 = mtbdd->Apply(root, root2, leaf_addition);
 
-	value_added = 28;
+	value_added.resize(4);
+	value_added[0] = 17;
+	value_added[1] = 15;
+	value_added[2] = 7;
+	value_added[3] = 9;
 	leaves = mtbdd->GetValue(root3, asgn);
 	BOOST_CHECK((leaves.size() == 1) && (value_added == *(leaves[0])));
 
