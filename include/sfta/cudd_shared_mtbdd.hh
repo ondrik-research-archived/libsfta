@@ -632,6 +632,10 @@ public:   // Public methods
 	{
 		// set the bottom
 		LA::setBottom(LeafType());
+
+		CUDDFacade::Node* btm = cudd_.AddConst(BOTTOM);
+		cudd_.Ref(btm);
+		cudd_.SetBackground(btm);
 	}
 
 
@@ -650,8 +654,8 @@ public:   // Public methods
 	virtual void SetValue(const RootType& root,
 		const VariableAssignmentType& asgn, const LeafType& value)
 	{
-		SFTA_LOGGER_DEBUG("Setting value at " + Convert::ToString(asgn)
-			+ " to " + Convert::ToString(value));
+		SFTA_LOGGER_DEBUG("Setting value of root " + Convert::ToString(root)
+			+ " at " + Convert::ToString(asgn) + " to " + Convert::ToString(value));
 
 		// create the MTBDD with given value at given position
 		RootType mtbddAsgn = createMTBDDForVariableAssignment(asgn, value);
@@ -676,7 +680,8 @@ public:   // Public methods
 	virtual typename ParentClass::LeafContainer GetValue(const RootType& root,
 		const VariableAssignmentType& asgn)
 	{
-		SFTA_LOGGER_DEBUG("Reading value at " + Convert::ToString(asgn));
+		SFTA_LOGGER_DEBUG("Reading value of root " + Convert::ToString(root)
+			+ " at " + Convert::ToString(asgn));
 
 		// create the projection MTBDD for given variable assignment
 		RootType mtbddAsgn = createMTBDDForVariableProjection(asgn);
@@ -708,6 +713,9 @@ public:   // Public methods
 		{	// for each leaf handle
 			leaves[i] = &LA::getLeafOfHandle(leavesHandles[i]);
 		}
+
+		SFTA_LOGGER_DEBUG("Read value of root " + Convert::ToString(root)
+			+ " at " + Convert::ToString(asgn) + ": " + Convert::ToString(leaves));
 
 		return leaves;
 	}
@@ -780,7 +788,8 @@ public:   // Public methods
 
 		for (unsigned i = 0; i < sinks.size(); ++i)
 		{	// insert all sink nodes' names
-			sinkNames[sinks[i]] = Convert::ToString(LA::getLeafOfHandle(sinks[i]));
+			sinkNames[sinks[i]] = Convert::ToString(sinks[i]) + " : "
+				+ Convert::ToString(LA::getLeafOfHandle(sinks[i]));
 		}
 
 		// create the Dot file
@@ -808,6 +817,9 @@ public:   // Public methods
 		{	// traverse all negated variables and dereference them
 			cudd_.RecursiveDeref(*it);
 		}
+
+		// remove the background
+		cudd_.RecursiveDeref(cudd_.ReadBackground());
 	}
 };
 
