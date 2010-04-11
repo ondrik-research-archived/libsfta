@@ -30,6 +30,7 @@ LogFixture::LogFixture()
 		log4cpp::Appender* app1 = new log4cpp::OstreamAppender("ClogAppender", &std::clog);
 		log4cpp::Appender* app2 = new log4cpp::OstreamAppender("ClogAppender", &std::clog);
 		log4cpp::Appender* app3 = new log4cpp::OstreamAppender("ClogAppender", &std::clog);
+		log4cpp::Appender* app4 = new log4cpp::OstreamAppender("ClogAppender", &std::clog);
 
 		// Set the data layout of the appender
 		log4cpp::Layout* layout1 = new log4cpp::BasicLayout();
@@ -40,6 +41,9 @@ LogFixture::LogFixture()
 
 		log4cpp::Layout* layout3 = new log4cpp::BasicLayout();
 		app3->setLayout(layout3);
+
+		log4cpp::Layout* layout4 = new log4cpp::BasicLayout();
+		app4->setLayout(layout4);
 
 		std::string cat_name = SFTA::Private::CUDDFacade::LOG_CATEGORY_NAME;
 
@@ -57,6 +61,12 @@ LogFixture::LogFixture()
 
 		log4cpp::Category::getInstance(cat_name).setAdditivity(false);
 		log4cpp::Category::getInstance(cat_name).addAppender(app3);
+		log4cpp::Category::getInstance(cat_name).setPriority(log4cpp::Priority::DEBUG);
+
+		cat_name = "compact_variable_assignment";
+
+		log4cpp::Category::getInstance(cat_name).setAdditivity(false);
+		log4cpp::Category::getInstance(cat_name).addAppender(app4);
 		log4cpp::Category::getInstance(cat_name).setPriority(log4cpp::Priority::DEBUG);
 	}
 }

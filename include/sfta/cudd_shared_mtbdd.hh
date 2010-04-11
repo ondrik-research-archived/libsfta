@@ -480,7 +480,7 @@ private:  // Private methods
 	 *
 	 * @returns  The variable
 	 */
-	CUDDFacade::Node* getIthVariable(unsigned i)
+	CUDDFacade::Node* getIthVariable(size_t i)
 	{
 		while (i >= varArray_.size())
 		{	// while we do not have large enough collection of variables
@@ -504,7 +504,7 @@ private:  // Private methods
 	 *
 	 * @returns  Complement of the variable
 	 */
-	CUDDFacade::Node* getIthVariableNot(unsigned i)
+	CUDDFacade::Node* getIthVariableNot(size_t i)
 	{
 		while (i >= varArrayNot_.size())
 		{	// while we do not have large enough collection of negated variables
@@ -540,7 +540,7 @@ private:  // Private methods
 		CUDDFacade::Node* node = cudd_.AddConst(leaf);
 		cudd_.Ref(node);
 
-		for (unsigned i = 0; i < vars.Size(); ++i)
+		for (size_t i = 0; i < vars.Size(); ++i)
 		{	// for all variables
 			CUDDFacade::Node* var = static_cast<CUDDFacade::Node*>(0);
 			if (vars.GetIthVariableValue(i) == VariableAssignmentType::ONE)
@@ -589,7 +589,7 @@ private:  // Private methods
 		CUDDFacade::Node* node = cudd_.AddConst(1);
 		cudd_.Ref(node);
 
-		for (unsigned i = 0; i < vars.Size(); ++i)
+		for (size_t i = 0; i < vars.Size(); ++i)
 		{	// for all variables
 			CUDDFacade::Node* var = static_cast<CUDDFacade::Node*>(0);
 			if (vars.GetIthVariableValue(i) == VariableAssignmentType::ONE)
@@ -736,7 +736,7 @@ public:   // Public methods
 		cudd_.RecursiveDeref(monRes);
 
 		typename ParentClass::LeafContainer leaves(leavesHandles.size());
-		for (unsigned i = 0; i < leavesHandles.size(); ++i)
+		for (size_t i = 0; i < leavesHandles.size(); ++i)
 		{	// for each leaf handle
 			leaves[i] = &LA::getLeafOfHandle(leavesHandles[i]);
 		}
@@ -799,7 +799,7 @@ public:   // Public methods
 		// the array of root names
 		std::vector<std::string> rootNames(roots.size());
 
-		for (unsigned i = 0; i < roots.size(); ++i)
+		for (size_t i = 0; i < roots.size(); ++i)
 		{	// insert all root nodes and respective names
 			nodes[i] = RA::getHandleOfRoot(roots[i]);
 			rootNames[i] = Convert::ToString(roots[i]);
@@ -813,7 +813,7 @@ public:   // Public methods
 		// array of sink node names
 		std::vector<std::string> sinkNames(maxSink + 1);
 
-		for (unsigned i = 0; i < sinks.size(); ++i)
+		for (size_t i = 0; i < sinks.size(); ++i)
 		{	// insert all sink nodes' names
 			sinkNames[sinks[i]] = Convert::ToString(sinks[i]) + " : "
 				+ Convert::ToString(LA::getLeafOfHandle(sinks[i]));

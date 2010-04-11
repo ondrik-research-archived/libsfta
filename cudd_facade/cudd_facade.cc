@@ -373,7 +373,7 @@ void CUDDFacade::DumpDot(const std::vector<Node*>& nodes,
 
 		// create the array of nodes
 		arrNodes = new DdNode*[nodes.size()];
-		for (unsigned i = 0; i < nodes.size(); ++i)
+		for (size_t i = 0; i < nodes.size(); ++i)
 		{	// insert the nodes to the array
 			arrNodes[i] = toCUDD(nodes[i]);
 		}
@@ -382,7 +382,7 @@ void CUDDFacade::DumpDot(const std::vector<Node*>& nodes,
 		{	// if there are names of roots
 			arrRootNames = new char*[rootNames.size()];
 
-			for (unsigned i = 0; i < rootNames.size(); ++i)
+			for (size_t i = 0; i < rootNames.size(); ++i)
 			{	// copy names of roots
 				arrRootNames[i] = const_cast<char*>(rootNames[i].c_str());
 			}
@@ -392,7 +392,7 @@ void CUDDFacade::DumpDot(const std::vector<Node*>& nodes,
 		{	// if there are names of sink nodes
 			arrSinkNames = new char*[sinkNames.size()];
 
-			for (unsigned i = 0; i < sinkNames.size(); ++i)
+			for (size_t i = 0; i < sinkNames.size(); ++i)
 			{	// copy names of sink nodes
 				arrSinkNames[i] = const_cast<char*>(sinkNames[i].c_str());
 			}
@@ -400,7 +400,7 @@ void CUDDFacade::DumpDot(const std::vector<Node*>& nodes,
 
 		std::vector<std::string> varNames;
 		arrVarNames = new char*[GetVarCount()];
-		for (unsigned i = 0; i < GetVarCount(); ++i)
+		for (size_t i = 0; i < GetVarCount(); ++i)
 		{	// fill the array of variables
 			varNames.push_back("x" + Convert::ToString(i));
 			arrVarNames[i] = const_cast<char*>(varNames[i].c_str());
