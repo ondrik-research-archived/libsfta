@@ -14,6 +14,7 @@
 // Standard library headers
 #include <cassert>
 #include <vector>
+#include <algorithm>
 
 // SFTA headers
 #include <sfta/sfta.hh>
@@ -90,8 +91,21 @@ class SFTA::CUDDSharedMTBDD
 {
 public:    // Public data types
 
+	/**
+	 * @brief  Type of a leaf
+	 *
+	 * Type of a leaf of MTBDD.
+	 */
 	typedef Leaf LeafType;
+
+
+	/**
+	 * @brief  Type of a root
+	 *
+	 * Type of a root of MTBDD.
+	 */
 	typedef Root RootType;
+
 
 private:   // Private data types
 
@@ -176,6 +190,57 @@ private:   // Private data types
 
 
 	/**
+	 * @brief  The type for an array of leaf handles
+	 *
+	 * The type that represents an array of leaf handles.
+	 */
+	typedef std::vector<typename LA::HandleType> LeafHandleArray;
+
+
+	/**
+	 * @brief  Wrapper for Apply callback function parameters
+	 *
+	 * This structure is a wrapper that contains all necessary parameters that
+	 * are needed for the Apply callback to work. In fact, it serves as an
+	 * envelope that we send to ourselves.
+	 */
+	struct ApplyCallbackParameters
+	{
+	public:   // Public data members
+
+		/**
+		 * @brief  Pointer to the operation
+		 *
+		 * Pointer to the function that carries out the operation on leave nodes of
+		 * the MTBDD.
+		 */
+		typename ParentClass::ApplyFunctionType Op;
+
+
+		/**
+		 * @brief  MTBDD that provides the context
+		 *
+		 * MTBDD which is used to provide the context, in which the operation
+		 * takes place.
+		 */
+		CUDDSharedMTBDD* SharedMTBDD;
+
+	public:   // Public methods
+
+		/**
+		 * @brief  Constructor
+		 *
+		 * The constructor of the structure.
+		 */
+		ApplyCallbackParameters(typename ParentClass::ApplyFunctionType op,
+			CUDDSharedMTBDD* bdd)
+			: Op(op), SharedMTBDD(bdd)
+		{ }
+
+	};
+
+
+	/**
 	 * @brief   Static class with apply functions for MTBDD
 	 *
 	 * Static class that is used to provide a separate namespace for apply
@@ -212,8 +277,12 @@ private:   // Private data types
 		 * @returns  Sink node after the operation
 		 */
 		static typename LA::HandleType overwriteByRight(
-			typename LA::HandleType lhs, typename LA::HandleType rhs, void* /*data*/)
+			const typename LA::HandleType& lhs, const typename LA::HandleType& rhs,
+			void* data)
 		{
+			// Assertions
+			assert(data == data);  // just to make the compiler happy
+
 			return (rhs == BOTTOM)? lhs : rhs;
 		}
 
@@ -229,28 +298,96 @@ private:   // Private data types
 		 *
 		 * @param[in]  lhs   Left-hand side MTBDD sink node
 		 * @param[in]  rhs   Right-hand side MTBDD sink node
-		 * @param[in]  data  Pointer to data (not used, pass 0 pointer)
+		 * @param[in]  data  Pointer to data (not used)
 		 *
 		 * @returns  Sink node after the operation
 		 */
 		static typename LA::HandleType projectByRight(
-			typename LA::HandleType lhs, typename LA::HandleType rhs, void* /*data*/)
+			const typename LA::HandleType& lhs, const typename LA::HandleType& rhs,
+			void* data)
 		{
+			// Assertions
+			assert(data == data);  // just to make the compiler happy
+
 			return (rhs == BOTTOM)? BOTTOM : lhs;
 		}
 
 
-		// TODO: fix
-		static typename LA::HandleType collectLeaves(typename LA::HandleType node, void* data)
+		/**
+		 * @brief  Collects values from the leaves of a MTBDD
+		 *
+		 * This is a monadic Apply operation that collects non-bottom values from
+		 * all leaves into a container.
+		 *
+		 * @see  SFTA::Private::CUDDFacade::MonadicApply()
+		 *
+		 * @param[in]  node  MTBDD's sink node
+		 * @param[in]  data  Pointer to SFTA::CUDDSharedMTBDD::LeafHandleArray
+		 *
+		 * @returns  Unchanged node value
+		 */
+		static typename LA::HandleType collectLeaves(
+			const typename LA::HandleType& node, void* data)
 		{
-			std::vector<unsigned>& vec = *(static_cast<std::vector<unsigned>*>(data));
+			// Assertions
+			assert(static_cast<LeafHandleArray*>(data)
+				!= static_cast<LeafHandleArray*>(0));
 
-			if (node != 0)
-			{
-				vec.push_back(node);
+			// cast the data to proper data type
+			LeafHandleArray& leaves = *(static_cast<LeafHandleArray*>(data));
+
+			if (node != BOTTOM)
+			{	// in case we haven't hit the bottom
+				leaves.push_back(node);
 			}
 
 			return node;
+		}
+
+
+		/**
+		 * @brief  Performs generic Apply operation
+		 *
+		 * This is an Apply operation that performs generic Apply operation on two
+		 * MTBDDs. Which Apply operation to be performed is given by the @c data
+		 * parameter, which contains ApplyCallbackParameters with pointer to the
+		 * function and the MTBDD which is to serve as the context for the
+		 * operation.
+		 *
+		 * @see  ApplyCallbackParameters
+		 * @see  Apply()
+		 *
+		 * @param[in]  lhs   Left-hand side MTBDD sink node
+		 * @param[in]  rhs   Right-hand side MTBDD sink node
+		 * @param[in]  data  Pointer to ApplyCallbackParameters
+		 *
+		 * @returns  Result of the operation
+		 */
+		static typename LA::HandleType genericApply(
+			const typename LA::HandleType& lhs,
+			const typename LA::HandleType& rhs, void* data)
+		{
+			// Assertions
+			assert(static_cast<ApplyCallbackParameters*>(data)
+				!= static_cast<ApplyCallbackParameters*>(0));
+
+			// extract low-level callback parameters
+			ApplyCallbackParameters& params =
+				*(static_cast<ApplyCallbackParameters*>(data));
+
+			// get the MTBDD
+			CUDDSharedMTBDD& mtbdd = *(params.SharedMTBDD);
+
+			SFTA_LOGGER_DEBUG("Performing generic apply on "
+				+ Convert::ToString(mtbdd.LA::getLeafOfHandle(lhs))
+				+ " and " + Convert::ToString(mtbdd.LA::getLeafOfHandle(rhs)));
+
+			// perform the operation
+			typename LA::LeafType res = params.Op(
+				mtbdd.LA::getLeafOfHandle(lhs), mtbdd.LA::getLeafOfHandle(rhs));
+
+			// create a leaf and return its handle
+			return mtbdd.LA::createLeaf(res);
 		}
 	};
 
@@ -299,7 +436,7 @@ private:  // Private data members
 	 *
 	 * The value which denotes the @em bottom of the MTBDD.
 	 */
-	static const typename LA::HandleType BOTTOM = 0;
+	static const typename LA::HandleType BOTTOM;
 
 
 private:  // Private methods
@@ -386,7 +523,8 @@ private:  // Private methods
 			{	// in case the variable has value '0'
 				var = getIthVariableNot(i);
 			}
-			else if (vars.GetIthVariableValue(i) == VariableAssignmentType::DONT_CARE)
+			else if (vars.GetIthVariableValue(i)
+				== VariableAssignmentType::DONT_CARE)
 			{	// in case the variable is not in the assignment
 				continue;
 			}
@@ -434,7 +572,8 @@ private:  // Private methods
 			{	// in case the variable has value '0'
 				var = getIthVariableNot(i);
 			}
-			else if (vars.GetIthVariableValue(i) == VariableAssignmentType::DONT_CARE)
+			else if (vars.GetIthVariableValue(i)
+				== VariableAssignmentType::DONT_CARE)
 			{	// in case the variable is not in the assignment
 				continue;
 			}
@@ -477,8 +616,8 @@ public:   // Public methods
 	 */
 	CUDDSharedMTBDD() : cudd_(), varArray_(0), varArrayNot_(0)
 	{
-		// TODO: fix this
-		LA::createLeaf(0);
+		// set the bottom
+		LA::setBottom(LeafType());
 	}
 
 
@@ -520,7 +659,7 @@ public:   // Public methods
 	}
 
 
-	virtual LeafType& GetValue(const RootType& root,
+	virtual typename ParentClass::LeafContainer GetValue(const RootType& root,
 		const VariableAssignmentType& asgn)
 	{
 		SFTA_LOGGER_DEBUG("Reading value at " + Convert::ToString(asgn));
@@ -537,36 +676,52 @@ public:   // Public methods
 		// remove the temporary MTBDD
 		eraseRoot(mtbddAsgn);
 
-		// TODO: do something with this
-		std::vector<unsigned> vec;
-		CUDDFacade::MonadicApplyCallbackParameters paramsMon(ApplyFunctions::collectLeaves, static_cast<void*>(&vec));
+		// create container for handles of leaves that are at the position
+		LeafHandleArray leavesHandles(0);
+		// create parameters of monadic Apply function that pass correct callback
+		// function and container for handles of leaves
+		CUDDFacade::MonadicApplyCallbackParameters paramsMon(
+			ApplyFunctions::collectLeaves, static_cast<void*>(&leavesHandles));
+		// carry out the monadic Apply operation
 		CUDDFacade::Node* monRes = cudd_.MonadicApply(res, &paramsMon);
 
-		// remove the temporary MTBDD
+		// remove temporary MTBDDs
 		cudd_.RecursiveDeref(res);
 		cudd_.RecursiveDeref(monRes);
 
-
-		std::string pokus = "";
-		for (unsigned i = 0; i < vec.size(); ++i)
-		{
-			pokus += Convert::ToString(LA::getLeafOfHandle(vec[i])) + "; ";
+		typename ParentClass::LeafContainer leaves(leavesHandles.size());
+		for (unsigned i = 0; i < leavesHandles.size(); ++i)
+		{	// for each leaf handle
+			leaves[i] = &LA::getLeafOfHandle(leavesHandles[i]);
 		}
 
-		SFTA_LOGGER_DEBUG("Elements in vector: "
-			+ Convert::ToString(vec.size()));
-		SFTA_LOGGER_DEBUG("Values of elements in vector: " + pokus);
-
-		assert(vec.size() > 0);
-
-		return LA::getLeafOfHandle(vec[0]);
+		return leaves;
 	}
 
 
-	virtual RootType Apply(const RootType& /*lhs*/, const RootType& /*rhs*/, const typename ParentClass::ApplyFunctionType& /*func*/)
+	/**
+	 * @brief  \copybrief  SFTA::AbstractSharedMTBDD::Apply()
+	 *
+	 * \copydetails  SFTA::AbstractSharedMTBDD::Apply()
+	 */
+	virtual RootType Apply(const RootType& lhs, const RootType& rhs, const typename ParentClass::ApplyFunctionType& func)
 	{
-		// TODO:
-		return RootType();
+		// Assertions
+		assert(func != static_cast<typename ParentClass::ApplyFunctionType>(0));
+
+		// create parameters of high-level Apply function that pass correct
+		// callback function and this object as the context
+		ApplyCallbackParameters params(func, this);
+		// create parameters of low-level Apply function that pass correct
+		// callback function and abovementioned parameters for the high-level
+		// Apply function
+		CUDDFacade::ApplyCallbackParameters cuddFacadeParams(
+			ApplyFunctions::genericApply, static_cast<void*>(&params));
+		// carry out the Apply operation
+		CUDDFacade::Node* res = cudd_.Apply(RA::getHandleOfRoot(lhs),
+			RA::getHandleOfRoot(rhs), &cuddFacadeParams);
+
+		return RA::allocateRoot(res);
 	}
 
 
@@ -603,12 +758,15 @@ public:   // Public methods
 
 		// array of sink nodes
 		std::vector<CUDDFacade::ValueType> sinks = LA::getAllHandles();
+		// find the maximum element of sinks
+		CUDDFacade::ValueType maxSink =
+			*std::max_element(sinks.begin(), sinks.end());
 		// array of sink node names
-		std::vector<std::string> sinkNames(sinks.size());
+		std::vector<std::string> sinkNames(maxSink + 1);
 
 		for (unsigned i = 0; i < sinks.size(); ++i)
 		{	// insert all sink nodes' names
-			sinkNames[i] = Convert::ToString(LA::getLeafOfHandle(sinks[i]));
+			sinkNames[sinks[i]] = Convert::ToString(sinks[i]) + " : " + Convert::ToString(LA::getLeafOfHandle(sinks[i]));
 		}
 
 		// create the Dot file
@@ -651,5 +809,19 @@ template
 >
 const char* SFTA::CUDDSharedMTBDD<R, L, VAT, LA, RA>::LOG_CATEGORY_NAME
 	= "cudd_shared_mtbdd";
+
+
+// Setting the bottom value
+template
+<
+	typename R,
+	typename L,
+	class VAT,
+	template <typename, typename> class LA,
+	template <typename, typename> class RA
+>
+const typename SFTA::CUDDSharedMTBDD<R, L, VAT, LA, RA>::LA::HandleType
+	SFTA::CUDDSharedMTBDD<R, L, VAT, LA, RA>::BOTTOM = 0;
+
 
 #endif
