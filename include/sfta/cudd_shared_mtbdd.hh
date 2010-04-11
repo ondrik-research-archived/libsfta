@@ -602,6 +602,19 @@ private:  // Private methods
 	 */
 	void eraseRoot(RootType root)
 	{
+		// First, for every leaf, call proper release function
+
+		// create parameters of monadic Apply function that pass correct callback
+		// function and this object to provide context
+		CUDDFacade::MonadicApplyCallbackParameters paramsMon(
+			LA::leafReleaser, static_cast<void*>(this));
+		// carry out the monadic Apply operation
+		CUDDFacade::Node* monRes = cudd_.MonadicApply(RA::getHandleOfRoot(root),
+			&paramsMon);
+
+		// remove temporary MTBDDs
+		cudd_.RecursiveDeref(monRes);
+
 		cudd_.RecursiveDeref(RA::getHandleOfRoot(root));
 		RA::eraseRoot(root);
 	}
