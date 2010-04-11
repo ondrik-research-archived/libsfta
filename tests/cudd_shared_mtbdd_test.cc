@@ -49,6 +49,15 @@ private:
 
 protected:
 
+	static HandleType leafReleaser(const HandleType& node, void* data)
+	{
+		// Assertions
+		assert(static_cast<MyLeafAllocator*>(data)
+			!= static_cast<MyLeafAllocator*>(0));
+
+		return node;
+	}
+
 	MyLeafAllocator()
 		: asocArr_(), nextIndex_(1)
 	{
