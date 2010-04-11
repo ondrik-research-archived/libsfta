@@ -16,6 +16,7 @@
 #include <string>
 
 
+// insert the class into proper namespace
 namespace SFTA
 {
 	template

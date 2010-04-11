@@ -23,6 +23,7 @@
 #include <sfta/convert.hh>
 
 
+// insert the class into proper namespace
 namespace SFTA
 {
 	template
