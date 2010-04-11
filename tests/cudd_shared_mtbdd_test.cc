@@ -41,29 +41,47 @@ private:
 
 	typedef std::map<HandleType, LeafType> LeafContainer;
 
-	LeafContainer asoc_arr_;
+	LeafContainer asocArr_;
 
-	HandleType next_index_;
+	HandleType nextIndex_;
+
+	static const HandleType BOTTOM_INDEX;
 
 protected:
 
 	MyLeafAllocator()
-		: asoc_arr_(), next_index_(0)
+		: asocArr_(), nextIndex_(1)
 	{
+		asocArr_[BOTTOM_INDEX] = LeafType();
+	}
+
+	void setBottom(const LeafType& leaf)
+	{
+		asocArr_[BOTTOM_INDEX] = leaf;
 	}
 
 	HandleType createLeaf(const LeafType& leaf)
 	{
-		asoc_arr_[next_index_] = leaf;
-		++next_index_;
-		return next_index_ - 1;
+		for (typename LeafContainer::const_iterator it = asocArr_.begin();
+			it != asocArr_.end(); ++it)
+		{	// try to find the leaf in already created leaves
+			if (it->second == leaf)
+			{	// in case we found it
+				return it->first;
+			}
+		}
+
+		// otherwise create a new leaf
+		asocArr_[nextIndex_] = leaf;
+		++nextIndex_;
+		return nextIndex_ - 1;
 	}
 
 	LeafType& getLeafOfHandle(const HandleType& handle)
 	{
 		// try to find given leaf
-		typename LeafContainer::iterator it = asoc_arr_.find(handle);
-		if (it == asoc_arr_.end())
+		typename LeafContainer::iterator it = asocArr_.find(handle);
+		if (it == asocArr_.end())
 		{	// in case it couldn't be found
 			throw std::runtime_error("Trying to access leaf \""
 				+ SFTA::Private::Convert::ToString(handle) + "\" that is not managed.");
@@ -75,8 +93,8 @@ protected:
 	const LeafType& getLeafOfHandle(const HandleType& handle) const
 	{
 		// try to find given leaf
-		typename LeafContainer::const_iterator it = asoc_arr_.find(handle);
-		if (it == asoc_arr_.end())
+		typename LeafContainer::const_iterator it = asocArr_.find(handle);
+		if (it == asocArr_.end())
 		{	// in case it couldn't be found
 			throw std::runtime_error("Trying to access leaf \""
 				+ SFTA::Private::Convert::ToString(handle) + "\" that is not managed.");
@@ -89,7 +107,8 @@ protected:
 	{
 		std::vector<HandleType> result;
 
-		for (typename std::map<HandleType, LeafType>::const_iterator it = asoc_arr_.begin(); it != asoc_arr_.end(); ++it)
+		for (typename std::map<HandleType, LeafType>::const_iterator it
+			= asocArr_.begin(); it != asocArr_.end(); ++it)
 		{
 			result.push_back(it->first);
 		}
@@ -99,6 +118,15 @@ protected:
 
 	~MyLeafAllocator() { }
 };
+
+
+template
+<
+	typename L,
+	typename H
+>
+const typename MyLeafAllocator<L, H>::HandleType MyLeafAllocator<L, H>::BOTTOM_INDEX = 0;
+
 
 template
 <
@@ -127,19 +155,19 @@ public:
 private:
 
 	HandleContainer arr_;
-	size_t next_index_;
+	size_t nextIndex_;
 
 protected:
 
-	MyRootAllocator() : arr_(), next_index_(0)
+	MyRootAllocator() : arr_(), nextIndex_(0)
 	{
 	}
 
 	unsigned allocateRoot(const HandleType& handle)
 	{
-		arr_[next_index_] = handle;
-		++next_index_;
-		return next_index_ - 1;
+		arr_[nextIndex_] = handle;
+		++nextIndex_;
+		return nextIndex_ - 1;
 	}
 
 	const HandleType& getHandleOfRoot(unsigned root) const
@@ -250,7 +278,7 @@ public:
 	size_t Size() const
 	{
 		//return 8*sizeof(unsigned);
-		return 8;
+		return 4;
 	}
 
 	std::string ToString() const
@@ -276,9 +304,11 @@ private:
 	CUDDSharedMTBDDFixture(const CUDDSharedMTBDDFixture& fixture);
 	CUDDSharedMTBDDFixture& operator=(const CUDDSharedMTBDDFixture& rhs);
 
-protected:
+public:
 
 	typedef AbstractSharedMTBDD<unsigned, unsigned, MyVariableAssignment> ASMTBDD;
+
+protected:
 
 	ASMTBDD* mtbdd;
 
@@ -299,6 +329,11 @@ public:
 };
 
 
+unsigned leaf_addition(const unsigned& lhs, const unsigned& rhs)
+{
+	return lhs + rhs;
+}
+
 /******************************************************************************
  *                              Start of testing                              *
  ******************************************************************************/
@@ -314,23 +349,38 @@ BOOST_AUTO_TEST_CASE(setters_and_getters_test)
 	MyVariableAssignment asgn(5);
 	mtbdd->SetValue(root, asgn, value_added);
 
-	unsigned value_read = mtbdd->GetValue(root, asgn);
+	ASMTBDD::LeafContainer leaves = mtbdd->GetValue(root, asgn);
 
+	BOOST_CHECK((leaves.size() == 1) && (value_added == *(leaves[0])));
 
-	BOOST_CHECK(value_added == value_read);
-
-	value_added = 15;
+	value_added = 17;
 	asgn = 3;
 	mtbdd->SetValue(root, asgn, value_added);
-	mtbdd->DumpToDotFile("pokus.dot");
-	value_read = mtbdd->GetValue(root, asgn);
+	leaves = mtbdd->GetValue(root, asgn);
 
-	BOOST_CHECK(value_added == value_read);
+	BOOST_CHECK((leaves.size() == 1) && (value_added == *(leaves[0])));
 
 	value_added = 7;
 	asgn = 5;
-	value_read = mtbdd->GetValue(root, asgn);
-	BOOST_CHECK(value_added == value_read);
+	leaves = mtbdd->GetValue(root, asgn);
+	BOOST_CHECK((leaves.size() == 1) && (value_added == *(leaves[0])));
+
+	unsigned root2 = mtbdd->CreateRoot();
+	value_added = 13;
+	asgn = 11;
+	mtbdd->SetValue(root2, asgn, value_added);
+
+	value_added = 11;
+	asgn = 3;
+	mtbdd->SetValue(root2, asgn, value_added);
+
+	unsigned root3 = mtbdd->Apply(root, root2, leaf_addition);
+
+	value_added = 28;
+	leaves = mtbdd->GetValue(root3, asgn);
+	BOOST_CHECK((leaves.size() == 1) && (value_added == *(leaves[0])));
+
+	mtbdd->DumpToDotFile("pokus.dot");
 }
 
 BOOST_AUTO_TEST_CASE(serialization)
