@@ -780,7 +780,7 @@ public:   // Public methods
 
 		for (unsigned i = 0; i < sinks.size(); ++i)
 		{	// insert all sink nodes' names
-			sinkNames[sinks[i]] = Convert::ToString(sinks[i]) + " : " + Convert::ToString(LA::getLeafOfHandle(sinks[i]));
+			sinkNames[sinks[i]] = Convert::ToString(LA::getLeafOfHandle(sinks[i]));
 		}
 
 		// create the Dot file
