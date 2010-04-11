@@ -27,6 +27,19 @@ namespace SFTA
 }
 
 
+/**
+ * @brief   Leaf allocator that uses map
+ * @author  Ondra Lengal <ondra@lengal.net>
+ * @date    2010
+ *
+ * This is a @c LeafAllocator policy for SFTA::CUDDSharedMTBDD that uses a map
+ * to provide mapping between virtual and real leaves of an MTBDD.
+ * 
+ * @see  SFTA::CUDDSharedMTBDD
+ *
+ * @tparam  Leaf    The type of leaf.
+ * @tparam  Handle  The type of handle.
+ */
 template
 <
 	typename Leaf,
@@ -89,7 +102,7 @@ private:  // Private data members
 	HandleType nextIndex_;
 
 
-	/*
+	/**
 	 * @brief  The name of the Log4cpp category for logging
 	 *
 	 * The name of the Log4cpp category used for logging messages from this

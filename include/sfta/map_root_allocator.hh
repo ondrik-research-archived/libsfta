@@ -38,7 +38,7 @@ namespace SFTA
  * @see  SFTA::CUDDSharedMTBDD
  *
  * @tparam  Root    The type of root.
- * @tparam  Handle  The type of handle
+ * @tparam  Handle  The type of handle.
  */
 template
 <

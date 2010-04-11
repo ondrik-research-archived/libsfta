@@ -250,17 +250,51 @@ private:   // Private data types
 	 */
 	class ApplyFunctions
 	{
-	private:
+	private:  // Private methods
 
-		// private constructors etc. that disable creating an instance of the
-		// class
+		/**
+		 * @brief  Private constructor
+		 *
+		 * Private default constructor which should disable creating an instance
+		 * of the class.
+		 */
 		ApplyFunctions();
-		ApplyFunctions(const ApplyFunctions&);
-		ApplyFunctions& operator=(const ApplyFunctions&);
+
+
+		/**
+		 * @brief  Private copy constructor
+		 *
+		 * Private copy constructor which should disable creating an instance of
+		 * the class.
+		 *
+		 * @param[in]  func  ApplyFunctions object
+		 */
+		ApplyFunctions(const ApplyFunctions& func);
+
+
+		/**
+		 * @brief  Private assignment operator
+		 *
+		 * Private assignment operator which should disable creating an instance
+		 * of the class.
+		 *
+		 * @param[in]  func  ApplyFunctions object
+		 *
+		 * @returns  Reference to the assigned object
+		 */
+		ApplyFunctions& operator=(const ApplyFunctions& func);
+
+
+		/**
+		 * @brief  Destructor
+		 *
+		 * Private destructor which should disable creating an instance of the
+		 * class.
+		 */
 		~ApplyFunctions();
 
 
-	public:
+	public:   // Public methods
 
 		/**
 		 * @brief  Overwrites not-0 nodes with their right equivalent
