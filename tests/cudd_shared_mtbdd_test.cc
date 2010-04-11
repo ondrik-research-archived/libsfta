@@ -13,6 +13,8 @@
 using SFTA::AbstractSharedMTBDD;
 using SFTA::CUDDSharedMTBDD;
 
+#include <sfta/root_allocator.hh>
+
 // Boost headers
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE CUDDSharedMTBDD
@@ -137,122 +139,6 @@ template
 const typename MyLeafAllocator<L, H>::HandleType MyLeafAllocator<L, H>::BOTTOM_INDEX = 0;
 
 
-template
-<
-	typename Root,
-	typename Handle
->
-struct MyRootAllocator;
-
-template
-<
-	typename Handle
->
-struct MyRootAllocator<unsigned, Handle>
-{
-public:
-	typedef Handle HandleType;
-	typedef unsigned RootType;
-
-private:
-
-	typedef std::map<unsigned, HandleType> HandleContainer;
-
-public:
-	typedef typename HandleContainer::iterator Iterator;
-
-private:
-
-	HandleContainer arr_;
-	size_t nextIndex_;
-
-protected:
-
-	MyRootAllocator() : arr_(), nextIndex_(0)
-	{
-	}
-
-	unsigned allocateRoot(const HandleType& handle)
-	{
-		arr_[nextIndex_] = handle;
-		++nextIndex_;
-		return nextIndex_ - 1;
-	}
-
-	const HandleType& getHandleOfRoot(unsigned root) const
-	{
-		// try to find given root
-		typename HandleContainer::const_iterator it = arr_.find(root);
-		if (it == arr_.end())
-		{	// in case it couldn't be found
-			assert(false);
-			throw std::runtime_error("Trying to access root \""
-				+ SFTA::Private::Convert::ToString(root) + "\" that is not managed.");
-		}
-
-		return it->second;
-	}
-
-	void changeHandleOfRoot(unsigned root, const HandleType& handle)
-	{
-		// try to find given root
-		typename HandleContainer::iterator it = arr_.find(root);
-		if (it == arr_.end())
-		{	// in case it couldn't be found
-			throw std::runtime_error("Trying to change value of root \""
-				+ SFTA::Private::Convert::ToString(root) + "\" that is not managed.");
-		}
-
-		it->second = handle;
-	}
-
-	std::vector<unsigned> getAllRoots() const
-	{
-		std::vector<RootType> res(0);
-
-		for (typename HandleContainer::const_iterator it = arr_.begin();
-			it != arr_.end(); ++it)
-		{
-			res.push_back(it->first);
-		}
-
-		return res;
-	}
-
-	std::vector<HandleType> getAllRootHandles() const
-	{
-		std::vector<HandleType> res(0);
-
-		for (typename HandleContainer::const_iterator it = arr_.begin();
-			it != arr_.end(); ++it)
-		{
-			res.push_back(it->second);
-		}
-
-		return res;
-	}
-
-	void eraseRoot(unsigned root)
-	{
-		// try to find given root
-		typename HandleContainer::iterator it = arr_.find(root);
-		if (it == arr_.end())
-		{	// in case it couldn't be found
-			throw std::runtime_error("Trying to erase root \""
-				+ SFTA::Private::Convert::ToString(root) + "\" that is not managed.");
-		}
-
-		arr_.erase(it);
-	}
-
-	~MyRootAllocator() { }
-
-public:
-
-	const static size_t INITIAL_VECTOR_SIZE = 8;
-};
-
-
 struct MyVariableAssignment
 {
 private:
@@ -327,7 +213,7 @@ public:
 		: mtbdd(static_cast<ASMTBDD*>(0))
 	{
 		mtbdd = new SFTA::CUDDSharedMTBDD<unsigned, unsigned, MyVariableAssignment,
-			MyLeafAllocator, MyRootAllocator>();
+			MyLeafAllocator, SFTA::Private::MapRootAllocator>();
 	}
 
 	~CUDDSharedMTBDDFixture()
