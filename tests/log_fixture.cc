@@ -27,23 +27,36 @@ LogFixture::LogFixture()
 		logInitialized_ = true;
 
 		// Create the appender
-		log4cpp::Appender* app = new log4cpp::OstreamAppender("ClogAppender", &std::clog);
+		log4cpp::Appender* app1 = new log4cpp::OstreamAppender("ClogAppender", &std::clog);
 		log4cpp::Appender* app2 = new log4cpp::OstreamAppender("ClogAppender", &std::clog);
+		log4cpp::Appender* app3 = new log4cpp::OstreamAppender("ClogAppender", &std::clog);
 
 		// Set the data layout of the appender
-		log4cpp::Layout* layout = new log4cpp::BasicLayout();
-		app->setLayout(layout);
+		log4cpp::Layout* layout1 = new log4cpp::BasicLayout();
+		app1->setLayout(layout1);
+
+		log4cpp::Layout* layout2 = new log4cpp::BasicLayout();
+		app2->setLayout(layout2);
+
+		log4cpp::Layout* layout3 = new log4cpp::BasicLayout();
+		app3->setLayout(layout3);
 
 		std::string cat_name = SFTA::Private::CUDDFacade::LOG_CATEGORY_NAME;
 
 		log4cpp::Category::getInstance(cat_name).setAdditivity(false);
-		log4cpp::Category::getInstance(cat_name).addAppender(app);
+		log4cpp::Category::getInstance(cat_name).addAppender(app1);
 		log4cpp::Category::getInstance(cat_name).setPriority(log4cpp::Priority::DEBUG);
 
 		cat_name = "cudd_shared_mtbdd";
 
 		log4cpp::Category::getInstance(cat_name).setAdditivity(false);
 		log4cpp::Category::getInstance(cat_name).addAppender(app2);
+		log4cpp::Category::getInstance(cat_name).setPriority(log4cpp::Priority::DEBUG);
+
+		cat_name = "my_leaf_allocator";
+
+		log4cpp::Category::getInstance(cat_name).setAdditivity(false);
+		log4cpp::Category::getInstance(cat_name).addAppender(app3);
 		log4cpp::Category::getInstance(cat_name).setPriority(log4cpp::Priority::DEBUG);
 	}
 }
