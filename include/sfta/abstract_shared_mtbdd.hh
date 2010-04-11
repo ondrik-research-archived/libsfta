@@ -59,7 +59,18 @@ public:  // Public data types
 	 * Data type for function pointers for functions that carry out the Apply
 	 * operation on the MTBDD.
 	 */
-	typedef LeafType (*ApplyFunctionType)(LeafType, LeafType);
+	typedef LeafType (*ApplyFunctionType)(const LeafType&, const LeafType&);
+
+
+	/**
+	 * @brief  The container type for leafs
+	 *
+	 * The type that serves as a container of several leafs. This type is used
+	 * for example byt the GetValue() method.
+	 *
+	 * @see  GetValue()
+	 */
+	typedef std::vector<LeafType*> LeafContainer;
 
 
 public:  // Public methods
@@ -82,19 +93,21 @@ public:  // Public methods
 
 
 	/**
-	 * @brief  Gets the reference to the leaf
+	 * @brief  Gets references to leaves
 	 *
-	 * <TODO:  @todo  Verbose description>
+	 * This function returns a container with all leaves that are reachable by
+	 * given variable assignment.
 	 *
+	 * @see  LeafContainer
 	 * @see  SetValue()
 	 *
 	 * @param[in]  root   The root of the MTBDD in which the method works
 	 * @param[in]  asgn   The position of the leaf given by the assignment to
 	 *                    Boolean variables of the MTBDD
 	 *
-	 * @returns  Reference to the leaf at given position of given MTBDD
+	 * @returns  Container of references to leaves at given position of the MTBDD
 	 */
-	virtual LeafType& GetValue(const RootType& root,
+	virtual LeafContainer GetValue(const RootType& root,
 		const VariableAssignmentType& asgn) = 0;
 
 
