@@ -12,6 +12,11 @@
 #define _COMPACT_VARIABLE_ASSIGNMENT_HH_
 
 
+// Standard library headers
+#include <string>
+#include <stdexcept>
+
+
 // insert class into correct namespace
 namespace SFTA
 {
