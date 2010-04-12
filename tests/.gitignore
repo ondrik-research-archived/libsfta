@@ -1,2 +1,3 @@
 cudd_facade_test
 cudd_shared_mtbdd_test
+mtbdd_transition_function_test
