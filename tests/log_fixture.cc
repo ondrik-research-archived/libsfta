@@ -45,7 +45,7 @@ LogFixture::LogFixture()
 		log4cpp::Layout* layout4 = new log4cpp::BasicLayout();
 		app4->setLayout(layout4);
 
-		std::string cat_name = SFTA::Private::CUDDFacade::LOG_CATEGORY_NAME;
+		std::string cat_name = "cudd_facade";
 
 		log4cpp::Category::getInstance(cat_name).setAdditivity(false);
 		log4cpp::Category::getInstance(cat_name).addAppender(app1);
