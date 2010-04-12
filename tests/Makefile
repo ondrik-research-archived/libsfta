@@ -1,5 +1,12 @@
-
-
+###############################################################################
+#  Symbolic Finite Tree Automata Library
+#
+#  Copyright (c) 2010  Ondra Lengal <ondra@lengal.net>
+#
+#  Description:
+#    Makefile for tests.
+#
+###############################################################################
 
 
 # Compiler
