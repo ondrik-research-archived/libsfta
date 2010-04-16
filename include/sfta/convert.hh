@@ -11,8 +11,9 @@
 #ifndef _CONVERT_HH_
 #define _CONVERT_HH_
 
-
+// Standard library headers
 #include <string>
+#include <vector>
 #include <sstream>
 
 
