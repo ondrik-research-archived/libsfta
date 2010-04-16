@@ -124,6 +124,21 @@ private:   // Private data types
 	ParentClass;
 
 
+public:    // Public data types
+
+	/**
+	 * @brief  The container type for leafs
+	 *
+	 * The type that serves as a container of several leafs. This type is used
+	 * for example byt the GetValue() method.
+	 *
+	 * @see  GetValue()
+	 */
+	typedef typename ParentClass::LeafContainer LeafContainer;
+
+
+private:   // Private data types
+
 	/**
 	 * @brief  The type of the leaf allocator
 	 *
@@ -467,6 +482,14 @@ private:  // Private data members
 	VariableArrayType varArrayNot_;
 
 
+	/**
+	 * @brief  Root for the bottom
+	 *
+	 * Root that points directly to the bottom of the MTBDD.
+	 */
+	RootType bottom_;
+
+
 private:  // Private methods
 
 	/**
@@ -655,7 +678,7 @@ public:   // Public methods
 	 *
 	 * The constructor of CUDDSharedMTBDD.
 	 */
-	CUDDSharedMTBDD() : cudd_(), varArray_(0), varArrayNot_(0)
+	CUDDSharedMTBDD() : cudd_(), varArray_(0), varArrayNot_(0), bottom_()
 	{
 		// set the bottom
 		LA::setBottom(LeafType());
@@ -663,6 +686,11 @@ public:   // Public methods
 		CUDDFacade::Node* btm = cudd_.AddConst(LA::BOTTOM);
 		cudd_.Ref(btm);
 		cudd_.SetBackground(btm);
+
+		CUDDFacade::Node* node = cudd_.ReadBackground();
+		cudd_.Ref(node);
+
+		bottom_ = RA::allocateRoot(node);
 	}
 
 
@@ -753,7 +781,8 @@ public:   // Public methods
 	 *
 	 * @copydetails  SFTA::AbstractSharedMTBDD::Apply()
 	 */
-	virtual RootType Apply(const RootType& lhs, const RootType& rhs, const typename ParentClass::ApplyFunctionType& func)
+	virtual RootType Apply(const RootType& lhs, const RootType& rhs,
+		const typename ParentClass::ApplyFunctionType& func)
 	{
 		// Assertions
 		assert(func != static_cast<typename ParentClass::ApplyFunctionType>(0));
@@ -780,6 +809,18 @@ public:   // Public methods
 		cudd_.Ref(node);
 
 		return RA::allocateRoot(node);
+	}
+
+
+	virtual void SetBottomValue(const LeafType& bottom)
+	{
+		LA::setBottom(bottom);
+	}
+
+
+	virtual RootType GetRootForBottom() const
+	{
+		return bottom_;
 	}
 
 
@@ -862,7 +903,5 @@ template
 >
 const char* SFTA::CUDDSharedMTBDD<R, L, VAT, LA, RA>::LOG_CATEGORY_NAME
 	= "cudd_shared_mtbdd";
-
-
 
 #endif
