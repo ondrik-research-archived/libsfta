@@ -18,35 +18,64 @@ namespace SFTA
 	template
 	<
 		typename Symbol,
-		typename LeftHandSide,
-		typename RightHandSide
+		typename State,
+		template <typename> class LeftHandSide,
+		template <typename> class InputRightHandSide,
+		template <typename> class OutputRightHandSide
 	>
 	class AbstractTransitionFunction;
 }
 
 
+/**
+ * @brief   Abstract class for a transition function
+ * @author  Ondra Lengal <ondra@lengal.net>
+ * @date    2010
+ *
+ * Abstract class that represents the interface used by transition functions
+ * of tree automata.
+ *
+ * @tparam  Symbol               The data type for a symbol.
+ * @tparam  State                The data type for a state.
+ * @tparam  LeftHandSide         The data type for a left-hand side of
+ *                               a transition rule.
+ * @tparam  InputRightHandSide   The data type for a right-hand side of
+ *                               a transition rule that is used for insertion
+ *                               of the rule to the transition function table.
+ * @tparam  OutputRightHandSide  The data type for a right-hand side of
+ *                               a transition rule that is used for retrieval
+ *                               of the rule from the transition function
+ *                               table.
+ */
 template
 <
 	typename Symbol,
-	typename LeftHandSide,
-	typename RightHandSide
+	typename State,
+	template <typename> class LeftHandSide,
+	template <typename> class InputRightHandSide,
+	template <typename> class OutputRightHandSide
+
 >
 class SFTA::AbstractTransitionFunction
 {
 public:   // Public data types
 
 	typedef Symbol SymbolType;
-	typedef LeftHandSide LeftHandSideType;
-	typedef RightHandSide RightHandSideType;
+	typedef State StateType;
+	typedef LeftHandSide<StateType> LeftHandSideType;
+	typedef InputRightHandSide<StateType> InputRightHandSideType;
+	typedef OutputRightHandSide<StateType> OutputRightHandSideType;
+
 
 public:   // Public methods
 
-	virtual void AddTransition(const SymbolType& symbol, const LeftHandSideType& lhs,
-		const RightHandSideType& rhs) = 0;
+	virtual void AddTransition(const SymbolType& symbol,
+		const LeftHandSideType& lhs, const InputRightHandSideType& rhs) = 0;
 
 
-	virtual RightHandSideType GetTransition(const SymbolType& symbol,
-		const LeftHandSideType& lhs) const = 0;
+	virtual OutputRightHandSideType GetTransition(const SymbolType& symbol,
+		const LeftHandSideType& lhs) = 0;
+
 
 	virtual ~AbstractTransitionFunction()
 	{ }
