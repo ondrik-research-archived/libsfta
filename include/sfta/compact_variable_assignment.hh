@@ -13,6 +13,7 @@
 
 
 // Standard library headers
+#include <cassert>
 #include <string>
 #include <stdexcept>
 
