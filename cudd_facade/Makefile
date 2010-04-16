@@ -41,6 +41,7 @@ ST_LIBS        += $(CUDD_PATH)/mtr/libmtr.a
 ST_LIBS        += $(CUDD_PATH)/st/libst.a
 ST_LIBS        += $(CUDD_PATH)/util/libutil.a
 ST_LIBS        += $(CUDD_PATH)/obj/libobj.a
+ST_LIBS        += $(CUDD_PATH)/dddmp/libdddmp.a
 
 SRC_FILES=$(wildcard *.cc)
 OBJ_FILES=$(patsubst %.cc, %.o, $(SRC_FILES))
