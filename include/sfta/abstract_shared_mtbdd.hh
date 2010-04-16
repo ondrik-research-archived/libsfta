@@ -142,6 +142,26 @@ public:  // Public methods
 
 
 	/**
+	 * @brief  Sets the value of the bottom
+	 *
+	 * This method sets a new value of the leaf for the bottom of the MTBDD.
+	 *
+	 * @param[in]  bottom  The new value for the bottom of the MTBDD
+	 */
+	virtual void SetBottomValue(const LeafType& bottom) = 0;
+
+
+	/**
+	 * @brief  Returns root value for the bottom
+	 *
+	 * This method returns the value of the root that points to bottom
+	 *
+	 * @returns  Value of the root for bottom
+	 */
+	virtual RootType GetRootForBottom() const = 0;
+
+
+	/**
 	 * @brief  Serializes the MTBDD into a string
 	 *
 	 * This function serializes the MTBDD into a string
