@@ -52,6 +52,8 @@ public:
 	CUDDSharedMTBDDFixture()
 		: mtbdd(static_cast<ASMTBDD*>(0))
 	{
+		boost::unit_test::unit_test_log.set_threshold_level(boost::unit_test::log_messages);
+
 		mtbdd = new SFTA::CUDDSharedMTBDD<unsigned, std::vector<unsigned>, MyVariableAssignment,
 			SFTA::Private::MapLeafAllocator, SFTA::Private::MapRootAllocator>();
 	}
@@ -105,51 +107,53 @@ BOOST_AUTO_TEST_CASE(setters_and_getters_test)
 
 	value_added.push_back(3);
 	value_added.push_back(5);
-//	asgn = MyVariableAssignment("0111");
-//	mtbdd->SetValue(root, asgn, value_added);
-//	asgn = MyVariableAssignment("0001");
+	asgn = MyVariableAssignment("0111");
+	mtbdd->SetValue(root, asgn, value_added);
+	asgn = MyVariableAssignment("0001");
 	mtbdd->SetValue(root, asgn, value_added);
 	ASMTBDD::LeafContainer leaves = mtbdd->GetValue(root, asgn);
 
 	BOOST_CHECK((leaves.size() == 1) && (value_added == *(leaves[0])));
 
-//	value_added[0] = 17;
-//	value_added[1] = 15;
-//	asgn = 3;
-//	mtbdd->SetValue(root, asgn, value_added);
-//	leaves = mtbdd->GetValue(root, asgn);
-//
-//	BOOST_CHECK((leaves.size() == 1) && (value_added == *(leaves[0])));
-//
-//	value_added[0] = 1;
-//	value_added[1] = 2;
-//	asgn = 5;
-//	mtbdd->SetValue(root, asgn, value_added);
-//	leaves = mtbdd->GetValue(root, asgn);
-//	BOOST_CHECK((leaves.size() == 1) && (value_added == *(leaves[0])));
-//
-//	unsigned root2 = mtbdd->CreateRoot();
-//	value_added[0] = 11;
-//	value_added[1] = 19;
-//	asgn = 4;
-//	mtbdd->SetValue(root2, asgn, value_added);
-//
-//	value_added[0] = 7;
-//	value_added[1] = 9;
-//	asgn = 3;
-//	mtbdd->SetValue(root2, asgn, value_added);
-//
-//	unsigned root3 = mtbdd->Apply(root, root2, leaf_addition);
-//
-//	value_added.resize(4);
-//	value_added[0] = 17;
-//	value_added[1] = 15;
-//	value_added[2] = 7;
-//	value_added[3] = 9;
-//	leaves = mtbdd->GetValue(root3, asgn);
-//	BOOST_CHECK((leaves.size() == 1) && (value_added == *(leaves[0])));
+	value_added[0] = 17;
+	value_added[1] = 15;
+	asgn = MyVariableAssignment("XXX1");
+	mtbdd->SetValue(root, asgn, value_added);
+	leaves = mtbdd->GetValue(root, asgn);
+
+	BOOST_CHECK((leaves.size() == 1) && (value_added == *(leaves[0])));
+
+	value_added[0] = 1;
+	value_added[1] = 2;
+	asgn = MyVariableAssignment("0101");
+	mtbdd->SetValue(root, asgn, value_added);
+	leaves = mtbdd->GetValue(root, asgn);
+	BOOST_CHECK((leaves.size() == 1) && (value_added == *(leaves[0])));
+
+	unsigned root2 = mtbdd->CreateRoot();
+	value_added[0] = 11;
+	value_added[1] = 19;
+	asgn = MyVariableAssignment("1XX0");
+	mtbdd->SetValue(root2, asgn, value_added);
+
+	value_added[0] = 7;
+	value_added[1] = 9;
+	asgn = MyVariableAssignment("000X");
+	mtbdd->SetValue(root2, asgn, value_added);
+
+	unsigned root3 = mtbdd->Apply(root, root2, leaf_addition);
+
+	value_added.resize(4);
+	value_added[0] = 17;
+	value_added[1] = 15;
+	value_added[2] = 7;
+	value_added[3] = 9;
+	leaves = mtbdd->GetValue(root3, asgn);
+	BOOST_CHECK((leaves.size() == 1) && (value_added == *(leaves[0])));
 
 	mtbdd->DumpToDotFile("pokus.dot");
+
+	BOOST_TEST_MESSAGE("Serialized MTBDD: " + mtbdd->Serialize());
 }
 
 BOOST_AUTO_TEST_CASE(serialization)
