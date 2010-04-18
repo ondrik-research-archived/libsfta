@@ -8,8 +8,8 @@
  *
  *****************************************************************************/
 
-#ifndef _COMPACT_VARIABLE_ASSIGNMENT_HH_
-#define _COMPACT_VARIABLE_ASSIGNMENT_HH_
+#ifndef _SFTA_COMPACT_VARIABLE_ASSIGNMENT_HH_
+#define _SFTA_COMPACT_VARIABLE_ASSIGNMENT_HH_
 
 
 // Standard library headers
@@ -64,6 +64,7 @@ public:   // Public data types
 		DONT_CARE = 0x03
 	};
 
+	typedef std::vector<CompactVariableAssignment> AssignmentList;
 
 private:  // Private data types
 
@@ -152,6 +153,11 @@ private:  // Private methods
 
 public:   // Public methods
 
+	CompactVariableAssignment()
+		: vars_()
+	{ }
+
+
 	/**
 	 * @brief  Constructor from std::string
 	 *
@@ -210,6 +216,32 @@ public:   // Public methods
 		return (vars_[getIndexOfChar(i)] >> getIndexInsideChar(i)) & DefaultMask;
 	}
 
+	inline void SetIthVariableValue(size_t i, char value)
+	{
+		// Assertions
+		assert(i <= VariablesCount);
+
+		switch (value)
+		{
+			case ZERO:      break;
+			case ONE:       break;
+			case DONT_CARE: break;
+			default:        throw std::runtime_error("Invalid input value!");
+		}
+
+		// prepare the mask
+		char mask = (DefaultMask << getIndexInsideChar(i)) ^ static_cast<char>(-1);
+
+		// mask out bits at given position by the mask
+		vars_[getIndexOfChar(i)] &= mask;
+
+		// prepare new value of given bits
+		value <<= getIndexInsideChar(i);
+
+		// insert the value of given bits
+		vars_[getIndexOfChar(i)] |= value;
+	}
+
 
 	/**
 	 * @brief  The number of variables
@@ -251,6 +283,18 @@ public:   // Public methods
 		return result;
 	}
 
+	static AssignmentList GetAllAssignments()
+	{
+		std::string str;
+		for (size_t i = 0; i < VariablesCount; ++i)
+		{	// for all variables
+			str += 'X';
+		}
+
+		AssignmentList lst;
+		lst.push_back(CompactVariableAssignment(str));
+		return lst;
+	}
 
 	/**
 	 * @brief  Overloaded << operator
