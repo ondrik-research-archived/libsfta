@@ -8,8 +8,8 @@
  *
  *****************************************************************************/
 
-#ifndef _MAP_LEAF_ALLOCATOR_HH_
-#define _MAP_LEAF_ALLOCATOR_HH_
+#ifndef _SFTA_MAP_LEAF_ALLOCATOR_HH_
+#define _SFTA_MAP_LEAF_ALLOCATOR_HH_
 
 
 // insert the class into proper namespace
