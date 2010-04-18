@@ -8,8 +8,15 @@
  *
  *****************************************************************************/
 
-#ifndef _ABSTRACT_TRANSITION_FUNCTION_HH_
-#define _ABSTRACT_TRANSITION_FUNCTION_HH_
+#ifndef _SFTA_ABSTRACT_TRANSITION_FUNCTION_HH_
+#define _SFTA_ABSTRACT_TRANSITION_FUNCTION_HH_
+
+// Standard library header files
+#include <list>
+
+// Loki header files
+#include <loki/HierarchyGenerators.h>
+#include <loki/TypelistMacros.h>
 
 
 // insert the class into proper namespace
@@ -66,6 +73,10 @@ public:   // Public data types
 	typedef InputRightHandSide<StateType> InputRightHandSideType;
 	typedef OutputRightHandSide<StateType> OutputRightHandSideType;
 
+	typedef Loki::Tuple<LOKI_TYPELIST_3(Symbol, LeftHandSideType,
+		InputRightHandSideType)> TransitionType;
+	typedef std::list<TransitionType> TransitionListType;
+
 
 public:   // Public methods
 
@@ -76,6 +87,7 @@ public:   // Public methods
 	virtual OutputRightHandSideType GetTransition(const SymbolType& symbol,
 		const LeftHandSideType& lhs) = 0;
 
+	virtual TransitionListType GetListOfTransitions() = 0;
 
 	virtual ~AbstractTransitionFunction()
 	{ }
