@@ -8,8 +8,8 @@
  *
  *****************************************************************************/
 
-#ifndef _CONVERT_HH_
-#define _CONVERT_HH_
+#ifndef _SFTA_CONVERT_HH_
+#define _SFTA_CONVERT_HH_
 
 // Standard library headers
 #include <string>
