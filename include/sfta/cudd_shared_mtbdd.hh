@@ -8,8 +8,8 @@
  *
  *****************************************************************************/
 
-#ifndef _CUDD_SHARED_MTBDD_HH_
-#define _CUDD_SHARED_MTBDD_HH_
+#ifndef _SFTA_CUDD_SHARED_MTBDD_HH_
+#define _SFTA_CUDD_SHARED_MTBDD_HH_
 
 // Standard library headers
 #include <cassert>
@@ -359,7 +359,7 @@ private:   // Private data types
 			// Assertions
 			assert(data == data);  // just to make the compiler happy
 
-			return (rhs == LA::BOTTOM)? rhs : lhs;
+			return (rhs == LA::BOTTOM)? LA::BOTTOM : lhs;
 		}
 
 
@@ -386,10 +386,16 @@ private:   // Private data types
 			// cast the data to proper data type
 			LeafHandleArray& leaves = *(static_cast<LeafHandleArray*>(data));
 
-			if (node != LA::BOTTOM)
-			{	// in case we haven't hit the bottom
-				leaves.push_back(node);
+			for (typename LeafHandleArray::const_iterator it = leaves.begin();
+				it != leaves.end(); ++it)
+			{	// try to find whether the leaf is already there
+				if (*it == node)
+				{
+					return node;
+				}
 			}
+
+			leaves.push_back(node);
 
 			return node;
 		}
@@ -465,24 +471,6 @@ private:  // Private data members
 
 
 	/**
-	 * @brief  Array of variables
-	 *
-	 * An array that stores saved variables so that they don't need be always
-	 * recreated.
-	 */
-	VariableArrayType varArray_;
-
-
-	/**
-	 * @brief  Array of negated variables
-	 *
-	 * An array that stores saved negated variables so that they don't need be
-	 * always recreated.
-	 */
-	VariableArrayType varArrayNot_;
-
-
-	/**
 	 * @brief  Root for the bottom
 	 *
 	 * Root that points directly to the bottom of the MTBDD.
@@ -503,16 +491,9 @@ private:  // Private methods
 	 *
 	 * @returns  The variable
 	 */
-	CUDDFacade::Node* getIthVariable(size_t i)
+	inline CUDDFacade::Node* getIthVariable(size_t i)
 	{
-		while (i >= varArray_.size())
-		{	// while we do not have large enough collection of variables
-			CUDDFacade::Node* node = cudd_.AddIthVar(i);
-			cudd_.Ref(node);
-			varArray_.push_back(node);
-		}
-
-		return varArray_[i];
+		return cudd_.AddIthVar(i);
 	}
 
 
@@ -527,20 +508,9 @@ private:  // Private methods
 	 *
 	 * @returns  Complement of the variable
 	 */
-	CUDDFacade::Node* getIthVariableNot(size_t i)
+	inline CUDDFacade::Node* getIthVariableNot(size_t i)
 	{
-		while (i >= varArrayNot_.size())
-		{	// while we do not have large enough collection of negated variables
-
-			// get proper variable
-			CUDDFacade::Node* node = getIthVariable(i);
-			// and complement it
-			node = cudd_.AddCmpl(node);
-			cudd_.Ref(node);
-			varArrayNot_.push_back(node);
-		}
-
-		return varArrayNot_[i];
+		return cudd_.AddCmpl(getIthVariable(i));
 	}
 
 
@@ -678,7 +648,7 @@ public:   // Public methods
 	 *
 	 * The constructor of CUDDSharedMTBDD.
 	 */
-	CUDDSharedMTBDD() : cudd_(), varArray_(0), varArrayNot_(0), bottom_()
+	CUDDSharedMTBDD() : cudd_(), bottom_()
 	{
 		// set the bottom
 		LA::setBottom(LeafType());
@@ -826,8 +796,20 @@ public:   // Public methods
 
 	virtual std::string Serialize() const
 	{
-		// TODO:
-		return "";
+		// the array of roots
+		RootArray roots = RA::getAllRoots();
+		// the array of root nodes
+		std::vector<CUDDFacade::Node*> nodes(roots.size());
+		// the array of root names
+		std::vector<std::string> rootNames(roots.size());
+
+		for (size_t i = 0; i < roots.size(); ++i)
+		{	// insert all root nodes and respective names
+			nodes[i] = RA::getHandleOfRoot(roots[i]);
+			rootNames[i] = Convert::ToString(roots[i]);
+		}
+
+		return cudd_.StoreToString(nodes, rootNames);
 	}
 
 
@@ -871,18 +853,6 @@ public:   // Public methods
 		for (typename RootHandleArray::const_iterator it = roots.begin();
 			it != roots.end(); ++it)
 		{	// traverse all roots
-			cudd_.RecursiveDeref(*it);
-		}
-
-		for (VariableArrayType::iterator it = varArray_.begin();
-			it != varArray_.end(); ++it)
-		{	// traverse all variables and dereference them
-			cudd_.RecursiveDeref(*it);
-		}
-
-		for (VariableArrayType::iterator it = varArrayNot_.begin();
-			it != varArrayNot_.end(); ++it)
-		{	// traverse all negated variables and dereference them
 			cudd_.RecursiveDeref(*it);
 		}
 
