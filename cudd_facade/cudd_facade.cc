@@ -18,11 +18,13 @@
 #include <sfta/cudd_facade.hh>
 #include <sfta/sfta.hh>
 #include <sfta/convert.hh>
+#include <sfta/fake_file.hh>
 
 // CUDD headers
 #include <util.h>
 #include <cudd.h>
 #include <cuddInt.h>
+#include <dddmp.h>
 
 using namespace SFTA::Private;
 
@@ -341,6 +343,96 @@ CUDDFacade::Node* CUDDFacade::MonadicApply(Node* root,
 
 	return res;
 }
+
+
+std::string CUDDFacade::StoreToString(const std::vector<Node*>& nodes, const std::vector<std::string>& rootNames) const
+{
+	// Assertions
+	assert(manager_ != static_cast<Manager*>(0));
+	assert((rootNames.size() == 0) || (nodes.size() == rootNames.size()));
+
+	// arrays to be passed to the CUDD function
+	DdNode** arrNodes   = static_cast<DdNode**>(0);
+	char** arrRootNames = static_cast<char**>(0);
+	char** arrVarNames  = static_cast<char**>(0);
+
+	// fake FILE* manager
+	FakeFile ff;
+
+	SFTA_LOGGER_DEBUG("Storing a diagram with "
+		+ Convert::ToString(nodes.size()) + " nodes to string");
+
+	try
+	{	// try block due to possible memory errors
+
+		// create the array of nodes
+		arrNodes = new DdNode*[nodes.size()];
+		for (size_t i = 0; i < nodes.size(); ++i)
+		{	// insert the nodes to the array
+			arrNodes[i] = toCUDD(nodes[i]);
+		}
+
+		if (rootNames.size() > 0)
+		{	// if there are names of roots
+			arrRootNames = new char*[rootNames.size()];
+
+			for (size_t i = 0; i < rootNames.size(); ++i)
+			{	// copy names of roots
+				arrRootNames[i] = const_cast<char*>(rootNames[i].c_str());
+			}
+		}
+
+		std::vector<std::string> varNames;
+		arrVarNames = new char*[GetVarCount()];
+		for (size_t i = 0; i < GetVarCount(); ++i)
+		{	// fill the array of variables
+			varNames.push_back("x" + Convert::ToString(i));
+			arrVarNames[i] = const_cast<char*>(varNames[i].c_str());
+		}
+
+		if (!Dddmp_cuddAddArrayStore(toCUDD(manager_), static_cast<char*>(0), nodes.size(), arrNodes, arrRootNames, arrVarNames, static_cast<int*>(0), DDDMP_MODE_TEXT, DDDMP_VARDEFAULT, static_cast<char*>(0), ff.Open()))
+		{	// in case there was a problem with storing the BDD
+			throw std::runtime_error("Could not store BDD to string!");
+		}
+
+		// delete the arrays
+		delete [] arrNodes;
+		arrNodes = static_cast<DdNode**>(0);
+		delete [] arrRootNames;
+		arrRootNames = static_cast<char**>(0);
+		delete [] arrVarNames;
+		arrVarNames = static_cast<char**>(0);
+	}
+	catch (const std::exception& e)
+	{	// in case an exception appears, we log it
+		if (arrNodes != static_cast<DdNode**>(0))
+		{	// in case the array of nodes is still allocated
+			delete [] arrNodes;
+			arrNodes = static_cast<DdNode**>(0);
+		}
+
+		if (arrRootNames != static_cast<char**>(0))
+		{	// in case the array of root nodes' names is still allocated
+			delete [] arrRootNames;
+			arrRootNames = static_cast<char**>(0);
+		}
+
+		if (arrVarNames != static_cast<char**>(0))
+		{	// in case the array of variable nodes' names is still allocated
+			delete [] arrVarNames;
+			arrVarNames = static_cast<char**>(0);
+		}
+
+		SFTA_LOGGER_ERROR("Error while storing BDD to string: "
+			+ Convert::ToString(e.what()));
+
+		throw;
+	}
+
+	ff.Close();
+	return ff.GetContent();
+}
+
 
 
 void CUDDFacade::DumpDot(const std::vector<Node*>& nodes,

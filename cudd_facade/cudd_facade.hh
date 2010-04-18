@@ -9,8 +9,8 @@
  *
  *****************************************************************************/
 
-#ifndef _CUDD_FACADE_HH_
-#define _CUDD_FACADE_HH_
+#ifndef _SFTA_CUDD_FACADE_HH_
+#define _SFTA_CUDD_FACADE_HH_
 
 #include <vector>
 #include <string>
@@ -375,6 +375,9 @@ public:  // Public methods
 	 */
 	Node* MonadicApply(Node* root,
 		MonadicApplyCallbackParameters* cbParams) const;
+
+
+	std::string StoreToString(const std::vector<Node*>& nodes, const std::vector<std::string>& rootNames) const;
 
 
 	/**
