@@ -8,8 +8,8 @@
  *
  *****************************************************************************/
 
-#ifndef _ABSTRACT_SHARED_MTBDD_HH_
-#define _ABSTRACT_SHARED_MTBDD_HH_
+#ifndef _SFTA_ABSTRACT_SHARED_MTBDD_HH_
+#define _SFTA_ABSTRACT_SHARED_MTBDD_HH_
 
 
 // Standard library headers
