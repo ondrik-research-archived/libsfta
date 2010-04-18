@@ -47,6 +47,8 @@ BOOST_FIXTURE_TEST_SUITE(suite, CUDDFacadeFixture)
 
 BOOST_AUTO_TEST_CASE(work_with_variables)
 {
+	boost::unit_test::unit_test_log.set_threshold_level(boost::unit_test::log_messages);
+
 	CUDDFacade::Node* x0 = facade.AddIthVar(0);
 	BOOST_CHECK(x0 != static_cast<CUDDFacade::Node*>(0));
 	facade.Ref(x0);
@@ -89,6 +91,14 @@ BOOST_AUTO_TEST_CASE(work_with_variables)
 	facade.Ref(three_x0_not_x2);
 	facade.RecursiveDeref(three_x0);
 
+	std::vector<CUDDFacade::Node*> arr;
+	arr.push_back(three_x0_not_x2);
+
+	std::vector<std::string> arrStr;
+	arrStr.push_back("new root");
+
+	std::string str = facade.StoreToString(arr, arrStr);
+	BOOST_TEST_MESSAGE("Output: " + str);
 
 	facade.RecursiveDeref(three_x0_not_x2);
 	facade.RecursiveDeref(x0);
