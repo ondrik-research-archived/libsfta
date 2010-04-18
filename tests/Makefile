@@ -23,6 +23,7 @@ CFLAGS         += -Wctor-dtor-privacy
 CFLAGS         += -Weffc++
 CFLAGS         += -Woverloaded-virtual
 CFLAGS         += -finline-functions
+CFLAGS         += -Wold-style-cast
 CFLAGS         += -g
 
 # Where to search for include files
@@ -40,6 +41,7 @@ TESTS_LIB       = libtests.a
 LIBS            =
 LIBS           += -lboost_unit_test_framework
 LIBS           += -llog4cpp
+LIBS           += -lloki
 
 # Local object files
 OBJ             = log_fixture.o
@@ -47,6 +49,7 @@ OBJ             = log_fixture.o
 # Static libraries
 ST_LIBS         =
 ST_LIBS        += ../cudd_facade/libcudd_facade.a
+ST_LIBS        += ../src/libsfta.a
 ST_LIBS        += $(TESTS_LIB)
 
 SRC_FILES       = $(wildcard *_test.cc)
@@ -73,12 +76,15 @@ RANLIB          = ranlib
 #                                 Rules                                       #
 ###############################################################################
 
-.PHONY: all clean test
+.PHONY: all cudd_facade sfta clean test
 
-all: cudd_facade $(EXE_FILES)
+all: cudd_facade sfta $(EXE_FILES)
 
 cudd_facade:
 	cd ../cudd_facade ; make
+
+sfta:
+	cd ../src ; make
 
 $(TESTS_LIB): $(OBJ)
 	$(AR) $(AR_CREATE_FLAGS) $@ $^
