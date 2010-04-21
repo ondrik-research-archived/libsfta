@@ -28,7 +28,8 @@ namespace SFTA
 		typename State,
 		template <typename> class LeftHandSide,
 		template <typename> class InputRightHandSide,
-		template <typename> class OutputRightHandSide
+		template <typename> class OutputRightHandSide,
+		typename RegistrationToken
 	>
 	class AbstractTransitionFunction;
 }
@@ -60,8 +61,8 @@ template
 	typename State,
 	template <typename> class LeftHandSide,
 	template <typename> class InputRightHandSide,
-	template <typename> class OutputRightHandSide
-
+	template <typename> class OutputRightHandSide,
+	typename RegistrationToken
 >
 class SFTA::AbstractTransitionFunction
 {
@@ -72,6 +73,7 @@ public:   // Public data types
 	typedef LeftHandSide<StateType> LeftHandSideType;
 	typedef InputRightHandSide<StateType> InputRightHandSideType;
 	typedef OutputRightHandSide<StateType> OutputRightHandSideType;
+	typedef RegistrationToken RegistrationTokenType;
 
 	typedef Loki::Tuple<LOKI_TYPELIST_3(Symbol, LeftHandSideType,
 		InputRightHandSideType)> TransitionType;
@@ -80,18 +82,26 @@ public:   // Public data types
 
 public:   // Public methods
 
-	virtual void AddTransition(const SymbolType& symbol,
-		const LeftHandSideType& lhs, const InputRightHandSideType& rhs) = 0;
+	virtual void AddTransition(const RegistrationTokenType& regToken,
+		const SymbolType& symbol, const LeftHandSideType& lhs,
+		const InputRightHandSideType& rhs) = 0;
 
 
-	virtual OutputRightHandSideType GetTransition(const SymbolType& symbol,
+	virtual OutputRightHandSideType GetTransition(
+		const RegistrationTokenType& regToken, const SymbolType& symbol,
 		const LeftHandSideType& lhs) = 0;
 
-	virtual TransitionListType GetListOfTransitions() = 0;
+	virtual TransitionListType GetListOfTransitions(
+		const RegistrationTokenType& regToken) = 0;
+
+	virtual RegistrationTokenType RegisterAutomaton() = 0;
+
+	virtual void UnregisterAutomaton(const RegistrationTokenType& regToken) = 0;
+
+	virtual StateType AllocateState(const RegistrationTokenType& regToken) = 0;
 
 	virtual ~AbstractTransitionFunction()
 	{ }
-
 
 };
 

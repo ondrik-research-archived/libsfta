@@ -40,10 +40,15 @@ namespace SFTA
 		template <typename> class LeftHandSide,
 		template <typename> class InputRightHandSide,
 		template <typename> class OutputRightHandSide,
+		typename RegistrationToken,
 		class MTBDD,
-		typename MTBDDRoot
+		typename MTBDDRoot,
+		template <typename> class StateAllocator
 	>
 	class MTBDDTransitionFunction;
+
+	template <class>
+	class MTBDDOperation;
 }
 
 
@@ -66,6 +71,8 @@ struct MyHasher
  *
  * @tparam  Symbol               The data type for a symbol.
  * @tparam  State                The data type for a state.
+ * @tparam  LeftHandSide         The type for a left-hand side of a transition
+ *                               rule.
  * @tparam  InputRightHandSide   The data type for a right-hand side of
  *                               a transition rule that is used for insertion
  *                               of the rule to the transition function table.
@@ -73,8 +80,11 @@ struct MyHasher
  *                               a transition rule that is used for retrieval
  *                               of the rule from the transition function
  *                               table.
+ * @tparam  RegistrationToken    The type used as a token when registering the
+ *                               use from an automaton.
  * @tparam  MTBDD                The data type of the MTBDD to be used.
  * @tparam  MTBDDRoot            The data type of a MTBDD root.
+ * @tparam  StateAllocator       Policy used for allocation of new states.
  *
  * TODO: @todo  Rewrite this class to be parametrized by a type list that
  *              contains types for containers used for various length of
@@ -94,8 +104,10 @@ template
 	template <typename> class LeftHandSide,
 	template <typename> class InputRightHandSide,
 	template <typename> class OutputRightHandSide,
+	typename RegistrationToken,
 	class MTBDD,
-	typename MTBDDRoot
+	typename MTBDDRoot,
+	template <typename> class StateAllocator
 >
 class SFTA::MTBDDTransitionFunction
 	: public AbstractTransitionFunction
@@ -104,18 +116,25 @@ class SFTA::MTBDDTransitionFunction
 			State,
 			LeftHandSide,
 			InputRightHandSide,
-			OutputRightHandSide
+			OutputRightHandSide,
+			RegistrationToken
+		>,
+	  protected StateAllocator
+		<
+			State
 		>
 {
 public:   // Public data types
 
-	typedef AbstractTransitionFunction<Symbol, State, LeftHandSide, InputRightHandSide, OutputRightHandSide> ParentClass;
+	typedef AbstractTransitionFunction<Symbol, State, LeftHandSide,
+		InputRightHandSide, OutputRightHandSide, RegistrationToken> ParentClass;
 
 	typedef typename ParentClass::SymbolType SymbolType;
 	typedef typename ParentClass::StateType StateType;
 	typedef typename ParentClass::LeftHandSideType LeftHandSideType;
 	typedef typename ParentClass::InputRightHandSideType InputRightHandSideType;
 	typedef typename ParentClass::OutputRightHandSideType OutputRightHandSideType;
+	typedef typename ParentClass::RegistrationTokenType RegistrationTokenType;
 	typedef MTBDD MTBDDType;
 	typedef MTBDDRoot MTBDDRootType;
 
@@ -145,6 +164,13 @@ private:  // Private data types
 
 	typedef std::list<LHSRootPair> LHSRootList;
 
+
+	typedef StateAllocator
+	<
+		StateType
+	>
+	SA;
+
 private:  // Private data members
 
 	/**
@@ -154,9 +180,11 @@ private:  // Private data members
 	 */
 	MTBDDType mtbdd_;
 
+	MTBDDRootType sinkStateRoot_;
+
 	StateType sinkState_;
 
-
+	MTBDDRootTypeArray container0_;
 	MTBDDRootTypeArray container1_;
 	MTBDDRootTypeMatrix container2_;
 	MTBDDRootTypeHashTable containerN_;
@@ -173,39 +201,59 @@ private:  // Private data members
 
 private:  // Private methods
 
-	MTBDDRootType getRoot(const LeftHandSideType& lhs) const
+	inline MTBDDType& getMTBDD()
 	{
-		// Assertions
-		assert(lhs.size() > 0);
+		return mtbdd_;
+	}
 
+	MTBDDRootType getRoot(const RegistrationTokenType& regToken,
+		const LeftHandSideType& lhs) const
+	{
 		switch (lhs.size())
 		{
-			case 1: return getRootForArity1(lhs); break;
-			case 2: return getRootForArity2(lhs); break;
-			default: return getRootForArityN(lhs); break;
+			case 0: return getRootForArity0(regToken, lhs);
+			case 1: return getRootForArity1(regToken, lhs); break;
+			case 2: return getRootForArity2(regToken, lhs); break;
+			default: return getRootForArityN(regToken, lhs); break;
 		}
 	}
 
-	MTBDDRootType getRootForArity1(const LeftHandSideType& lhs) const
+
+	MTBDDRootType getRootForArity0(const RegistrationTokenType& regToken,
+		const LeftHandSideType& lhs) const
+	{
+		// Assertions
+		assert(lhs.size() == 0);
+
+		return container0_[regToken];
+	}
+
+	MTBDDRootType getRootForArity1(const RegistrationTokenType& regToken,
+		const LeftHandSideType& lhs) const
 	{
 		// Assertions
 		assert(lhs.size() == 1);
+		assert(regToken == regToken);  // just to make the compiler happy
 
 		return container1_[lhs[0]];
 	}
 
-	MTBDDRootType getRootForArity2(const LeftHandSideType& lhs) const
+	MTBDDRootType getRootForArity2(const RegistrationTokenType& regToken,
+		const LeftHandSideType& lhs) const
 	{
 		// Assertions
 		assert(lhs.size() == 2);
+		assert(regToken == regToken);  // just to make the compiler happy
 
 		return container2_[lhs[0]][lhs[1]];
 	}
 
-	MTBDDRootType getRootForArityN(const LeftHandSideType& lhs) const
+	MTBDDRootType getRootForArityN(const RegistrationTokenType& regToken,
+		const LeftHandSideType& lhs) const
 	{
 		// Assertions
 		assert(lhs.size() > 2);
+		assert(regToken == regToken);  // just to make the compiler happy
 
 		typename MTBDDRootTypeHashTable::const_iterator it = containerN_.find(lhs);
 		if (it == containerN_.end())
@@ -217,51 +265,82 @@ private:  // Private methods
 	}
 
 
-	void setRoot(const LeftHandSideType& lhs, MTBDDRootType root)
+	void setRoot(const RegistrationTokenType& regToken,
+		const LeftHandSideType& lhs, MTBDDRootType root)
 	{
-		// Assertions
-		assert(lhs.size() > 0);
-
 		switch (lhs.size())
 		{
-			case 1: return setRootForArity1(lhs, root); break;
-			case 2: return setRootForArity2(lhs, root); break;
-			default: return setRootForArityN(lhs, root); break;
+			case 0: return setRootForArity0(regToken, lhs, root); break;
+			case 1: return setRootForArity1(regToken, lhs, root); break;
+			case 2: return setRootForArity2(regToken, lhs, root); break;
+			default: return setRootForArityN(regToken, lhs, root); break;
 		}
 	}
 
-	void setRootForArity1(const LeftHandSideType& lhs, MTBDDRootType root)
+	void setRootForArity0(const RegistrationTokenType& regToken,
+		const LeftHandSideType& lhs, MTBDDRootType root)
+	{
+		// Assertions
+		assert(lhs.size() == 0);
+
+		container0_[regToken] = root;
+	}
+
+	void setRootForArity1(const RegistrationTokenType& regToken,
+		const LeftHandSideType& lhs, MTBDDRootType root)
 	{
 		// Assertions
 		assert(lhs.size() == 1);
+		assert(regToken == regToken);  // just to make the compiler happy
 
 		container1_[lhs[0]] = root;
 	}
 
-	void setRootForArity2(const LeftHandSideType& lhs, MTBDDRootType root)
+	void setRootForArity2(const RegistrationTokenType& regToken,
+		const LeftHandSideType& lhs, MTBDDRootType root)
 	{
 		// Assertions
 		assert(lhs.size() == 2);
+		assert(regToken == regToken);  // just to make the compiler happy
 
 		container2_[lhs[0]][lhs[1]] = root;
 	}
 
-	void setRootForArityN(const LeftHandSideType& lhs, MTBDDRootType root)
+	void setRootForArityN(const RegistrationTokenType& regToken,
+		const LeftHandSideType& lhs, MTBDDRootType root)
 	{
 		// Assertions
 		assert(lhs.size() > 2);
+		assert(regToken == regToken);  // just to make the compiler happy
 
 		containerN_[lhs] = root;
 	}
 
-	LHSRootList getAllRootsForArity1() const
+	LHSRootList getAllRootsForArity0(const RegistrationTokenType& regToken) const
 	{
 		LHSRootList lst;
+		if (container0_[regToken] != sinkStateRoot_)
+		{
+			LHSRootPair pair;
+			Loki::Field<0>(pair) = LeftHandSideType();
+			Loki::Field<1>(pair) = container0_[regToken];
+			lst.push_back(pair);
+		}
 
+		return lst;
+	}
+
+	LHSRootList getAllRootsForArity1(const RegistrationTokenType& regToken) const
+	{
+		// Assertions
+		assert(regToken == regToken);  // just to make the compiler happy
+
+		LHSRootList lst;
 		for (size_t i = 0; i < container1_.size(); ++i)
 		{	// append all non-bottom roots
-			if (container1_[i] != sinkState_)
+			if (container1_[i] != sinkStateRoot_)
 			{
+				SFTA_LOGGER_DEBUG("Container1_[i] = " + Convert::ToString(container1_[i]));
 				LeftHandSideType lhs(1);
 				lhs[0] = i;
 
@@ -275,8 +354,11 @@ private:  // Private methods
 		return lst;
 	}
 
-	LHSRootList getAllRootsForArity2() const
+	LHSRootList getAllRootsForArity2(const RegistrationTokenType& regToken) const
 	{
+		// Assertions
+		assert(regToken == regToken);  // just to make the compiler happy
+
 		LHSRootList lst;
 
 		for (size_t i = 0; i < container2_.size(); ++i)
@@ -285,7 +367,7 @@ private:  // Private methods
 
 			for (size_t j = 0; j < innerArr.size(); ++j)
 			{	// append all non-bottom roots
-				if (innerArr[j] != sinkState_)
+				if (innerArr[j] != sinkStateRoot_)
 				{
 					LeftHandSideType lhs(2);
 					lhs[0] = i;
@@ -302,14 +384,17 @@ private:  // Private methods
 		return lst;
 	}
 
-	LHSRootList getAllRootsForArityN() const
+	LHSRootList getAllRootsForArityN(const RegistrationTokenType& regToken) const
 	{
+		// Assertions
+		assert(regToken == regToken);  // just to make the compiler happy
+
 		LHSRootList lst;
 
 		for (typename MTBDDRootTypeHashTable::const_iterator it
 			= containerN_.begin(); it != containerN_.end(); ++it)
 		{	// append all non-bottom roots
-			if (it->second != sinkState_)
+			if (it->second != sinkStateRoot_)
 			{
 				LHSRootPair pair;
 				Loki::Field<0>(pair) = it->first;
@@ -335,25 +420,25 @@ private:  // Private methods
 
 		if (position == SymbolType::VariablesCount)
 		{	// if we are at the bottom
-			RHSSymbolType rhsSymbol;
-			Loki::Field<0>(rhsSymbol) = symbol;
 
-			Loki::Field<1>(rhsSymbol) = *(mtbdd_.GetValue(root, symbol)[0]);
-
+			// read the leaf
 			typename MTBDDType::LeafContainer leaves = mtbdd_.GetValue(root, symbol);
-			for (typename MTBDDType::LeafContainer::const_iterator it
-				= leaves.begin(); it != leaves.end(); ++it)
-			{
-				if ((**it)[0] != sinkState_)
-				{
-					Loki::Field<1>(rhsSymbol) = **it;
-				}
-			}
+
+			// assertion
+			assert(leaves.size() <= 1);
 
 			RHSSymbolListType result;
+			if (leaves.size() == 1)
+			{	// in case something was found
 
-			if (Loki::Field<1>(rhsSymbol)[0] != sinkState_)
-			{
+				// assertions
+				assert(leaves[0] != static_cast<typename MTBDDType::LeafType*>(0));
+				typename MTBDDType::LeafType& leaf = *(leaves[0]);
+				SFTA_LOGGER_DEBUG("Found " + Convert::ToString(leaf));
+
+				RHSSymbolType rhsSymbol;
+				Loki::Field<0>(rhsSymbol) = symbol;
+				Loki::Field<1>(rhsSymbol) = leaf;
 				result.push_back(rhsSymbol);
 			}
 
@@ -390,55 +475,69 @@ private:  // Private methods
 
 public:   // Public methods
 
-	MTBDDTransitionFunction(size_t statesCount, const StateType& sinkState)
+	MTBDDTransitionFunction()
 		: mtbdd_(),
+			sinkStateRoot_(),
 			sinkState_(),
+			container0_(),
 			container1_(),
 			container2_(),
 			containerN_()
 	{
+		sinkState_ = SA::AllocateState();
+		// Assertion
+		assert(sinkState_ == 0);
+
 		InputRightHandSideType rhs;
-		rhs.push_back(sinkState);
+		rhs.push_back(sinkState_);
 		mtbdd_.SetBottomValue(rhs);
 
-		sinkState_ = mtbdd_.GetRootForBottom();
-		container1_ = MTBDDRootTypeArray(statesCount, mtbdd_.GetRootForBottom());
-		container2_ = MTBDDRootTypeMatrix(statesCount, MTBDDRootTypeArray(statesCount, mtbdd_.GetRootForBottom()));
+		sinkStateRoot_ = mtbdd_.GetRootForBottom();
+		container0_ = MTBDDRootTypeArray(0);
+		container1_ = MTBDDRootTypeArray(1, sinkStateRoot_);
+		container2_ = MTBDDRootTypeMatrix(1, MTBDDRootTypeArray(1, sinkStateRoot_));
 	}
 
-
-	virtual void AddTransition(const SymbolType& symbol,
-		const LeftHandSideType& lhs, const InputRightHandSideType& rhs)
+	virtual void AddTransition(const RegistrationTokenType& regToken,
+		const SymbolType& symbol, const LeftHandSideType& lhs,
+		const InputRightHandSideType& rhs)
 	{
-		SFTA_LOGGER_DEBUG("Adding transition: \"" + Convert::ToString(symbol)
+		SFTA_LOGGER_DEBUG("Adding transition for automaton "
+			+ Convert::ToString(regToken) + ": \"" + Convert::ToString(symbol)
 			+ Convert::ToString(lhs) + " -> " + Convert::ToString(rhs) + "\"");
 
 		// retrieve the pointer to the root of the MTBDD
-		MTBDDRootType root = getRoot(lhs);
-		if (root == mtbdd_.GetRootForBottom())
+		MTBDDRootType root = getRoot(regToken, lhs);
+		if (root == sinkStateRoot_)
 		{	// in case there has been nothing assigned to this combination of states
-			SFTA_LOGGER_DEBUG("Creating new MTBDD for " + Convert::ToString(lhs));
+			SFTA_LOGGER_DEBUG("Creating new MTBDD for automaton "
+				+ Convert::ToString(regToken) + " and states "
+				+ Convert::ToString(lhs));
 			root = mtbdd_.CreateRoot();
-			setRoot(lhs, root);
+			setRoot(regToken, lhs, root);
 		}
 
 		mtbdd_.SetValue(root, symbol, rhs);
 	}
 
 
-	virtual OutputRightHandSideType GetTransition(const SymbolType& symbol,
+	virtual OutputRightHandSideType GetTransition(
+		const RegistrationTokenType& regToken, const SymbolType& symbol,
 		const LeftHandSideType& lhs)
 	{
-		SFTA_LOGGER_DEBUG("Reading transition: \"" + Convert::ToString(symbol)
+		SFTA_LOGGER_DEBUG("Reading transition for automaton "
+			+ Convert::ToString(regToken) + ": \"" + Convert::ToString(symbol)
 			+ Convert::ToString(lhs) + " -> ???\"");
 
-		MTBDDRootType root = getRoot(lhs);
+		MTBDDRootType root = getRoot(regToken, lhs);
 
 		OutputRightHandSideType res;
 
-		typename MTBDDType::LeafContainer leaves = mtbdd_.GetValue(root, symbol);
+		typename MTBDDType::LeafContainer leaves
+			= mtbdd_.GetValue(root, symbol);
 
-		SFTA_LOGGER_DEBUG("Read transition: \"" + Convert::ToString(symbol)
+		SFTA_LOGGER_DEBUG("Read transition of automaton "
+			+ Convert::ToString(regToken) + ": \"" + Convert::ToString(symbol)
 			+ Convert::ToString(lhs) + " -> " + Convert::ToString(leaves) + "\"");
 
 		for (typename MTBDDType::LeafContainer::const_iterator it = leaves.begin();
@@ -450,19 +549,29 @@ public:   // Public methods
 		return res;
 	}
 
-	inline MTBDDType& GetMTBDD()
-	{
-		return mtbdd_;
-	}
-
-	virtual TransitionListType GetListOfTransitions()
+	virtual TransitionListType GetListOfTransitions(
+		const RegistrationTokenType& regToken)
 	{
 		LHSRootList lst;
-		LHSRootList arity1Lst = getAllRootsForArity1();
+		LHSRootList arity0Lst = getAllRootsForArity0(regToken);
+		lst.insert(lst.end(), arity0Lst.begin(), arity0Lst.end());
+		for (typename LHSRootList::const_iterator it = lst.begin();
+			it != lst.end(); ++it)
+		{
+			SFTA_LOGGER_DEBUG("Gotten: " + Convert::ToString(Loki::Field<0>(*it))
+				+ " - " + Convert::ToString(Loki::Field<1>(*it)));
+		}
+		LHSRootList arity1Lst = getAllRootsForArity1(regToken);
 		lst.insert(lst.end(), arity1Lst.begin(), arity1Lst.end());
-		LHSRootList arity2Lst = getAllRootsForArity2();
+		for (typename LHSRootList::const_iterator it = lst.begin();
+			it != lst.end(); ++it)
+		{
+			SFTA_LOGGER_DEBUG("Gotten: " + Convert::ToString(Loki::Field<0>(*it))
+				+ " - " + Convert::ToString(Loki::Field<1>(*it)));
+		}
+		LHSRootList arity2Lst = getAllRootsForArity2(regToken);
 		lst.insert(lst.end(), arity2Lst.begin(), arity2Lst.end());
-		LHSRootList arityNLst = getAllRootsForArityN();
+		LHSRootList arityNLst = getAllRootsForArityN(regToken);
 		lst.insert(lst.end(), arityNLst.begin(), arityNLst.end());
 
 		TransitionListType result;
@@ -491,18 +600,59 @@ public:   // Public methods
 					Loki::Field<1>(trans) = Loki::Field<0>(pair);
 					Loki::Field<2>(trans) = Loki::Field<1>(*kt);
 
+		SFTA_LOGGER_DEBUG("List of transitions: " + Convert::ToString(Loki::Field<0>(trans)) + "|" + Convert::ToString(Loki::Field<1>(trans)) + "|" + Convert::ToString(Loki::Field<2>(trans)));
 					result.push_back(trans);
 				}
 			}
 		}
 
+
 		return result;
 	}
 
+	virtual RegistrationTokenType RegisterAutomaton()
+	{
+		container0_.push_back(sinkStateRoot_);
+
+		return container0_.size() - 1;
+	}
+
+	virtual void UnregisterAutomaton(const RegistrationToken& regToken)
+	{
+		// Assertions
+		assert(regToken == regToken);  // just to make the compiler happy
+
+		mtbdd_.DumpToDotFile("mtbdd.dot");
+	}
+
+	virtual StateType AllocateState(const RegistrationToken& regToken)
+	{
+		// Assertions
+		assert(regToken == regToken);  // just to make the compiler happy
+
+		StateType state = SA::AllocateState();
+
+		container1_.push_back(sinkStateRoot_);
+
+		MTBDDRootTypeArray arr;
+		for (typename MTBDDRootTypeMatrix::iterator it = container2_.begin();
+			it != container2_.end(); ++it)
+		{
+			it->push_back(sinkStateRoot_);
+			arr.push_back(sinkStateRoot_);
+		}
+
+		arr.push_back(sinkStateRoot_);
+
+		container2_.push_back(arr);
+
+		return state;
+	}
 
 	virtual ~MTBDDTransitionFunction()
 	{ }
 
+	template <class> friend class MTBDDOperation;
 };
 
 
@@ -514,10 +664,12 @@ template
 	template <typename> class LHS,
 	template <typename> class IRHS,
 	template <typename> class ORHS,
+	typename RT,
 	class MTBDD,
-	typename MTBDDRoot
+	typename MTBDDRoot,
+	template <typename> class SA
 >
-const char* SFTA::MTBDDTransitionFunction<Symbol, State, LHS, IRHS, ORHS,
-	MTBDD, MTBDDRoot>::LOG_CATEGORY_NAME = "mtbdd_transition_function";
+const char* SFTA::MTBDDTransitionFunction<Symbol, State, LHS, IRHS, ORHS, RT,
+	MTBDD, MTBDDRoot, SA>::LOG_CATEGORY_NAME = "mtbdd_transition_function";
 
 #endif
