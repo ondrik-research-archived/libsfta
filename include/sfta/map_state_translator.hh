@@ -89,9 +89,6 @@ public:   // Public methods
 
 	AStateType TranslateTF2Automaton(const TFStateType& tfState) const
 	{
-		SFTA_LOGGER_DEBUG("Translating from TF state to A state: "
-			+ Convert::ToString(tfState));
-
 		typename TF2ATableType::const_iterator it;
 		if ((it = tf2a_.find(tfState)) == tf2a_.end())
 		{	// in case the translation could not be found
@@ -104,9 +101,6 @@ public:   // Public methods
 
 	TFStateType TranslateA2TF(const AStateType& aState) const
 	{
-		SFTA_LOGGER_DEBUG("Translating from A state to TF state: "
-			+ Convert::ToString(aState));
-
 		typename A2TFTableType::const_iterator it;
 		if ((it = a2tf_.find(aState)) == a2tf_.end())
 		{	// in case the translation could not be found

@@ -434,7 +434,6 @@ private:  // Private methods
 				// assertions
 				assert(leaves[0] != static_cast<typename MTBDDType::LeafType*>(0));
 				typename MTBDDType::LeafType& leaf = *(leaves[0]);
-				SFTA_LOGGER_DEBUG("Found " + Convert::ToString(leaf));
 
 				RHSSymbolType rhsSymbol;
 				Loki::Field<0>(rhsSymbol) = symbol;
@@ -555,20 +554,8 @@ public:   // Public methods
 		LHSRootList lst;
 		LHSRootList arity0Lst = getAllRootsForArity0(regToken);
 		lst.insert(lst.end(), arity0Lst.begin(), arity0Lst.end());
-		for (typename LHSRootList::const_iterator it = lst.begin();
-			it != lst.end(); ++it)
-		{
-			SFTA_LOGGER_DEBUG("Gotten: " + Convert::ToString(Loki::Field<0>(*it))
-				+ " - " + Convert::ToString(Loki::Field<1>(*it)));
-		}
 		LHSRootList arity1Lst = getAllRootsForArity1(regToken);
 		lst.insert(lst.end(), arity1Lst.begin(), arity1Lst.end());
-		for (typename LHSRootList::const_iterator it = lst.begin();
-			it != lst.end(); ++it)
-		{
-			SFTA_LOGGER_DEBUG("Gotten: " + Convert::ToString(Loki::Field<0>(*it))
-				+ " - " + Convert::ToString(Loki::Field<1>(*it)));
-		}
 		LHSRootList arity2Lst = getAllRootsForArity2(regToken);
 		lst.insert(lst.end(), arity2Lst.begin(), arity2Lst.end());
 		LHSRootList arityNLst = getAllRootsForArityN(regToken);
@@ -600,7 +587,6 @@ public:   // Public methods
 					Loki::Field<1>(trans) = Loki::Field<0>(pair);
 					Loki::Field<2>(trans) = Loki::Field<1>(*kt);
 
-		SFTA_LOGGER_DEBUG("List of transitions: " + Convert::ToString(Loki::Field<0>(trans)) + "|" + Convert::ToString(Loki::Field<1>(trans)) + "|" + Convert::ToString(Loki::Field<2>(trans)));
 					result.push_back(trans);
 				}
 			}
