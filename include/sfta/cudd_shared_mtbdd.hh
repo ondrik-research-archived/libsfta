@@ -721,7 +721,7 @@ public:   // Public methods
 		eraseRoot(mtbddAsgn);
 
 		// create container for handles of leaves that are at the position
-		LeafHandleArray leavesHandles(0);
+		LeafHandleArray leavesHandles;
 		// create parameters of monadic Apply function that pass correct callback
 		// function and container for handles of leaves
 		CUDDFacade::MonadicApplyCallbackParameters paramsMon(
@@ -733,10 +733,14 @@ public:   // Public methods
 		cudd_.RecursiveDeref(res);
 		cudd_.RecursiveDeref(monRes);
 
-		typename ParentClass::LeafContainer leaves(leavesHandles.size());
-		for (size_t i = 0; i < leavesHandles.size(); ++i)
+		typename ParentClass::LeafContainer leaves;
+		for (typename LeafHandleArray::const_iterator it = leavesHandles.begin();
+			it != leavesHandles.end(); ++it)
 		{	// for each leaf handle
-			leaves[i] = &LA::getLeafOfHandle(leavesHandles[i]);
+			if (*it != LA::BOTTOM)
+			{
+				leaves.push_back(&LA::getLeafOfHandle(*it));
+			}
 		}
 
 		SFTA_LOGGER_DEBUG("Read value of root " + Convert::ToString(root)
