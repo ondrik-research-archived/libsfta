@@ -56,10 +56,11 @@ private:  // Private data types
 
 public:   // Public data types
 
-	typedef Symbol AutomatonSymbolType;
-	typedef State AutomatonStateType;
+	typedef Symbol ASymbolType;
+	typedef State AStateType;
 
 	typedef typename TransitionFunction::StateType TFStateType;
+	typedef typename TransitionFunction::SymbolType TFSymbolType;
 
 	typedef TransitionFunction TransitionFunctionType;
 	typedef typename TransitionFunctionType::TransitionListType TransitionListType;
@@ -67,13 +68,13 @@ public:   // Public data types
 	// uses ref counting
 	typedef Loki::SmartPtr<TransitionFunctionType> TransFuncPtrType;
 
-	typedef SFTA::Vector<AutomatonStateType> RuleLeftHandSideType;
+	typedef SFTA::Vector<AStateType> RuleLeftHandSideType;
 
-	typedef std::set<AutomatonStateType> SetOfStatesType;
+	typedef std::set<AStateType> SetOfStatesType;
 
 	typedef StateTranslator
 	<
-		AutomatonStateType,
+		AStateType,
 		TFStateType
 	>
 	ST;
@@ -104,14 +105,14 @@ public:   // Public methods
 	}
 
 
-	void AddState(const AutomatonStateType& state)
+	void AddState(const AStateType& state)
 	{
 		TFStateType tfState = transFunc_->AllocateState(regToken_);
 		ST::AddTranslation(state, tfState);
 	}
 
 
-	void AddTransition(const AutomatonSymbolType& symbol,
+	void AddTransition(const ASymbolType& symbol,
 		const RuleLeftHandSideType& lhs, const SetOfStatesType& rhs)
 	{
 		typename TransitionFunctionType::LeftHandSideType tfLhs(lhs.size());
