@@ -14,6 +14,7 @@
 #include <sfta/cudd_shared_mtbdd.hh>
 #include <sfta/map_leaf_allocator.hh>
 #include <sfta/map_root_allocator.hh>
+#include <sfta/simple_state_allocator.hh>
 #include <sfta/vector.hh>
 #include <sfta/ordered_vector.hh>
 #include <sfta/convert.hh>
@@ -44,9 +45,9 @@ public:
 
 	typedef SFTA::Private::CompactVariableAssignment<4> MyVariableAssignment;
 
-	typedef SFTA::AbstractTransitionFunction<MyVariableAssignment, unsigned, SFTA::Vector, SFTA::OrderedVector, SFTA::OrderedVector> ATF;
+	typedef SFTA::AbstractTransitionFunction<MyVariableAssignment, unsigned, SFTA::Vector, SFTA::OrderedVector, SFTA::OrderedVector, unsigned> ATF;
 
-	typedef SFTA::MTBDDTransitionFunction<MyVariableAssignment, unsigned, SFTA::Vector, SFTA::OrderedVector, SFTA::OrderedVector, SFTA::CUDDSharedMTBDD<unsigned, SFTA::OrderedVector<unsigned>, MyVariableAssignment, SFTA::Private::MapLeafAllocator, SFTA::Private::MapRootAllocator>, unsigned> MTBDDTF;
+	typedef SFTA::MTBDDTransitionFunction<MyVariableAssignment, unsigned, SFTA::Vector, SFTA::OrderedVector, SFTA::OrderedVector, unsigned, SFTA::CUDDSharedMTBDD<unsigned, SFTA::OrderedVector<unsigned>, MyVariableAssignment, SFTA::Private::MapLeafAllocator, SFTA::Private::MapRootAllocator>, unsigned, SFTA::Private::SimpleStateAllocator> MTBDDTF;
 
 protected:
 
@@ -58,7 +59,7 @@ protected:
 public:
 
 	MTBDDTransitionFunctionFixture()
-		: transFunc_(STATE_SET_SIZE, SINK_STATE)
+		: transFunc_()
 	{
 	}
 
@@ -80,6 +81,19 @@ BOOST_AUTO_TEST_CASE(setters_and_getters_test)
 {
 	boost::unit_test::unit_test_log.set_threshold_level(boost::unit_test::log_messages);
 
+	transFunc_.RegisterAutomaton();
+	transFunc_.AllocateState(0);
+	transFunc_.AllocateState(0);
+	transFunc_.AllocateState(0);
+	transFunc_.AllocateState(0);
+	transFunc_.AllocateState(0);
+	transFunc_.AllocateState(0);
+	transFunc_.AllocateState(0);
+	transFunc_.AllocateState(0);
+	transFunc_.AllocateState(0);
+	transFunc_.AllocateState(0);
+	transFunc_.AllocateState(0);
+
 	// Test of nullary symbols
 	MyVariableAssignment asgn("0010");
 	SFTA::Vector<unsigned> leftHandSide;
@@ -88,9 +102,9 @@ BOOST_AUTO_TEST_CASE(setters_and_getters_test)
 	rightHandSide.push_back(3);
 	rightHandSide.push_back(4);
 	rightHandSide.push_back(5);
-	transFunc_.AddTransition(asgn, leftHandSide, rightHandSide);
+	transFunc_.AddTransition(0, asgn, leftHandSide, rightHandSide);
 
-	SFTA::OrderedVector<unsigned> outputVal = transFunc_.GetTransition(asgn, leftHandSide);
+	SFTA::OrderedVector<unsigned> outputVal = transFunc_.GetTransition(0, asgn, leftHandSide);
 	BOOST_TEST_MESSAGE("Output value: " + Convert::ToString(outputVal));
 	BOOST_CHECK(rightHandSide == outputVal);
 
@@ -100,9 +114,9 @@ BOOST_AUTO_TEST_CASE(setters_and_getters_test)
 	asgn = MyVariableAssignment("000X");
 	rightHandSide.clear();
 	rightHandSide.push_back(7);
-	transFunc_.AddTransition(asgn, leftHandSide, rightHandSide);
+	transFunc_.AddTransition(0, asgn, leftHandSide, rightHandSide);
 
-	outputVal = transFunc_.GetTransition(asgn, leftHandSide);
+	outputVal = transFunc_.GetTransition(0, asgn, leftHandSide);
 	BOOST_TEST_MESSAGE("Output value: " + Convert::ToString(outputVal));
 	BOOST_CHECK(rightHandSide == outputVal);
 
@@ -114,9 +128,9 @@ BOOST_AUTO_TEST_CASE(setters_and_getters_test)
 	rightHandSide.clear();
 	rightHandSide.push_back(3);
 	rightHandSide.push_back(1);
-	transFunc_.AddTransition(asgn, leftHandSide, rightHandSide);
+	transFunc_.AddTransition(0, asgn, leftHandSide, rightHandSide);
 
-	outputVal = transFunc_.GetTransition(asgn, leftHandSide);
+	outputVal = transFunc_.GetTransition(0, asgn, leftHandSide);
 	BOOST_TEST_MESSAGE("Output value: " + Convert::ToString(outputVal));
 	BOOST_CHECK(rightHandSide == outputVal);
 
@@ -130,9 +144,9 @@ BOOST_AUTO_TEST_CASE(setters_and_getters_test)
 	rightHandSide.clear();
 	rightHandSide.push_back(6);
 	rightHandSide.push_back(2);
-	transFunc_.AddTransition(asgn, leftHandSide, rightHandSide);
+	transFunc_.AddTransition(0, asgn, leftHandSide, rightHandSide);
 
-	outputVal = transFunc_.GetTransition(asgn, leftHandSide);
+	outputVal = transFunc_.GetTransition(0, asgn, leftHandSide);
 	BOOST_TEST_MESSAGE("Output value: " + Convert::ToString(outputVal));
 	BOOST_CHECK(rightHandSide == outputVal);
 
@@ -143,7 +157,7 @@ BOOST_AUTO_TEST_CASE(setters_and_getters_test)
 	asgn = MyVariableAssignment("0001");
 	rightHandSide.clear();
 
-	outputVal = transFunc_.GetTransition(asgn, leftHandSide);
+	outputVal = transFunc_.GetTransition(0, asgn, leftHandSide);
 	BOOST_TEST_MESSAGE("Output value: " + Convert::ToString(outputVal));
 	BOOST_CHECK(rightHandSide == outputVal);
 
@@ -154,7 +168,7 @@ BOOST_AUTO_TEST_CASE(setters_and_getters_test)
 	asgn = MyVariableAssignment("0000");
 	rightHandSide.clear();
 
-	outputVal = transFunc_.GetTransition(asgn, leftHandSide);
+	outputVal = transFunc_.GetTransition(0, asgn, leftHandSide);
 	BOOST_TEST_MESSAGE("Output value: " + Convert::ToString(outputVal));
 	BOOST_CHECK(rightHandSide == outputVal);
 
@@ -168,11 +182,11 @@ BOOST_AUTO_TEST_CASE(setters_and_getters_test)
 	rightHandSide.push_back(3);
 	rightHandSide.push_back(1);
 
-	outputVal = transFunc_.GetTransition(asgn, leftHandSide);
+	outputVal = transFunc_.GetTransition(0, asgn, leftHandSide);
 	BOOST_TEST_MESSAGE("Output value: " + Convert::ToString(outputVal));
 	BOOST_CHECK(rightHandSide == outputVal);
 
-	ATF::TransitionListType tl = transFunc_.GetListOfTransitions();
+	ATF::TransitionListType tl = transFunc_.GetListOfTransitions(0);
 
 	for (ATF::TransitionListType::const_iterator it = tl.begin();
 		it != tl.end(); ++it)
