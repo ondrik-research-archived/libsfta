@@ -55,6 +55,18 @@ private:  // Private data members
 
 public:   // Public methods
 
+
+	OrderedVector()
+		: vec_()
+	{
+	}
+
+	explicit OrderedVector(const VectorType& vec)
+		: vec_(vec)
+	{
+	}
+
+
 	inline void push_back(const T& x)
 	{
 		vec_.push_back(x);
@@ -67,6 +79,53 @@ public:   // Public methods
 		vec_.clear();
 	}
 
+	inline size_t size() const
+	{
+		return vec_.size();
+	}
+
+	OrderedVector Union(const OrderedVector& rhs) const
+	{
+		VectorType newVector;
+
+		typename VectorType::const_iterator lhsIt = vec_.begin();
+		typename VectorType::const_iterator rhsIt = rhs.vec_.begin();
+
+		while ((lhsIt != vec_.end()) || (rhsIt != rhs.vec_.end()))
+		{	// until we get to the end of both vectors
+			if (lhsIt == vec_.end())
+			{	// if we are finished with the left-hand side vector
+				newVector.push_back(*rhsIt);
+				++rhsIt;
+			}
+			else if (rhsIt == rhs.vec_.end())
+			{	// if we are finished with the right-hand side vector
+				newVector.push_back(*lhsIt);
+				++lhsIt;
+			}
+			else
+			{
+				if (*lhsIt < *rhsIt)
+				{
+					newVector.push_back(*lhsIt);
+					++lhsIt;
+				}
+				else if (*lhsIt > *rhsIt)
+				{
+					newVector.push_back(*rhsIt);
+					++rhsIt;
+				}
+				else
+				{	// in case they are equal
+					newVector.push_back(*rhsIt);
+					++rhsIt;
+					++lhsIt;
+				}
+			}
+		}
+
+		return OrderedVector(newVector);
+	}
 
 	template <class InputIterator>
 	inline void insert(iterator position, InputIterator first, InputIterator last)
