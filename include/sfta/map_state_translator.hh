@@ -84,15 +84,19 @@ public:   // Public methods
 		{	// in case there was an attempt to overwrite previous value
 			throw std::runtime_error("An attempt to overwrite existing state.");
 		}
+
+		SFTA_LOGGER_DEBUG("Added state translation: " + Convert::ToString(autState)
+			+ " <-> " + Convert::ToString(tfState));
 	}
 
 
-	AStateType TranslateTF2Automaton(const TFStateType& tfState) const
+	AStateType TranslateTF2A(const TFStateType& tfState) const
 	{
 		typename TF2ATableType::const_iterator it;
 		if ((it = tf2a_.find(tfState)) == tf2a_.end())
 		{	// in case the translation could not be found
-			throw std::runtime_error("Cannot find translation.");
+			assert(false);
+			throw std::runtime_error("Cannot find translation TF2A.");
 		}
 
 		return it->second;
@@ -104,7 +108,7 @@ public:   // Public methods
 		typename A2TFTableType::const_iterator it;
 		if ((it = a2tf_.find(aState)) == a2tf_.end())
 		{	// in case the translation could not be found
-			throw std::runtime_error("Cannot find translation.");
+			throw std::runtime_error("Cannot find translation A2TF.");
 		}
 
 		return it->second;

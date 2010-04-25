@@ -73,20 +73,18 @@ public:   // Public methods
 
 		LeftHandSideType lhs;
 
-		StateType newInitialState = transFunc->AllocateState(0);
 		LeftHandSideType newLhs;
-		newLhs.push_back(newInitialState);
 
-		RootType root = mtbdd.Apply(transFunc->getRoot(0, lhs), transFunc->getRoot(1, lhs), leafUnion);
+		RootType root = mtbdd.Apply(transFunc->getRoot(ta1.GetRegToken(), lhs), transFunc->getRoot(ta2.GetRegToken(), lhs), leafUnion);
 
-		transFunc->setRoot(2, newLhs, root);
+		TreeAutomaton result(transFunc);
 
-		//TreeAutomaton result(
-		
+		transFunc->setRoot(result.GetRegToken(), newLhs, root);
+
 		mtbdd.DumpToDotFile("mtbdd.dot");
 
 
-		return ta1;
+		return result;
 	}
 };
 

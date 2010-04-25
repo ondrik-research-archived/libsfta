@@ -53,9 +53,6 @@ protected:
 
 	MTBDDTF transFunc_;
 
-	const static size_t STATE_SET_SIZE = 10;
-	const static size_t SINK_STATE = 0;
-
 public:
 
 	MTBDDTransitionFunctionFixture()

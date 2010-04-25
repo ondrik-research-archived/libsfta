@@ -15,6 +15,7 @@
 // Standard library headers
 #include <cassert>
 #include <string>
+#include <vector>
 #include <stdexcept>
 
 
@@ -155,7 +156,12 @@ public:   // Public methods
 
 	CompactVariableAssignment()
 		: vars_()
-	{ }
+	{
+		for (size_t i = 0; i < Size(); ++i)
+		{	// for each variable
+			SetIthVariableValue(i, ZERO);
+		}
+	}
 
 
 	/**
@@ -295,6 +301,32 @@ public:   // Public methods
 		lst.push_back(CompactVariableAssignment(str));
 		return lst;
 	}
+
+
+	CompactVariableAssignment operator++()
+	{
+		for (size_t i = 0; i < Size(); ++i)
+		{	// for each variable
+			char value = GetIthVariableValue(i);
+			if (value == ZERO)
+			{	// in case we can stop here
+				SetIthVariableValue(i, ONE);
+				return *this;
+			}
+			else if (value == ONE)
+			{	// we change to zero and continue to search zero
+				SetIthVariableValue(i, ZERO);
+			}
+			else
+			{	// otherwise
+				throw std::runtime_error(
+					"An attempt to increment assignment with invalid states");
+			}
+		}
+
+		return *this;
+	}
+
 
 	/**
 	 * @brief  Overloaded << operator

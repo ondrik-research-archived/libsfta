@@ -24,6 +24,7 @@ CFLAGS         += -Weffc++
 CFLAGS         += -Woverloaded-virtual
 CFLAGS         += -finline-functions
 CFLAGS         += -Wold-style-cast
+CFLAGS         += -fdiagnostics-show-option
 CFLAGS         += -g
 
 # Where to search for include files

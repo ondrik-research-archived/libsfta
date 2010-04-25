@@ -434,9 +434,9 @@ private:   // Private data types
 			// get the MTBDD
 			CUDDSharedMTBDD& mtbdd = *(params.SharedMTBDD);
 
-			SFTA_LOGGER_DEBUG("Performing generic apply on "
-				+ Convert::ToString(mtbdd.LA::getLeafOfHandle(lhs))
-				+ " and " + Convert::ToString(mtbdd.LA::getLeafOfHandle(rhs)));
+			//SFTA_LOGGER_DEBUG("Performing generic apply on "
+			//	+ Convert::ToString(mtbdd.LA::getLeafOfHandle(lhs))
+			//	+ " and " + Convert::ToString(mtbdd.LA::getLeafOfHandle(rhs)));
 
 			// perform the operation
 			typename LA::LeafType res = params.Op(
@@ -493,7 +493,9 @@ private:  // Private methods
 	 */
 	inline CUDDFacade::Node* getIthVariable(size_t i)
 	{
-		return cudd_.AddIthVar(i);
+		CUDDFacade::Node* node = cudd_.AddIthVar(i);
+		cudd_.Ref(node);
+		return node;
 	}
 
 
@@ -510,7 +512,9 @@ private:  // Private methods
 	 */
 	inline CUDDFacade::Node* getIthVariableNot(size_t i)
 	{
-		return cudd_.AddCmpl(getIthVariable(i));
+		CUDDFacade::Node* cmplNode = cudd_.AddCmpl(cudd_.AddIthVar(i));
+		cudd_.Ref(cmplNode);
+		return cmplNode;
 	}
 
 
@@ -558,6 +562,7 @@ private:  // Private methods
 			CUDDFacade::Node* tmp = cudd_.Times(node, var);
 			cudd_.Ref(tmp);
 			cudd_.RecursiveDeref(node);
+			cudd_.RecursiveDeref(var);
 			node = tmp;
 		}
 
@@ -606,38 +611,12 @@ private:  // Private methods
 
 			CUDDFacade::Node* tmp = cudd_.Times(node, var);
 			cudd_.Ref(tmp);
-			cudd_.RecursiveDeref(node);
+			//cudd_.RecursiveDeref(node);
+			//cudd_.RecursiveDeref(var);
 			node = tmp;
 		}
 
 		return RA::allocateRoot(node);
-	}
-
-
-	/**
-	 * @brief  Erases a root
-	 *
-	 * Erases given root and dereferences proper MTBDD
-	 *
-	 * @param[in]  root  The root of the MTBDD to be erased
-	 */
-	void eraseRoot(RootType root)
-	{
-		// First, for every leaf, call proper release function
-
-		// create parameters of monadic Apply function that pass correct callback
-		// function and this object to provide context
-		CUDDFacade::MonadicApplyCallbackParameters paramsMon(
-			LA::leafReleaser, static_cast<void*>(this));
-		// carry out the monadic Apply operation
-		CUDDFacade::Node* monRes = cudd_.MonadicApply(RA::getHandleOfRoot(root),
-			&paramsMon);
-
-		// remove temporary MTBDDs
-		cudd_.RecursiveDeref(monRes);
-
-		cudd_.RecursiveDeref(RA::getHandleOfRoot(root));
-		RA::eraseRoot(root);
 	}
 
 
@@ -692,7 +671,8 @@ public:   // Public methods
 			RA::getHandleOfRoot(mtbddAsgn), &params);
 
 		// remove the temporary MTBDD
-		eraseRoot(mtbddAsgn);
+		cudd_.RecursiveDeref(RA::getHandleOfRoot(mtbddAsgn));
+		RA::eraseRoot(mtbddAsgn);
 
 		// get rid of the old MTBDD for the function
 		cudd_.RecursiveDeref(RA::getHandleOfRoot(root));
@@ -705,8 +685,8 @@ public:   // Public methods
 	virtual typename ParentClass::LeafContainer GetValue(const RootType& root,
 		const VariableAssignmentType& asgn)
 	{
-		SFTA_LOGGER_DEBUG("Reading value of root " + Convert::ToString(root)
-			+ " at " + Convert::ToString(asgn));
+		//SFTA_LOGGER_DEBUG("Reading value of root " + Convert::ToString(root)
+		//	+ " at " + Convert::ToString(asgn));
 
 		// create the projection MTBDD for given variable assignment
 		RootType mtbddAsgn = createMTBDDForVariableProjection(asgn);
@@ -718,7 +698,8 @@ public:   // Public methods
 			RA::getHandleOfRoot(mtbddAsgn), &params);
 
 		// remove the temporary MTBDD
-		eraseRoot(mtbddAsgn);
+		cudd_.RecursiveDeref(RA::getHandleOfRoot(mtbddAsgn));
+		RA::eraseRoot(mtbddAsgn);
 
 		// create container for handles of leaves that are at the position
 		LeafHandleArray leavesHandles;
@@ -743,8 +724,8 @@ public:   // Public methods
 			}
 		}
 
-		SFTA_LOGGER_DEBUG("Read value of root " + Convert::ToString(root)
-			+ " at " + Convert::ToString(asgn) + ": " + Convert::ToString(leaves));
+		//SFTA_LOGGER_DEBUG("Read value of root " + Convert::ToString(root)
+		//	+ " at " + Convert::ToString(asgn) + ": " + Convert::ToString(leaves));
 
 		return leaves;
 	}
@@ -783,6 +764,33 @@ public:   // Public methods
 		cudd_.Ref(node);
 
 		return RA::allocateRoot(node);
+	}
+
+
+	/**
+	 * @brief  Erases a root
+	 *
+	 * Erases given root and dereferences proper MTBDD
+	 *
+	 * @param[in]  root  The root of the MTBDD to be erased
+	 */
+	void EraseRoot(RootType root)
+	{
+		// First, for every leaf, call proper release function
+
+		// create parameters of monadic Apply function that pass correct callback
+		// function and this object to provide context
+		CUDDFacade::MonadicApplyCallbackParameters paramsMon(
+			LA::leafReleaser, static_cast<void*>(this));
+		// carry out the monadic Apply operation
+		CUDDFacade::Node* monRes = cudd_.MonadicApply(RA::getHandleOfRoot(root),
+			&paramsMon);
+
+		// remove temporary MTBDDs
+		cudd_.RecursiveDeref(monRes);
+
+		cudd_.RecursiveDeref(RA::getHandleOfRoot(root));
+		RA::eraseRoot(root);
 	}
 
 
@@ -859,9 +867,6 @@ public:   // Public methods
 		{	// traverse all roots
 			cudd_.RecursiveDeref(*it);
 		}
-
-		// remove the background
-		cudd_.RecursiveDeref(cudd_.ReadBackground());
 	}
 };
 

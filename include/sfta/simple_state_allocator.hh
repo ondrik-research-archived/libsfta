@@ -39,6 +39,10 @@ private:  // Private data members
 
 	StateType nextState_;
 
+protected:// Protected data members
+
+	const static StateType SINK_STATE = 0;
+
 public:   // Public methods
 
 	SimpleStateAllocator()

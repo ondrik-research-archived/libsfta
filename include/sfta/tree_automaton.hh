@@ -50,17 +50,12 @@ class SFTA::TreeAutomaton
 			typename TransitionFunction::StateType
 		>
 {
-private:  // Private data types
-
-	typedef SFTA::Private::Convert Convert;
-
 public:   // Public data types
 
-	typedef Symbol ASymbolType;
+	typedef Symbol SymbolType;
 	typedef State AStateType;
 
 	typedef typename TransitionFunction::StateType TFStateType;
-	typedef typename TransitionFunction::SymbolType TFSymbolType;
 
 	typedef TransitionFunction TransitionFunctionType;
 	typedef typename TransitionFunctionType::TransitionListType TransitionListType;
@@ -72,6 +67,10 @@ public:   // Public data types
 
 	typedef std::set<AStateType> SetOfStatesType;
 
+private:  // Private data types
+
+	typedef SFTA::Private::Convert Convert;
+
 	typedef StateTranslator
 	<
 		AStateType,
@@ -79,6 +78,7 @@ public:   // Public data types
 	>
 	ST;
 
+	typedef std::set<TFStateType> SetOfTFStates;
 
 private:  // Private data members
 
@@ -86,11 +86,14 @@ private:  // Private data members
 
 	typename TransitionFunctionType::RegistrationTokenType regToken_;
 
+	SetOfTFStates finalStates_;
+
 public:   // Public methods
 
 	TreeAutomaton()
 		: transFunc_(new TransitionFunctionType()),
-		  regToken_()
+		  regToken_(),
+			finalStates_()
 	{
 		regToken_ = transFunc_->RegisterAutomaton();
 	}
@@ -112,7 +115,7 @@ public:   // Public methods
 	}
 
 
-	void AddTransition(const ASymbolType& symbol,
+	void AddTransition(const SymbolType& symbol,
 		const RuleLeftHandSideType& lhs, const SetOfStatesType& rhs)
 	{
 		typename TransitionFunctionType::LeftHandSideType tfLhs(lhs.size());
@@ -131,10 +134,22 @@ public:   // Public methods
 		transFunc_->AddTransition(regToken_, symbol, tfLhs, tfRhs);
 	}
 
+	void SetStateFinal(const AStateType& state)
+	{
+		TFStateType tfState = ST::TranslateA2TF(state);
+		finalStates_.insert(tfState);
+	}
+
 
 	inline TransFuncPtrType GetTransitionFunction()
 	{
 		return transFunc_;
+	}
+
+	inline typename TransitionFunctionType::RegistrationTokenType
+		GetRegToken() const
+	{
+		return regToken_;
 	}
 
 	std::string ToString()
@@ -153,11 +168,13 @@ public:   // Public methods
 
 			if (lhs.size() > 0)
 			{	// if the symbol is more than nullary
-				result += Convert::ToString(ST::TranslateTF2Automaton(lhs[0]));
+				//result += Convert::ToString(ST::TranslateTF2A(lhs[0]));
+				result += Convert::ToString(lhs[0]);
 
 				for (size_t i = 1; i < lhs.size(); ++i)
 				{
-					result += ", " + Convert::ToString(ST::TranslateTF2Automaton(lhs[i]));
+					//result += ", " + Convert::ToString(ST::TranslateTF2A(lhs[i]));
+					result += ", " + Convert::ToString(lhs[i]);
 				}
 			}
 
@@ -168,10 +185,12 @@ public:   // Public methods
 			assert(rhs.size() > 0);
 
 			result += ") -> {";
-			result += Convert::ToString(ST::TranslateTF2Automaton(rhs[0]));
+			//result += Convert::ToString(ST::TranslateTF2A(rhs[0]));
+			result += Convert::ToString(rhs[0]);
 			for (size_t i = 1; i < rhs.size(); ++i)
 			{
-				result += ", " + Convert::ToString(ST::TranslateTF2Automaton(rhs[i]));
+				//result += ", " + Convert::ToString(ST::TranslateTF2A(rhs[i]));
+				result += ", " + Convert::ToString(rhs[i]);
 			}
 
 			result += "}\n";

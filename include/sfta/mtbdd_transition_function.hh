@@ -407,16 +407,36 @@ private:  // Private methods
 	}
 
 
+	static typename MTBDDType::LeafType leafUnion(
+		const typename MTBDDType::LeafType& lhs,
+		const typename MTBDDType::LeafType& rhs)
+	{
+		if (lhs[0] == SA::SINK_STATE)
+		{
+			return rhs;
+		}
+		else if (rhs[0] == SA::SINK_STATE)
+		{
+			return lhs;
+		}
+
+		typename MTBDDType::LeafType newLeaf = lhs;
+		newLeaf.insert(newLeaf.end(), rhs.begin(), rhs.end());
+
+		return newLeaf;
+	}
+
+
 	RHSSymbolListType getTransitionsForSymbol(MTBDDRootType root,
 		SymbolType symbol, size_t position)
 	{
 		// Assertions
 		assert(position <= SymbolType::VariablesCount);
 
-		SFTA_LOGGER_DEBUG("Getting transition from root "
-			+ Convert::ToString(root) + " for symbol "
-			+ Convert::ToString(symbol) + " and position "
-			+ Convert::ToString(position));
+		//SFTA_LOGGER_DEBUG("Getting transition from root "
+		//	+ Convert::ToString(root) + " for symbol "
+		//	+ Convert::ToString(symbol) + " and position "
+		//	+ Convert::ToString(position));
 
 		if (position == SymbolType::VariablesCount)
 		{	// if we are at the bottom
@@ -514,9 +534,21 @@ public:   // Public methods
 				+ Convert::ToString(lhs));
 			root = mtbdd_.CreateRoot();
 			setRoot(regToken, lhs, root);
+			mtbdd_.SetValue(root, symbol, rhs);
 		}
+		else
+		{	// in case there already is something
 
-		mtbdd_.SetValue(root, symbol, rhs);
+			// create a new root
+			MTBDDRootType tmpRoot = mtbdd_.CreateRoot();
+			mtbdd_.SetValue(tmpRoot, symbol, rhs);
+
+			MTBDDRootType newRoot = mtbdd_.Apply(root, tmpRoot, leafUnion);
+
+			mtbdd_.EraseRoot(root);
+			mtbdd_.EraseRoot(tmpRoot);
+			setRoot(regToken, lhs, newRoot);
+		}
 	}
 
 
@@ -607,8 +639,6 @@ public:   // Public methods
 	{
 		// Assertions
 		assert(regToken == regToken);  // just to make the compiler happy
-
-		mtbdd_.DumpToDotFile("mtbdd.dot");
 	}
 
 	virtual StateType AllocateState(const RegistrationToken& regToken)
