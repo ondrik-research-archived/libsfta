@@ -171,6 +171,39 @@ private:  // Private data types
 	>
 	SA;
 
+	class LeafUnionFunctor
+		: public MTBDDType::AbstractApplyFunctorType
+	{
+	private:
+
+		StateType sinkState_;
+
+	public:
+
+		explicit LeafUnionFunctor(const StateType& sinkState)
+			: sinkState_(sinkState)
+		{ }
+
+		virtual typename MTBDDType::LeafType operator()(
+			const typename MTBDDType::LeafType& lhs,
+			const typename MTBDDType::LeafType& rhs)
+		{
+			if (lhs[0] == sinkState_)
+			{
+				return rhs;
+			}
+			else if (rhs[0] == sinkState_)
+			{
+				return lhs;
+			}
+
+			typename MTBDDType::LeafType newLeaf = lhs;
+			newLeaf.insert(newLeaf.end(), rhs.begin(), rhs.end());
+
+			return newLeaf;
+		}
+	};
+
 private:  // Private data members
 
 	/**
@@ -340,7 +373,6 @@ private:  // Private methods
 		{	// append all non-bottom roots
 			if (container1_[i] != sinkStateRoot_)
 			{
-				SFTA_LOGGER_DEBUG("Container1_[i] = " + Convert::ToString(container1_[i]));
 				LeftHandSideType lhs(1);
 				lhs[0] = i;
 
@@ -404,26 +436,6 @@ private:  // Private methods
 		}
 
 		return lst;
-	}
-
-
-	static typename MTBDDType::LeafType leafUnion(
-		const typename MTBDDType::LeafType& lhs,
-		const typename MTBDDType::LeafType& rhs)
-	{
-		if (lhs[0] == SA::SINK_STATE)
-		{
-			return rhs;
-		}
-		else if (rhs[0] == SA::SINK_STATE)
-		{
-			return lhs;
-		}
-
-		typename MTBDDType::LeafType newLeaf = lhs;
-		newLeaf.insert(newLeaf.end(), rhs.begin(), rhs.end());
-
-		return newLeaf;
 	}
 
 
@@ -543,7 +555,8 @@ public:   // Public methods
 			MTBDDRootType tmpRoot = mtbdd_.CreateRoot();
 			mtbdd_.SetValue(tmpRoot, symbol, rhs);
 
-			MTBDDRootType newRoot = mtbdd_.Apply(root, tmpRoot, leafUnion);
+			MTBDDRootType newRoot = mtbdd_.Apply(root, tmpRoot,
+				new LeafUnionFunctor(sinkState_));
 
 			mtbdd_.EraseRoot(root);
 			mtbdd_.EraseRoot(tmpRoot);

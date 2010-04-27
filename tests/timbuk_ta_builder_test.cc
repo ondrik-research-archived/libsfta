@@ -98,17 +98,20 @@ BOOST_AUTO_TEST_CASE(setters_and_getters_test)
 	Director director1(builder1);
 	std::ifstream file1("automata/easy1");
 	TAType ta1 = director1.Construct(file1);
-	BOOST_TEST_MESSAGE("Result 1: " + ta1.ToString());
 
 	BuilderPtr builder2(new Builder(dict));
 	Director director2(builder2, ta1.GetTransitionFunction());
 	std::ifstream file2("automata/easy2");
 	TAType ta2 = director2.Construct(file2);
+	BOOST_TEST_MESSAGE("Result 1: " + ta1.ToString());
 	BOOST_TEST_MESSAGE("Result 2: " + ta2.ToString());
 
 	SFTA::MTBDDOperation<TAType> op;
 	TAType ta3 = op.Union(ta1, ta2);
 	BOOST_TEST_MESSAGE("After union: " + ta3.ToString());
+
+	TAType ta4 = op.Intersection(ta1, ta2);
+	BOOST_TEST_MESSAGE("After intersection: " + ta4.ToString());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

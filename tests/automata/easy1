@@ -12,11 +12,11 @@ Final States q9
 Transitions 
 bot0 -> q50
 bot0 -> q14
-yblack(q50,q50) -> q34
+yblack(q50) -> q34
 bot2(q50,q50) -> q41
 bot2(q50,q50) -> q50
 black(q50,q50) -> q32
-yblack(q14,q14) -> q18
+yblack(q14) -> q18
 bot2(q14,q14) -> q14
 bot2(q14,q14) -> q24
 black(q14,q14) -> q9

@@ -12,11 +12,11 @@ Final States q8
 Transitions 
 bot0 -> q16
 bot0 -> q35
-red(q16,q16) -> q10
+yblack(q16) -> q10
 bot2(q16,q16) -> q1
 bot2(q16,q16) -> q16
 black(q16,q16) -> q11
-red(q1,q1) -> q5
+red(q1) -> q5
 red(q1,q1) -> q6
 black(q1,q1) -> q6
 black(q1,q1) -> q8

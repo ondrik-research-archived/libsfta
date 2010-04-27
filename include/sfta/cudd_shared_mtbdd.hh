@@ -230,7 +230,7 @@ private:   // Private data types
 		 * Pointer to the function that carries out the operation on leave nodes of
 		 * the MTBDD.
 		 */
-		typename ParentClass::ApplyFunctionType Op;
+		typename ParentClass::AbstractApplyFunctorType* Op;
 
 
 		/**
@@ -248,13 +248,50 @@ private:   // Private data types
 		 *
 		 * The constructor of the structure.
 		 */
-		ApplyCallbackParameters(typename ParentClass::ApplyFunctionType op,
+		ApplyCallbackParameters(typename ParentClass::AbstractApplyFunctorType* op,
 			CUDDSharedMTBDD* bdd)
 			: Op(op), SharedMTBDD(bdd)
 		{ }
 
 	};
 
+	struct ApplyWithContextCallbackParameters
+	{
+	public:   // Public data members
+
+		/**
+		 * @brief  Pointer to the operation
+		 *
+		 * Pointer to the function that carries out the operation on leave nodes of
+		 * the MTBDD.
+		 */
+		typename ParentClass::ApplyWithContextFunctionType Op;
+
+
+		/**
+		 * @brief  MTBDD that provides the context
+		 *
+		 * MTBDD which is used to provide the context, in which the operation
+		 * takes place.
+		 */
+		CUDDSharedMTBDD* SharedMTBDD;
+
+		void* Context;
+
+	public:   // Public methods
+
+		/**
+		 * @brief  Constructor
+		 *
+		 * The constructor of the structure.
+		 */
+		ApplyWithContextCallbackParameters(
+			typename ParentClass::ApplyWithContextFunctionType op,
+			CUDDSharedMTBDD* bdd, void* context)
+			: Op(op), SharedMTBDD(bdd), Context(context)
+		{ }
+
+	};
 
 	/**
 	 * @brief   Static class with apply functions for MTBDD
@@ -439,7 +476,7 @@ private:   // Private data types
 			//	+ " and " + Convert::ToString(mtbdd.LA::getLeafOfHandle(rhs)));
 
 			// perform the operation
-			typename LA::LeafType res = params.Op(
+			typename LA::LeafType res = (*params.Op)(
 				mtbdd.LA::getLeafOfHandle(lhs), mtbdd.LA::getLeafOfHandle(rhs));
 
 			// create a leaf and return its handle
@@ -737,10 +774,11 @@ public:   // Public methods
 	 * @copydetails  SFTA::AbstractSharedMTBDD::Apply()
 	 */
 	virtual RootType Apply(const RootType& lhs, const RootType& rhs,
-		const typename ParentClass::ApplyFunctionType& func)
+		typename ParentClass::AbstractApplyFunctorType* func)
 	{
 		// Assertions
-		assert(func != static_cast<typename ParentClass::ApplyFunctionType>(0));
+		assert(func
+			!= static_cast<typename ParentClass::AbstractApplyFunctorType*>(0));
 
 		// create parameters of high-level Apply function that pass correct
 		// callback function and this object as the context

@@ -12,6 +12,7 @@
 #define _SFTA_TREE_AUTOMATON_HH_
 
 // SFTA header files
+#include <sfta/sfta.hh>
 #include <sfta/abstract_transition_function.hh>
 #include <sfta/vector.hh>
 
@@ -88,6 +89,14 @@ private:  // Private data members
 
 	SetOfTFStates finalStates_;
 
+	/**
+	 * @brief  The name of the Log4cpp category for logging
+	 *
+	 * The name of the Log4cpp category used for logging messages from this
+	 * class.
+	 */
+	static const char* LOG_CATEGORY_NAME;
+
 public:   // Public methods
 
 	TreeAutomaton()
@@ -100,9 +109,10 @@ public:   // Public methods
 
 
 
-	TreeAutomaton(TransFuncPtrType transFunction)
+	explicit TreeAutomaton(TransFuncPtrType transFunction)
 		: transFunc_(transFunction),
-		  regToken_()
+		  regToken_(),
+			finalStates_()
 	{
 		regToken_ = transFunc_->RegisterAutomaton();
 	}
@@ -162,9 +172,26 @@ public:   // Public methods
 		for (typename TransitionListType::const_iterator it = lst.begin();
 			it != lst.end(); ++it)
 		{	// for each transition of the transition function
-			result += Convert::ToString(Loki::Field<0>(*it)) + "(";
 			typename TransitionFunctionType::LeftHandSideType lhs
 				= Loki::Field<1>(*it);
+
+//			bool foundInvalid = false;
+//			for (typename TransitionFunctionType::LeftHandSideType::const_iterator jt
+//				= lhs.begin(); jt != lhs.end(); ++jt)
+//			{	// check that all states are from this automaton
+//				if (!ContainsTFState(*jt))
+//				{
+//					foundInvalid = true;
+//					break;
+//				}
+//			}
+//
+//			if (foundInvalid)
+//			{	// in case an invalid state was found, skip this transition
+//				continue;
+//			}
+
+			result += Convert::ToString(Loki::Field<0>(*it)) + "(";
 
 			if (lhs.size() > 0)
 			{	// if the symbol is more than nullary
@@ -205,8 +232,16 @@ public:   // Public methods
 		transFunc_->UnregisterAutomaton(regToken_);
 	}
 
-
-
 };
 
+
+// Setting the logging category name for Log4cpp
+template
+<
+	typename Sy,
+	typename St,
+	class TF,
+	template <typename, typename> class ST
+>
+const char* SFTA::TreeAutomaton<Sy, St, TF, ST>::LOG_CATEGORY_NAME = "tree_automaton";
 #endif

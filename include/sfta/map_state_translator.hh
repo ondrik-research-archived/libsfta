@@ -115,6 +115,17 @@ public:   // Public methods
 	}
 
 
+	inline bool ContainsTFState(const TFStateType& tfState) const
+	{
+		return tf2a_.find(tfState) != tf2a_.end();
+	}
+
+	inline size_t Size() const
+	{
+		return a2tf_.size();
+	}
+
+
 	void SetTFStateFinal(const TFStateType& tfState)
 	{
 		finalStates_.insert(tfState);

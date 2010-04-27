@@ -35,6 +35,7 @@ LogFixture::LogFixture()
 		log4cpp::Appender* app6 = new log4cpp::OstreamAppender("ClogAppender", &std::clog);
 		log4cpp::Appender* app7 = new log4cpp::OstreamAppender("ClogAppender", &std::clog);
 		log4cpp::Appender* app8 = new log4cpp::OstreamAppender("ClogAppender", &std::clog);
+		log4cpp::Appender* app9 = new log4cpp::OstreamAppender("ClogAppender", &std::clog);
 
 		// Set the data layout of the appender
 		log4cpp::Layout* layout1 = new log4cpp::BasicLayout();
@@ -60,6 +61,9 @@ LogFixture::LogFixture()
 
 		log4cpp::Layout* layout8 = new log4cpp::BasicLayout();
 		app8->setLayout(layout8);
+
+		log4cpp::Layout* layout9 = new log4cpp::BasicLayout();
+		app9->setLayout(layout9);
 
 		std::string cat_name = "cudd_facade";
 
@@ -107,6 +111,12 @@ LogFixture::LogFixture()
 
 		log4cpp::Category::getInstance(cat_name).setAdditivity(false);
 		log4cpp::Category::getInstance(cat_name).addAppender(app8);
+		log4cpp::Category::getInstance(cat_name).setPriority(log4cpp::Priority::DEBUG);
+
+		cat_name = "tree_automaton";
+
+		log4cpp::Category::getInstance(cat_name).setAdditivity(false);
+		log4cpp::Category::getInstance(cat_name).addAppender(app9);
 		log4cpp::Category::getInstance(cat_name).setPriority(log4cpp::Priority::DEBUG);
 	}
 }

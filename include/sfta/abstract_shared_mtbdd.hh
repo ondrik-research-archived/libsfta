@@ -60,8 +60,9 @@ public:  // Public data types
 	 * Data type for function pointers for functions that carry out the Apply
 	 * operation on the MTBDD.
 	 */
-	typedef LeafType (*ApplyFunctionType)(const LeafType&, const LeafType&);
+	//typedef LeafType (*ApplyFunctionType)();
 
+	//typedef LeafType (*ApplyWithContextFunctionType)(const LeafType&, const LeafType&, void*);
 
 	/**
 	 * @brief  The container type for leafs
@@ -73,6 +74,16 @@ public:  // Public data types
 	 */
 	typedef std::vector<LeafType*> LeafContainer;
 
+	class AbstractApplyFunctorType
+	{
+	public:   // Public methods
+
+		virtual LeafType operator()(const LeafType&, const LeafType&) = 0;
+
+		virtual ~AbstractApplyFunctorType()
+		{ }
+
+	};
 
 public:  // Public methods
 
@@ -127,7 +138,7 @@ public:  // Public methods
 	 * @returns  Root of a MTBDD with the result of the operation
 	 */
 	virtual RootType Apply(const RootType& lhs, const RootType& rhs,
-		const ApplyFunctionType& func) = 0;
+		AbstractApplyFunctorType* func) = 0;
 
 
 	/**

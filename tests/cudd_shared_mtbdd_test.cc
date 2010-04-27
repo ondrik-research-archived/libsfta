@@ -70,23 +70,29 @@ public:
  *                              Start of testing                              *
  ******************************************************************************/
 
-std::vector<unsigned> leaf_addition(const std::vector<unsigned>& lhs, const std::vector<unsigned>& rhs)
+class LeafAdditionFunctor
+	: public CUDDSharedMTBDDFixture::ASMTBDD::AbstractApplyFunctorType
 {
-	std::vector<unsigned> res(lhs.size() + rhs.size());
+	public:
 
-	size_t i = 0;
-	for (i = 0; i < lhs.size(); ++i)
+	virtual std::vector<unsigned> operator()(const std::vector<unsigned>& lhs, const std::vector<unsigned>& rhs)
 	{
-		res[i] = lhs[i];
-	}
+		std::vector<unsigned> res(lhs.size() + rhs.size());
 
-	for (size_t j = 0; j < rhs.size(); ++j)
-	{
-		res[i+j] = rhs[j];
-	}
+		size_t i = 0;
+		for (i = 0; i < lhs.size(); ++i)
+		{
+			res[i] = lhs[i];
+		}
 
-	return res;
-}
+		for (size_t j = 0; j < rhs.size(); ++j)
+		{
+			res[i+j] = rhs[j];
+		}
+
+		return res;
+	}
+};
 
 
 BOOST_FIXTURE_TEST_SUITE(suite, CUDDSharedMTBDDFixture)
@@ -141,7 +147,7 @@ BOOST_AUTO_TEST_CASE(setters_and_getters_test)
 	asgn = MyVariableAssignment("000X");
 	mtbdd->SetValue(root2, asgn, value_added);
 
-	unsigned root3 = mtbdd->Apply(root, root2, leaf_addition);
+	unsigned root3 = mtbdd->Apply(root, root2, new LeafAdditionFunctor);
 
 	value_added.resize(4);
 	value_added[0] = 17;

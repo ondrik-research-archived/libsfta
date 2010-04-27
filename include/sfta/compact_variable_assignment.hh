@@ -303,7 +303,7 @@ public:   // Public methods
 	}
 
 
-	CompactVariableAssignment operator++()
+	CompactVariableAssignment& operator++()
 	{
 		for (size_t i = 0; i < Size(); ++i)
 		{	// for each variable
