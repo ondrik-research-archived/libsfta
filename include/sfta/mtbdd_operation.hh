@@ -77,7 +77,7 @@ private:  // Private data types
 		StateType sinkState_;
 
 		// TODO: substitute for a matrix
-		MapOfPairsToStateType translationTable_;
+		MapOfPairsToStateType* translationTable_;
 
 	private:  // Private methods
 
@@ -103,12 +103,13 @@ private:  // Private data types
 	public:   // Public methods
 
 		LeafIntersection(QueueOfPairsPlusNewStateType* workingQueue,
-			TransFuncPtrType transFunc, RegistrationTokenType regToken)
+			TransFuncPtrType transFunc, RegistrationTokenType regToken,
+			MapOfPairsToStateType translationTable)
 			: workingQueue_(workingQueue),
 				transFunc_(transFunc),
 				regToken_(regToken),
 				sinkState_(transFunc->sinkState_),
-			  translationTable_()
+			  translationTable_(translationTable)
 		{ }
 
 
@@ -191,8 +192,10 @@ public:   // Public methods
 		QueueOfPairsPlusNewStateType queueOfProducts;
 		MapOfPairsToStateType translationTable;
 		SetOfStates processedStates;
-		LeafIntersection intersectFunc(&queueOfProducts, transFunc, result.GetRegToken());
-		RootType root = mtbdd.Apply(transFunc->getRoot(ta1.GetRegToken(), lhs), transFunc->getRoot(ta2.GetRegToken(), lhs), &intersectFunc);
+		LeafIntersection intersectFunc(&queueOfProducts, transFunc,
+			result.GetRegToken(), translationTable);
+		RootType root = mtbdd.Apply(transFunc->getRoot(ta1.GetRegToken(), lhs),
+			transFunc->getRoot(ta2.GetRegToken(), lhs), &intersectFunc);
 		transFunc->setRoot(result.GetRegToken(), lhs, root);
 
 
@@ -226,10 +229,21 @@ public:   // Public methods
 				// find roots for binary symbols with the states
 				lhs1 = LeftHandSideType(2);
 
+				// TODO: this could be done more efficiently using proper data
+				// structures!
+
 				// bind to the first position
 				for (size_t i = 0; i < transFunc->container2_.size(); ++i)
-				{	// try each column
-					transFunc->container2_[prod.first][i];
+				{
+					for (size_t j = 0; j < transFunc->container2_.size(); ++j)
+					{	// for each pair of states
+						if (translationTable.find(std::make_pair(i,j)))
+						{
+						}
+
+						transFunc->container2_[prod.first][i];
+						transFunc->container2_[prod.second][j];
+					}
 				}
 
 				// bind to the second position
