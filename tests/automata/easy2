@@ -20,3 +20,4 @@ red(q1) -> q5
 red(q1,q1) -> q6
 black(q1,q1) -> q6
 black(q1,q1) -> q8
+black(q16,q16,q16) -> q35

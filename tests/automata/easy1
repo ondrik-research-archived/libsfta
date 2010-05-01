@@ -20,3 +20,4 @@ yblack(q14) -> q18
 bot2(q14,q14) -> q14
 bot2(q14,q14) -> q24
 black(q14,q14) -> q9
+black(q14,q14,q14) -> q50
