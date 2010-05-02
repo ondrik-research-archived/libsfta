@@ -124,6 +124,11 @@ public:   // Public methods
 		ST::AddTranslation(state, tfState);
 	}
 
+	void MapStateToTF(const AStateType& aState, const TFStateType& tfState)
+	{
+		ST::AddTranslation(aState, tfState);
+	}
+
 
 	void AddTransition(const SymbolType& symbol,
 		const RuleLeftHandSideType& lhs, const SetOfStatesType& rhs)
@@ -150,6 +155,16 @@ public:   // Public methods
 		finalStates_.insert(tfState);
 	}
 
+	void SetTFStateFinal(const TFStateType& tfState)
+	{
+		finalStates_.insert(tfState);
+	}
+
+	bool IsTFStateFinal(const TFStateType& state) const
+	{
+		return (finalStates_.find(state) != finalStates_.end());
+	}
+
 
 	inline TransFuncPtrType GetTransitionFunction()
 	{
@@ -168,6 +183,31 @@ public:   // Public methods
 			= transFunc_->GetListOfTransitions(regToken_);
 
 		std::string result;
+
+		// print states
+		result += "States";
+		std::vector<TFStateType> states = ST::GetAllTFStates();
+		SFTA_LOGGER_DEBUG("States: " + Convert::ToString(states.size()));
+		for (typename std::vector<TFStateType>::const_iterator it = states.begin();
+			it != states.end(); ++it)
+		{
+			result += " " + Convert::ToString(*it);
+		}
+
+		result += "\n";
+
+		// print final states
+		result += "Final States";
+		for (typename SetOfTFStates::const_iterator it = finalStates_.begin();
+			it != finalStates_.end(); ++it)
+		{
+			result += " " + Convert::ToString(*it);
+		}
+
+		result += "\n";
+
+		// print transitions
+		result += "Transitions\n";
 
 		for (typename TransitionListType::const_iterator it = lst.begin();
 			it != lst.end(); ++it)
@@ -244,4 +284,5 @@ template
 	template <typename, typename> class ST
 >
 const char* SFTA::TreeAutomaton<Sy, St, TF, ST>::LOG_CATEGORY_NAME = "tree_automaton";
+
 #endif

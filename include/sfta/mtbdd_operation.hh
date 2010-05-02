@@ -225,6 +225,14 @@ public:   // Public methods
 			{	// in case the pair has not been processed yet
 				const PairOfStatesType& prod = prodNewState.first;
 
+				// insert the state into the state set
+				result.MapStateToTF("q" + Convert::ToString(newState), newState);
+
+				if (ta1.IsTFStateFinal(prod.first) && ta2.IsTFStateFinal(prod.second))
+				{	// in case both states are final in their respective automata
+					result.SetTFStateFinal(newState);
+				}
+
 				// find roots for unary symbols with the states
 				LeftHandSideType lhs1(1);
 				lhs1[0] = prod.first;
@@ -328,8 +336,6 @@ public:   // Public methods
 					const LeftHandSideType& firstVector = it->first;
 					root1 = it->second;
 
-					SFTA_LOGGER_DEBUG("Possible LHS1: " + Convert::ToString(firstVector));
-
 					size_t position;
 					for (position = 0; position < firstVector.size(); ++position)
 					{ // check that the entry has x from (x, y)
@@ -352,16 +358,12 @@ public:   // Public methods
 						const LeftHandSideType& secondVector = jt->first;
 						root2 = jt->second;
 
-						SFTA_LOGGER_DEBUG("Possible LHS2: " + Convert::ToString(secondVector));
-
 						if ((firstVector.size() != secondVector.size())
 							|| (secondVector[position] != prod.second))
 						{	// in case the required state is not at searched position (or if
 							// the size is different)
 							continue;
 						}
-
-						SFTA_LOGGER_DEBUG("size and position match");
 
 						size_t i;
 						LeftHandSideType newLhs(firstVector.size());
