@@ -55,7 +55,6 @@ private:  // Private data members
 	A2TFTableType a2tf_;
 	TF2ATableType tf2a_;
 
-	SetOfTFStatesType finalStates_;
 
 	/**
 	 * @brief  The name of the Log4cpp category for logging
@@ -70,8 +69,7 @@ protected:// Protected methods
 
 	MapStateTranslator()
 		: a2tf_(),
-		  tf2a_(),
-			finalStates_()
+		  tf2a_()
 	{ }
 
 public:   // Public methods
@@ -125,10 +123,17 @@ public:   // Public methods
 		return a2tf_.size();
 	}
 
-
-	void SetTFStateFinal(const TFStateType& tfState)
+	std::vector<TFStateType> GetAllTFStates() const
 	{
-		finalStates_.insert(tfState);
+		std::vector<TFStateType> result;
+
+		for (typename TF2ATableType::const_iterator it = tf2a_.begin();
+			it != tf2a_.end(); ++it)
+		{	// for all transition function states 
+			result.push_back(it->first);
+		}
+
+		return result;
 	}
 
 
