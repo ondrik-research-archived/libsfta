@@ -1,0 +1,7 @@
+States qa:0
+
+Final States qa
+
+Transitions 
+a -> qa
+g(qa) -> qa
