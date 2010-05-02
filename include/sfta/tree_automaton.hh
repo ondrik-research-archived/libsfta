@@ -177,6 +177,11 @@ public:   // Public methods
 		return regToken_;
 	}
 
+	std::vector<TFStateType> GetTFStates() const
+	{
+		return ST::GetAllTFStates();
+	}
+
 	std::string ToString()
 	{
 		typename TransitionFunctionType::TransitionListType lst

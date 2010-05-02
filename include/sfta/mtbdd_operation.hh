@@ -188,6 +188,28 @@ public:   // Public methods
 
 		transFunc->setRoot(result.GetRegToken(), lhs, root);
 
+		std::vector<StateType> states = ta1.GetTFStates();
+		for (size_t i = 0; i < states.size(); ++i)
+		{
+			// insert the state into the state set
+			result.MapStateToTF("q" + Convert::ToString(states[i]), states[i]);
+			if (ta1.IsTFStateFinal(states[i]))
+			{
+				result.SetTFStateFinal(states[i]);
+			}
+		}
+
+		states = ta2.GetTFStates();
+		for (size_t i = 0; i < states.size(); ++i)
+		{
+			// insert the state into the state set
+			result.MapStateToTF("q" + Convert::ToString(states[i]), states[i]);
+			if (ta2.IsTFStateFinal(states[i]))
+			{
+				result.SetTFStateFinal(states[i]);
+			}
+		}
+
 		return result;
 	}
 
