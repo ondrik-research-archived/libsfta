@@ -69,8 +69,11 @@ public:   // Public methods
 
 	inline void push_back(const T& x)
 	{
-		vec_.push_back(x);
-		std::sort(vec_.begin(), vec_.end());
+		if (std::find(vec_.begin(), vec_.end(), x) == vec_.end())
+		{	// in case the element is not in the vector so far
+			vec_.push_back(x);
+			std::sort(vec_.begin(), vec_.end());
+		}
 	}
 
 
