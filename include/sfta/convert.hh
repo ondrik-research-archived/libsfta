@@ -152,6 +152,42 @@ public:
 		// return the string
 		return oss.str();
 	}
+
+
+	/**
+	 * @brief  Converts an object to string (std::set specialization)
+	 *
+	 * Static method for conversion of a set of objects of any class with the
+	 * << output operator into a string
+	 *
+	 * @param[in]  st  The set for the conversion
+	 *
+	 * @returns  The string representation of the set
+	 */
+	template <typename T>
+	static std::string ToString(const std::set<T>& st)
+	{
+		// the output stream for the string
+		std::ostringstream oss;
+
+		oss << "{";		// opening tag
+		for (typename std::set<T>::const_iterator it = st.begin();
+			it != st.end(); ++it)
+		{	// for each element of the set
+			if (it != st.begin())
+			{	// if we are not at the first element
+				oss << ", ";
+			}
+
+			// the string of the element
+			oss << ToString(*it);
+		}
+
+		oss << "}";		// closing tag
+
+		// return the string
+		return oss.str();
+	}
 };
 
 #endif
