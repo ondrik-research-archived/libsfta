@@ -93,25 +93,34 @@ BOOST_AUTO_TEST_CASE(setters_and_getters_test)
 	boost::unit_test::unit_test_log.set_threshold_level(boost::unit_test::log_messages);
 
 	SymDictPtr dict(new SymDict);
-
-	BuilderPtr builder1(new Builder(dict));
-	Director director1(builder1);
-	std::ifstream file1("automata/finite");
-	TAType ta1 = director1.Construct(file1);
-
-	BuilderPtr builder2(new Builder(dict));
-	Director director2(builder2, ta1.GetTransitionFunction());
-	std::ifstream file2("automata/infinite");
-	TAType ta2 = director2.Construct(file2);
-	BOOST_TEST_MESSAGE("Result 1:\n" + ta1.ToString());
-	BOOST_TEST_MESSAGE("Result 2:\n" + ta2.ToString());
-
 	SFTA::MTBDDOperation<TAType> op;
-	TAType ta3 = op.Union(ta1, ta2);
-	BOOST_TEST_MESSAGE("After union:\n" + ta3.ToString());
 
-	TAType ta4 = op.Intersection(ta1, ta2);
-	BOOST_TEST_MESSAGE("After intersection:\n" + ta4.ToString());
+//	BuilderPtr builder1(new Builder(dict));
+//	Director director1(builder1);
+//	std::ifstream file1("automata/finite");
+//	TAType ta1 = director1.Construct(file1);
+//
+//	BuilderPtr builder2(new Builder(dict));
+//	Director director2(builder2, ta1.GetTransitionFunction());
+//	std::ifstream file2("automata/infinite");
+//	TAType ta2 = director2.Construct(file2);
+//	BOOST_TEST_MESSAGE("Result 1:\n" + ta1.ToString());
+//	BOOST_TEST_MESSAGE("Result 2:\n" + ta2.ToString());
+//
+//	TAType ta3 = op.Union(ta1, ta2);
+//	BOOST_TEST_MESSAGE("After union:\n" + ta3.ToString());
+//
+//	TAType ta4 = op.Intersection(ta1, ta2);
+//	BOOST_TEST_MESSAGE("After intersection:\n" + ta4.ToString());
+
+	BuilderPtr builder3(new Builder(dict));
+//	Director director3(builder3, ta1.GetTransitionFunction());
+	Director director3(builder3);
+	std::ifstream file3("automata/finite_for_reduction");
+	TAType ta5 = director3.Construct(file3);
+	BOOST_TEST_MESSAGE("Before reduction:\n" + ta5.ToString());
+	TAType ta6 = op.SimulationReduction(ta5);
+	BOOST_TEST_MESSAGE("After reduction:\n" + ta6.ToString());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -67,6 +67,20 @@ private:  // Private data types
 
 	typedef typename SFTA::Private::Convert Convert;
 
+	typedef std::map<StateType, SFTA::OrderedVector<StateType> > SimulationTable;
+
+	typedef std::map<StateType, SFTA::Vector<RootType> >
+		VectorSimulationTableUnary;
+
+	typedef std::queue<std::pair<RootType, RootType> > RootPairQueue;
+
+	typedef std::set<StateType> StateClass;
+	typedef Vector<StateClass> QuotientSet;
+
+	typedef std::map<StateType, std::pair<StateType, StateClass> > ProjectionMap;
+
+	typedef std::queue<StateType> StateQueue;
+
 	class LeafIntersection
 		: public MTBDDType::AbstractApplyFunctorType
 	{
@@ -158,6 +172,140 @@ private:  // Private data types
 		}
 	};
 
+
+	class LeafUnionWithTranslation
+		: public MTBDDType::AbstractApplyFunctorType
+	{
+	private:  // Private data members
+
+		ProjectionMap* canonicalProjection_;
+		StateType sinkState_;
+
+	private:  // Private methods
+
+		LeafUnionWithTranslation(const LeafUnionWithTranslation& leafUnion);
+		LeafUnionWithTranslation& operator=(const LeafUnionWithTranslation&
+			leafUnion);
+
+	public:   // Public methods
+
+		LeafUnionWithTranslation(ProjectionMap* canonicalProjection,
+			StateType sinkState)
+			: canonicalProjection_(canonicalProjection), sinkState_(sinkState)
+		{ }
+
+		virtual LeafType operator()(const LeafType& lhs, const LeafType& rhs)
+		{
+			LeafType newLeaf;
+
+			for (typename LeafType::const_iterator it = lhs.begin();
+				it != lhs.end(); ++it)
+			{	// for each state from the left-hand side list
+				RootType state = (*canonicalProjection_)[*it].first;
+				if (state != sinkState_)
+				{	// in case the state is not a sink state
+					newLeaf.push_back(state);
+				}
+			}
+
+			for (typename LeafType::const_iterator it = rhs.begin();
+				it != rhs.end(); ++it)
+			{	// for each state from the right-hand side list
+				RootType state = (*canonicalProjection_)[*it].first;
+				if (state != sinkState_)
+				{	// in case the state is not a sink state
+					newLeaf.push_back(state);
+				}
+			}
+
+			if (newLeaf.empty())
+			{	// in case the list is empty
+				newLeaf.push_back(sinkState_);
+			}
+
+			return newLeaf;
+		}
+	};
+
+
+	class SimulationRefinement
+		: public MTBDDType::AbstractApplyFunctorType
+	{
+	private:  // Private data members
+
+		SimulationTable* table_;
+		bool* changed_;
+
+	public:   // Public methods
+
+		SimulationRefinement(SimulationTable* table, bool* changed)
+			: table_(table), changed_(changed)
+		{ }
+
+		virtual LeafType operator()(const LeafType& lhs, const LeafType& rhs)
+		{
+			SFTA_LOGGER_DEBUG("LHS: " + Convert::ToString(lhs));
+			SFTA_LOGGER_DEBUG("RHS: " + Convert::ToString(rhs));
+
+			for (typename LeafType::const_iterator it = lhs.begin();
+				it != lhs.end(); ++it)
+			{	// for each state q from the simulated MTBDD
+				SFTA::OrderedVector<StateType>& simulatingStates = (*table_)[*it];
+
+				SFTA_LOGGER_DEBUG("States simulating " + Convert::ToString(*it)
+					+ ": " + Convert::ToString(simulatingStates));
+
+				size_t j = 0;
+				for (size_t i = 0; i < simulatingStates.size(); ++i)
+				{	// each state simulating q; (q, r) \in D
+					bool found = false;
+					while (j < rhs.size())
+					{	// continually traverse RHS leaf
+						if (rhs[j] == simulatingStates[i])
+						{	// in case the simulation holds
+							SFTA_LOGGER_DEBUG("Found match for "
+								+ Convert::ToString(rhs[j]));
+							++j;
+							found = true;
+							break;
+						}
+						else if (rhs[j] < simulatingStates[i])
+						{	// in case we might be in front of the correct state
+							SFTA_LOGGER_DEBUG("Searching "
+								+ Convert::ToString(simulatingStates[i]));
+
+							++j;
+						}
+						else if (rhs[j] > simulatingStates[i])
+						{	// in case we did not find the state
+							SFTA_LOGGER_DEBUG("Removing (" + Convert::ToString(*it) + ", "
+								+ Convert::ToString(simulatingStates[i])
+								+ ") from the simulation table.");
+							simulatingStates.Erase(i);
+							--i;
+							*changed_ = true;
+							found = true;
+							break;
+						}
+					}
+
+					if (!found)
+					{	// if we left the array
+						SFTA_LOGGER_DEBUG("Removing_(" + Convert::ToString(*it) + ", "
+							+ Convert::ToString(simulatingStates[i])
+							+ ") from the simulation table.");
+						simulatingStates.Erase(i);
+						--i;
+						*changed_ = true;
+					}
+				}
+			}
+
+			return lhs;
+		}
+	};
+
+
 private:  // Private data members
 
 	/**
@@ -182,7 +330,9 @@ public:   // Public methods
 
 		LeftHandSideType lhs;
 
-		RootType root = mtbdd.Apply(transFunc->getRoot(ta1.GetRegToken(), lhs), transFunc->getRoot(ta2.GetRegToken(), lhs), new LeafUnion);
+		LeafUnion leafUnion;
+		RootType root = mtbdd.Apply(transFunc->getRoot(ta1.GetRegToken(), lhs),
+			transFunc->getRoot(ta2.GetRegToken(), lhs), &leafUnion);
 
 		TreeAutomaton result(transFunc);
 
@@ -415,6 +565,277 @@ public:   // Public methods
 				}
 			}
 		} while (!queueOfProducts.empty());
+
+		return result;
+	}
+
+	virtual TreeAutomaton SimulationReduction(TreeAutomaton& ta) const
+	{
+		TransFuncPtrType transFunc = ta.GetTransitionFunction();
+
+		MTBDDType& mtbdd = transFunc->getMTBDD();
+
+		TreeAutomaton result(transFunc);
+
+		SimulationTable simulations;
+
+		std::vector<StateType> states = ta.GetTFStates();
+		SFTA::OrderedVector<StateType> orderedStates;
+		for (typename std::vector<StateType>::const_iterator it = states.begin();
+			it != states.end(); ++it)
+		{	// for each state of the automaton
+			orderedStates.push_back(*it);
+		}
+
+		SFTA_LOGGER_DEBUG("Ordered states: " + Convert::ToString(orderedStates));
+
+		for (typename std::vector<StateType>::const_iterator it = states.begin();
+			it != states.end(); ++it)
+		{	// for each state of the automaton
+			simulations.insert(std::make_pair(*it, orderedStates));
+		}
+
+		LeafUnion leafUnion;
+		RootPairQueue rootQueue;
+		bool changed = true;
+
+		while (changed)
+		{	// until we reach the fixpoint
+			changed = false;
+
+			// process nullary left-hand side
+			{
+				RootType root = transFunc->container0_[ta.GetRegToken()];
+				rootQueue.push(std::make_pair(root, root));
+			}
+
+			// process unary left-hand sides 
+
+			// for each left-hand side, compute left-hand sides that simulate that
+			// side
+			VectorSimulationTableUnary unarySimulations;
+			for (typename SFTA::OrderedVector<StateType>::const_iterator it
+				= orderedStates.begin(); it != orderedStates.end(); ++it)
+			{	// for each state of the automaton
+				if (transFunc->container1_[*it] != transFunc->sinkState_)
+				{	// in case the left-hand side is interesting
+					Vector<StateType> roots;
+
+					for (typename OrderedVector<StateType>::const_iterator jt
+						= simulations[*it].begin(); jt != simulations[*it].end(); ++jt)
+					{	// for all states from the left-hand sides that simulate this
+						// left-hand side
+						roots.push_back(transFunc->container1_[*jt]);
+					}
+
+					unarySimulations.insert(std::make_pair(*it, roots));
+				}
+				else
+				{	// in case it is not interesting
+					unarySimulations.insert(std::make_pair(*it, Vector<StateType>()));
+				}
+			}
+
+			// for each unary left-hand side, merge right-hand sides of all other
+			// left-hand sides that simulate that left-hand side
+			for (typename VectorSimulationTableUnary::const_iterator it
+				= unarySimulations.begin(); it != unarySimulations.end(); ++it)
+			{	// for every unary left-hand side
+
+				// merge MTBDDs of all vectors that simulate processed vector
+				RootType root = mtbdd.CreateRoot();
+				for (typename Vector<RootType>::const_iterator jt
+					= (it->second).begin(); jt != (it->second).end(); ++jt)
+				{	// for every left-hand side that simulates chosen left-hand side
+					RootType newRoot = mtbdd.Apply(root, *jt, &leafUnion);
+					mtbdd.EraseRoot(root);
+					root = newRoot;
+				}
+
+				rootQueue.push(std::make_pair(transFunc->container1_[it->first], root));
+			}
+
+			SimulationRefinement refinement(&simulations, &changed);
+
+			// process each pair (rootNode, sim(rootNode))
+			while (!rootQueue.empty())
+			{	// until the queue is empty
+				std::pair<RootType, RootType> procPair = rootQueue.front();
+				rootQueue.pop();
+
+				// attempt to refine the simulation relation
+				RootType tmpNode = mtbdd.Apply(procPair.first, procPair.second,
+					&refinement);
+				mtbdd.EraseRoot(tmpNode);
+			}
+		}
+
+		// process binary left-hand sides 
+
+		// process N-ary left-hand sides 
+
+
+		// print out the simulation relation
+		for (typename SimulationTable::const_iterator it = simulations.begin();
+			it != simulations.end(); ++it)
+		{
+			SFTA_LOGGER_DEBUG("States simulating " + Convert::ToString(it->first)
+				+ ": " + Convert::ToString(it->second));
+		}
+
+		// compute classes of equivalence relation ~ induced by symmetric closure
+		// of simulation relation
+		std::set<StateType> processedStates;
+		QuotientSet quotientSet;
+		for (typename SimulationTable::const_iterator it = simulations.begin();
+			it != simulations.end(); ++it)
+		{	// for each state
+			StateClass stateClass;
+			StateQueue stateQueue;
+			stateQueue.push(it->first);
+
+			while (!stateQueue.empty())
+			{	// while the queue is not empty
+				StateType state = stateQueue.front();
+				stateQueue.pop();
+				if ((processedStates.insert(state)).second)
+				{	// in case the state has not been processed yet
+					for (typename Vector<StateType>::const_iterator jt
+						= (it->second).begin(); jt != (it->second).end(); ++jt)
+					{	// for each state simulating current state
+						stateClass.insert(*jt);
+						stateQueue.push(*jt);
+					}
+				}
+			}
+
+			if (!stateClass.empty())
+			{	// unless the class of the quotient set is empty
+				quotientSet.push_back(stateClass);
+			}
+		}
+
+		// print quotient set
+		for (typename QuotientSet::const_iterator it = quotientSet.begin();
+			it != quotientSet.end(); ++it)
+		{	// for all classes of the quotient set
+			SFTA_LOGGER_DEBUG("Class of quotient set: " + Convert::ToString(*it));
+		}
+
+		// check that the result really is a quotient set
+		// TODO
+
+		// create new states for classes of the quotient set
+		for (size_t i = 0; i < quotientSet.size(); ++i)
+		{	// for each quotient set class, create new state
+			result.AddState(Convert::ToString(i));
+		}
+
+		std::vector<StateType> newStates(result.GetTFStates());
+
+		// create canonical projection map Q -> Q/~
+		ProjectionMap canonicalProjection;
+		for (size_t i = 0; i < quotientSet.size(); ++i)
+		{	// for each class of the quotient set
+			for (typename StateClass::const_iterator it = quotientSet[i].begin();
+				it != quotientSet[i].end(); ++it)
+			{	// for each state x, create projection x |-> [x]
+				canonicalProjection.insert(std::make_pair(*it,
+					std::make_pair(newStates[i], quotientSet[i])));;
+			}
+		}
+
+		// create new transition set from the simulation relation
+		LeafUnionWithTranslation leafUnionTranslation(&canonicalProjection,
+			transFunc->sinkState_);
+
+		// for nullary transition
+		{
+			RootType nullaryNode = transFunc->container0_[ta.GetRegToken()];
+			RootType root = mtbdd.CreateRoot();
+			RootType newRoot = mtbdd.Apply(root, nullaryNode, &leafUnionTranslation);
+			mtbdd.EraseRoot(root);
+			root = newRoot;
+			transFunc->container0_[result.GetRegToken()] = root;
+		}
+
+		// for unary transitions
+		processedStates.clear();
+		for (size_t i = 0; i < transFunc->container1_.size(); ++i)
+		{	// for all unary transitions
+			if (ta.ContainsTFState(i))
+			{	// if the only state of the unary left-hand side is from the input
+				// automaton
+
+				if ((processedStates.insert(i)).second)
+				{	// in case the left-hand side with the state has not been processed
+					RootType root = mtbdd.CreateRoot();
+
+					const StateClass& stClass = canonicalProjection[i].second;
+					for (typename StateClass::const_iterator it = stClass.begin();
+						it != stClass.end(); ++it)
+					{	// for each state in the class
+						RootType newRoot = mtbdd.Apply(root, transFunc->container1_[*it],
+							&leafUnionTranslation);
+						mtbdd.EraseRoot(root);
+						root = newRoot;
+
+						// mark the state as processed
+						processedStates.insert(*it);
+					}
+
+					// insert the MTBDD
+					transFunc->container1_[canonicalProjection[i].first] = root;
+				}
+			}
+		}
+
+		std::set<std::pair<StateType, StateType> > processedPairs;
+		// for binary transitions
+		for (size_t i = 0; i < transFunc->container2_.size(); ++i)
+		{	// for all rows
+			if (ta.ContainsTFState(i))
+			{	// case state i is in the correct automaton
+				for (size_t j = 0; j < transFunc->container2_[i].size(); ++j)
+				{	// for all columns
+					if (ta.ContainsTFState(j))
+					{	// in case both states are in the automaton
+						if ((processedPairs.insert(std::make_pair(i, j)).second))
+						{	// in case the left-hand side with the states has not been
+							// processed
+
+							RootType root = mtbdd.CreateRoot();
+
+							const StateClass& stClass1 = canonicalProjection[i].second;
+							const StateClass& stClass2 = canonicalProjection[j].second;
+							for (typename StateClass::const_iterator it = stClass1.begin();
+								it != stClass1.end(); ++it)
+							{	// for each state in the first class
+								for (typename StateClass::const_iterator jt = stClass2.begin();
+									jt != stClass2.end(); ++jt)
+								{	// for each state in the second class
+									RootType newRoot = mtbdd.Apply(root,
+										transFunc->container2_[*it][*jt], &leafUnionTranslation);
+									mtbdd.EraseRoot(root);
+									root = newRoot;
+
+									// mark the pair of states as processed
+									processedPairs.insert(std::make_pair(*it, *jt));
+								}
+							}
+
+							// insert the MTBDD
+							transFunc->container2_[canonicalProjection[i].first]
+								[canonicalProjection[j].first] = root;
+						}
+					}
+				}
+			}
+		}
+
+
+		// for N-ary transitions
+		// TODO
 
 		return result;
 	}
