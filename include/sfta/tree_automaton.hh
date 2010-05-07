@@ -177,9 +177,14 @@ public:   // Public methods
 		return regToken_;
 	}
 
-	std::vector<TFStateType> GetTFStates() const
+	inline std::vector<TFStateType> GetTFStates() const
 	{
 		return ST::GetAllTFStates();
+	}
+
+	inline bool ContainsTFState(const TFStateType& tfState) const
+	{
+		return ST::ContainsTFState(tfState);
 	}
 
 	std::string ToString()
