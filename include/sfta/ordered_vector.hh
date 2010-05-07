@@ -130,6 +130,7 @@ public:   // Public methods
 		return OrderedVector(newVector);
 	}
 
+
 	template <class InputIterator>
 	inline void insert(iterator position, InputIterator first, InputIterator last)
 	{
@@ -137,9 +138,23 @@ public:   // Public methods
 		std::sort(vec_.begin(), vec_.end());
 	}
 
+
+	inline void Erase(size_t position)
+	{
+		// Assertions
+		assert(position < vec_.size());
+
+		vec_.erase(vec_.begin() + position);
+	}
+
 	inline iterator begin()
 	{
 		return vec_.begin();
+	}
+
+	inline bool empty() const
+	{
+		return vec_.empty();
 	}
 
 	inline const_iterator begin() const
