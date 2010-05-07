@@ -1,0 +1,11 @@
+States qa:0 qga:0 qga2:0 qgga:0 qf:0
+
+Final States qf
+
+Transitions 
+a -> qa
+g(qa) -> qga
+g(qa) -> qga2
+g(qga) -> qgga
+g(qga2) -> qgga
+g(qgga) -> qf
