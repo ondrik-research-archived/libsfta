@@ -116,7 +116,7 @@ BOOST_AUTO_TEST_CASE(setters_and_getters_test)
 	BuilderPtr builder3(new Builder(dict));
 //	Director director3(builder3, ta1.GetTransitionFunction());
 	Director director3(builder3);
-	std::ifstream file3("automata/for_simulation");
+	std::ifstream file3("automata/for_simulation_nnary");
 	TAType ta5 = director3.Construct(file3);
 	BOOST_TEST_MESSAGE("Before reduction:\n" + ta5.ToString());
 	TAType ta6 = op.SimulationReduction(ta5);
