@@ -790,8 +790,8 @@ public:   // Public methods
 			}
 		}
 
-		std::set<std::pair<StateType, StateType> > processedPairs;
 		// for binary transitions
+		std::set<std::pair<StateType, StateType> > processedPairs;
 		for (size_t i = 0; i < transFunc->container2_.size(); ++i)
 		{	// for all rows
 			if (ta.ContainsTFState(i))
@@ -835,7 +835,80 @@ public:   // Public methods
 
 
 		// for N-ary transitions
-		// TODO
+		std::set<LeftHandSideType> processedLHSs;
+		for (typename
+			TransitionFunctionType::MTBDDRootTypeHashTable::const_iterator it
+			= transFunc->containerN_.begin();
+			it != transFunc->containerN_.end(); ++it)
+		{	// for every N-ary left-hand side
+			const LeftHandSideType& lhs = it->first;
+
+			SFTA_LOGGER_DEBUG("Processing N-ary LHS " + Convert::ToString(lhs));
+
+			bool contains = true;
+			for (typename LeftHandSideType::const_iterator jt = lhs.begin();
+				jt != lhs.end(); ++jt)
+			{	// check that every state is from the input automaton
+				if (!ta.ContainsTFState(*jt))
+				{	// in case this state is not
+					contains = false;
+					break;
+				}
+			}
+
+			if (contains)
+			{	// in case the left-hand side is interesting
+				SFTA_LOGGER_DEBUG("All states are from this automaton");
+				if ((processedLHSs.insert(lhs).second))
+				{	// in case the left-hand side with the states has not been
+					// processed yet
+
+					RootType root = mtbdd.CreateRoot();
+					LeftHandSideType newLhs(lhs.size());
+
+					std::vector<const StateClass*> stClasses(lhs.size());
+					for (size_t i = 0; i < lhs.size(); ++i)
+					{	// for each state of the left-hand side
+						stClasses[i] = &(canonicalProjection[lhs[i]].second);
+						newLhs[i] = canonicalProjection[lhs[i]].first;
+					}
+
+					// now traverse all N-ary LHSs and in case they belong to respective
+					// classes, make union
+					for (typename
+						TransitionFunctionType::MTBDDRootTypeHashTable::const_iterator jt
+						= transFunc->containerN_.begin();
+						jt != transFunc->containerN_.end(); ++jt)
+					{	// traverse all N-ary left-hand sides
+						bool isFromClasses = true;
+						const LeftHandSideType& innerLhs = jt->first;
+						for (size_t i = 0; i < innerLhs.size(); ++i)
+						{	// for all states of the left-hand side
+							if (stClasses[i]->find(innerLhs[i]) == stClasses[i]->end())
+							{	// in case the state is not in the state class
+								isFromClasses = false;
+								break;
+							}
+						}
+
+						if (isFromClasses)
+						{	// in case the states are from proper classes
+							SFTA_LOGGER_DEBUG("All states are from this automaton");
+							RootType newRoot = mtbdd.Apply(root, jt->second,
+								&leafUnionTranslation);
+							mtbdd.EraseRoot(root);
+							root = newRoot;
+
+							// mark the left-hand side as processed
+							processedLHSs.insert(innerLhs);
+						}
+					}
+
+					// insert the MTBDD
+					transFunc->setRootForArityN(result.GetRegToken(), newLhs, root);
+				}
+			}
+		}
 
 		return result;
 	}
