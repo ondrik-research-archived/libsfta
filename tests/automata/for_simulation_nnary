@@ -1,0 +1,15 @@
+Ops a:0 f:3 g:3 h:3
+Automaton A
+
+States qa:0 qfa1:0 qfa2:0 qga:0 qhfa1:0 qhfa2:0 qhga:0
+
+Final States qhga
+
+Transitions 
+a -> qa
+f(qa,qa,qa) -> qfa1
+f(qa,qa,qa) -> qfa2
+g(qa,qa,qa) -> qga
+h(qfa1,qfa1,qfa1) -> qhfa1
+h(qfa2,qfa2,qfa2) -> qhfa2
+h(qga,qga,qga) -> qhga
