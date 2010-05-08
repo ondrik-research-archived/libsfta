@@ -75,6 +75,9 @@ private:  // Private data types
 	typedef std::map<std::pair<StateType, StateType>, SFTA::Vector<RootType> >
 		VectorSimulationTableBinary;
 
+	typedef std::map<LeftHandSideType, SFTA::Vector<RootType> >
+		VectorSimulationTableNnary;
+
 	typedef std::queue<std::pair<RootType, RootType> > RootPairQueue;
 
 	typedef std::set<StateType> StateClass;
@@ -718,10 +721,120 @@ public:   // Public methods
 			}
 
 
-
-
 			// process N-ary left-hand sides 
-			// TODO
+
+			// for each left-hand side, compute left-hand sides that simulate that
+			// side
+			VectorSimulationTableNnary nnarySimulations;
+			for (typename
+				TransitionFunctionType::MTBDDRootTypeHashTable::const_iterator it
+				= transFunc->containerN_.begin();
+				it != transFunc->containerN_.end(); ++it)
+			{	// for every N-ary left-hand side
+				const LeftHandSideType& lhs = it->first;
+
+				bool contains = true;
+				for (typename LeftHandSideType::const_iterator jt = lhs.begin();
+					jt != lhs.end(); ++jt)
+				{	// check that every state is from the input automaton
+					if (!ta.ContainsTFState(*jt))
+					{	// in case this state is not
+						contains = false;
+						break;
+					}
+				}
+
+				if (contains)
+				{	// in case the left-hand side is from correct automaton
+					if (it->second != transFunc->sinkState_)
+					{	// in case the left-hand side is interesting
+						Vector<StateType> roots;
+
+						// create vector of simulating states for every state in the
+						// left-hand side
+						std::vector<SFTA::OrderedVector<StateType>*>
+							lhsSimulations(lhs.size());
+						for (size_t i = 0; i < lhs.size(); ++i)
+						{	// for every state of the left-hand side
+							lhsSimulations[i] = &(simulations[lhs[i]]);
+						}
+
+						// traverse N-ary left-hand sides and find those that simulate the
+						// current one
+						for (typename
+							TransitionFunctionType::MTBDDRootTypeHashTable::const_iterator jt
+							= transFunc->containerN_.begin();
+							jt != transFunc->containerN_.end(); ++jt)
+						{
+							const LeftHandSideType& simulatingLhs = jt->first;
+
+							// determine whether this LHS simulates current LHS
+							bool simulates = true;
+							for (size_t i = 0; i < simulatingLhs.size(); ++i)
+							{	// for every state in the left-hand side
+
+								// does this state simulate current state?
+								bool found = false;
+								for (size_t j = 0; j < lhsSimulations[i]->size(); ++j)
+								{	// for each state in the list
+									if ((*lhsSimulations[i])[j] == simulatingLhs[i])
+									{	// in case we found the state
+										found = true;
+										break;
+									}
+									else if ((*lhsSimulations[i])[j] < simulatingLhs[i])
+									{	// in case we might be in front of the state
+										continue;
+									}
+									else
+									{	// in case we are behind the state
+										break;
+									}
+								}
+
+								if (!found)
+								{	// in case state at position i does not simulate state at
+									// position i of current LHS
+									simulates = false;
+									break;
+								}
+							}
+
+							if (simulates)
+							{	// in case the left-hand side simulates current left-hand side
+								roots.push_back(jt->second);
+							}
+						}
+
+						nnarySimulations.insert(std::make_pair(lhs, roots));
+					}
+					else
+					{	// in case it is not interesting
+						nnarySimulations.insert(std::make_pair(lhs, Vector<StateType>()));
+					}
+				}
+			}
+
+
+			// for each n-nary left-hand side, merge right-hand sides of all other
+			// left-hand sides that simulate that left-hand side
+			for (typename VectorSimulationTableNnary::const_iterator it
+				= nnarySimulations.begin(); it != nnarySimulations.end(); ++it)
+			{	// for every n-nary left-hand side
+
+				// merge MTBDDs of all vectors that simulate processed vector
+				RootType root = mtbdd.CreateRoot();
+				for (typename Vector<RootType>::const_iterator jt
+					= (it->second).begin(); jt != (it->second).end(); ++jt)
+				{	// for every left-hand side that simulates chosen left-hand side
+					RootType newRoot = mtbdd.Apply(root, *jt, &leafUnion);
+					mtbdd.EraseRoot(root);
+					root = newRoot;
+				}
+
+				rootQueue.push(std::make_pair(transFunc->getRootForArityN(
+					ta.GetRegToken(), it->first), root));
+			}
 
 
 
