@@ -72,6 +72,9 @@ private:  // Private data types
 	typedef std::map<StateType, SFTA::Vector<RootType> >
 		VectorSimulationTableUnary;
 
+	typedef std::map<std::pair<StateType, StateType>, SFTA::Vector<RootType> >
+		VectorSimulationTableBinary;
+
 	typedef std::queue<std::pair<RootType, RootType> > RootPairQueue;
 
 	typedef std::set<StateType> StateClass;
@@ -655,6 +658,73 @@ public:   // Public methods
 				rootQueue.push(std::make_pair(transFunc->container1_[it->first], root));
 			}
 
+			// process binary left-hand sides 
+
+			// for each left-hand side, compute left-hand sides that simulate that
+			// side
+			VectorSimulationTableBinary binarySimulations;
+			for (typename SFTA::OrderedVector<StateType>::const_iterator it
+				= orderedStates.begin(); it != orderedStates.end(); ++it)
+			{
+				for (typename SFTA::OrderedVector<StateType>::const_iterator jt
+					= orderedStates.begin(); jt != orderedStates.end(); ++jt)
+				{	// for each pair of states of the automaton
+					if (transFunc->container2_[*it][*jt] != transFunc->sinkState_)
+					{	// in case the left-hand side is interesting
+						Vector<StateType> roots;
+
+						for (typename OrderedVector<StateType>::const_iterator kt
+							= simulations[*it].begin(); kt != simulations[*it].end(); ++kt)
+						{	// for all states from the left-hand sides that simulate the first
+							// state of the left-hand side
+							for (typename OrderedVector<StateType>::const_iterator lt
+								= simulations[*jt].begin(); lt != simulations[*jt].end(); ++lt)
+							{	// for all states from the left-hand sides that simulate the
+								// second state of the left-hand side
+								roots.push_back(transFunc->container2_[*kt][*lt]);
+							}
+						}
+
+						binarySimulations.insert(std::make_pair(std::make_pair(*it, *jt),
+							roots));
+					}
+					else
+					{	// in case it is not interesting
+						binarySimulations.insert(std::make_pair(std::make_pair(*it, *jt),
+							Vector<StateType>()));
+					}
+				}
+			}
+
+
+			// for each binary left-hand side, merge right-hand sides of all other
+			// left-hand sides that simulate that left-hand side
+			for (typename VectorSimulationTableBinary::const_iterator it
+				= binarySimulations.begin(); it != binarySimulations.end(); ++it)
+			{	// for every binary left-hand side
+
+				// merge MTBDDs of all vectors that simulate processed vector
+				RootType root = mtbdd.CreateRoot();
+				for (typename Vector<RootType>::const_iterator jt
+					= (it->second).begin(); jt != (it->second).end(); ++jt)
+				{	// for every left-hand side that simulates chosen left-hand side
+					RootType newRoot = mtbdd.Apply(root, *jt, &leafUnion);
+					mtbdd.EraseRoot(root);
+					root = newRoot;
+				}
+
+				rootQueue.push(std::make_pair(transFunc->container2_[(it->first).first]
+					[(it->first).second], root));
+			}
+
+
+
+
+			// process N-ary left-hand sides 
+			// TODO
+
+
+
 			SimulationRefinement refinement(&simulations, &changed);
 
 			// process each pair (rootNode, sim(rootNode))
@@ -669,10 +739,6 @@ public:   // Public methods
 				mtbdd.EraseRoot(tmpNode);
 			}
 		}
-
-		// process binary left-hand sides 
-
-		// process N-ary left-hand sides 
 
 
 		// print out the simulation relation
