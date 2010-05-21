@@ -34,6 +34,9 @@
 // testing headers
 #include "log_fixture.hh"
 
+// System library header files
+#include <sys/time.h>
+
 
 /******************************************************************************
  *                                  Fixtures                                  *
@@ -48,7 +51,7 @@ private:
 
 public:
 
-	typedef SFTA::Private::CompactVariableAssignment<8> MyVariableAssignment;
+	typedef SFTA::Private::CompactVariableAssignment<19> MyVariableAssignment;
 
 	typedef SFTA::AbstractTransitionFunction<MyVariableAssignment, unsigned, SFTA::Vector, SFTA::OrderedVector, SFTA::OrderedVector, unsigned> ATF;
 
@@ -116,10 +119,22 @@ BOOST_AUTO_TEST_CASE(setters_and_getters_test)
 	BuilderPtr builder3(new Builder(dict));
 //	Director director3(builder3, ta1.GetTransitionFunction());
 	Director director3(builder3);
-	std::ifstream file3("automata/for_simulation_nnary");
+	//std::ifstream file3("automata/for_simulation_large_alphabet_261487");
+	std::ifstream file3("automata/A0080");
 	TAType ta5 = director3.Construct(file3);
 	BOOST_TEST_MESSAGE("Before reduction:\n" + ta5.ToString());
+
+	timeval tv1;
+	timeval tv2;
+	gettimeofday(&tv1, 0);
+	BOOST_TEST_MESSAGE("Start: " + SFTA::Private::Convert::ToString(tv1.tv_sec)
+		+ "s " + SFTA::Private::Convert::ToString(tv1.tv_usec) + "us");
 	TAType ta6 = op.SimulationReduction(ta5);
+	gettimeofday(&tv2, 0);
+	BOOST_TEST_MESSAGE("End: " + SFTA::Private::Convert::ToString(tv2.tv_sec)
+		+ "s " + SFTA::Private::Convert::ToString(tv2.tv_usec) + "us");
+	BOOST_TEST_MESSAGE("Total: " + SFTA::Private::Convert::ToString(tv2.tv_sec - tv1.tv_sec)
+		+ "000000 + " + SFTA::Private::Convert::ToString(tv2.tv_usec - tv1.tv_usec));
 	BOOST_TEST_MESSAGE("After reduction:\n" + ta6.ToString());
 }
 

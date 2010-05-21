@@ -25,7 +25,12 @@ CFLAGS         += -Woverloaded-virtual
 CFLAGS         += -finline-functions
 CFLAGS         += -Wold-style-cast
 CFLAGS         += -fdiagnostics-show-option
-CFLAGS         += -g
+#CFLAGS         += -g
+#CFLAGS         += -pg
+CFLAGS         += -O2
+CFLAGS         += -march=core2
+CFLAGS         += -mtune=core2
+CFLAGS         += -msse2
 
 # Where to search for include files
 INCLUDE_PATHS   =

@@ -695,8 +695,8 @@ public:   // Public methods
 	virtual void SetValue(const RootType& root,
 		const VariableAssignmentType& asgn, const LeafType& value)
 	{
-		SFTA_LOGGER_DEBUG("Setting value of root " + Convert::ToString(root)
-			+ " at " + Convert::ToString(asgn) + " to " + Convert::ToString(value));
+		//SFTA_LOGGER_DEBUG("Setting value of root " + Convert::ToString(root)
+		//	+ " at " + Convert::ToString(asgn) + " to " + Convert::ToString(value));
 
 		// create the MTBDD with given value at given position
 		RootType mtbddAsgn = createMTBDDForVariableAssignment(asgn, value);

@@ -204,6 +204,8 @@ private:  // Private data types
 		{
 			LeafType newLeaf;
 
+			// TODO: why do we compute translations for lhs?
+
 			for (typename LeafType::const_iterator it = lhs.begin();
 				it != lhs.end(); ++it)
 			{	// for each state from the left-hand side list
@@ -250,16 +252,10 @@ private:  // Private data types
 
 		virtual LeafType operator()(const LeafType& lhs, const LeafType& rhs)
 		{
-			SFTA_LOGGER_DEBUG("LHS: " + Convert::ToString(lhs));
-			SFTA_LOGGER_DEBUG("RHS: " + Convert::ToString(rhs));
-
 			for (typename LeafType::const_iterator it = lhs.begin();
 				it != lhs.end(); ++it)
 			{	// for each state q from the simulated MTBDD
 				SFTA::OrderedVector<StateType>& simulatingStates = (*table_)[*it];
-
-				SFTA_LOGGER_DEBUG("States simulating " + Convert::ToString(*it)
-					+ ": " + Convert::ToString(simulatingStates));
 
 				size_t j = 0;
 				for (size_t i = 0; i < simulatingStates.size(); ++i)
@@ -269,24 +265,16 @@ private:  // Private data types
 					{	// continually traverse RHS leaf
 						if (rhs[j] == simulatingStates[i])
 						{	// in case the simulation holds
-							SFTA_LOGGER_DEBUG("Found match for "
-								+ Convert::ToString(rhs[j]));
 							++j;
 							found = true;
 							break;
 						}
 						else if (rhs[j] < simulatingStates[i])
 						{	// in case we might be in front of the correct state
-							SFTA_LOGGER_DEBUG("Searching "
-								+ Convert::ToString(simulatingStates[i]));
-
 							++j;
 						}
 						else if (rhs[j] > simulatingStates[i])
 						{	// in case we did not find the state
-							SFTA_LOGGER_DEBUG("Removing (" + Convert::ToString(*it) + ", "
-								+ Convert::ToString(simulatingStates[i])
-								+ ") from the simulation table.");
 							simulatingStates.Erase(i);
 							--i;
 							*changed_ = true;
@@ -297,9 +285,6 @@ private:  // Private data types
 
 					if (!found)
 					{	// if we left the array
-						SFTA_LOGGER_DEBUG("Removing_(" + Convert::ToString(*it) + ", "
-							+ Convert::ToString(simulatingStates[i])
-							+ ") from the simulation table.");
 						simulatingStates.Erase(i);
 						--i;
 						*changed_ = true;
@@ -605,8 +590,11 @@ public:   // Public methods
 		RootPairQueue rootQueue;
 		bool changed = true;
 
+		unsigned counter = 0;
 		while (changed)
 		{	// until we reach the fixpoint
+			SFTA_LOGGER_DEBUG("Iteration: " + Convert::ToString(counter));
+			counter++;
 			changed = false;
 
 			// process nullary left-hand side
@@ -619,6 +607,7 @@ public:   // Public methods
 
 			// for each left-hand side, compute left-hand sides that simulate that
 			// side
+			SFTA_LOGGER_DEBUG("Computing simulating unary LHSs");
 			VectorSimulationTableUnary unarySimulations;
 			for (typename SFTA::OrderedVector<StateType>::const_iterator it
 				= orderedStates.begin(); it != orderedStates.end(); ++it)
@@ -642,6 +631,7 @@ public:   // Public methods
 				}
 			}
 
+			SFTA_LOGGER_DEBUG("Merging simulating unary LHSs");
 			// for each unary left-hand side, merge right-hand sides of all other
 			// left-hand sides that simulate that left-hand side
 			for (typename VectorSimulationTableUnary::const_iterator it
@@ -665,6 +655,7 @@ public:   // Public methods
 
 			// for each left-hand side, compute left-hand sides that simulate that
 			// side
+			SFTA_LOGGER_DEBUG("Computing simulating binary LHSs");
 			VectorSimulationTableBinary binarySimulations;
 			for (typename SFTA::OrderedVector<StateType>::const_iterator it
 				= orderedStates.begin(); it != orderedStates.end(); ++it)
@@ -700,6 +691,7 @@ public:   // Public methods
 			}
 
 
+			SFTA_LOGGER_DEBUG("Merging simulating binary LHSs");
 			// for each binary left-hand side, merge right-hand sides of all other
 			// left-hand sides that simulate that left-hand side
 			for (typename VectorSimulationTableBinary::const_iterator it
@@ -725,6 +717,7 @@ public:   // Public methods
 
 			// for each left-hand side, compute left-hand sides that simulate that
 			// side
+			SFTA_LOGGER_DEBUG("Computing simulating n-nary LHSs");
 			VectorSimulationTableNnary nnarySimulations;
 			for (typename
 				TransitionFunctionType::MTBDDRootTypeHashTable::const_iterator it
@@ -816,6 +809,7 @@ public:   // Public methods
 			}
 
 
+			SFTA_LOGGER_DEBUG("Merging simulating n-nary LHSs");
 			// for each n-nary left-hand side, merge right-hand sides of all other
 			// left-hand sides that simulate that left-hand side
 			for (typename VectorSimulationTableNnary::const_iterator it
@@ -837,9 +831,9 @@ public:   // Public methods
 			}
 
 
-
 			SimulationRefinement refinement(&simulations, &changed);
 
+			SFTA_LOGGER_DEBUG("Refining simulation");
 			// process each pair (rootNode, sim(rootNode))
 			while (!rootQueue.empty())
 			{	// until the queue is empty
@@ -858,8 +852,31 @@ public:   // Public methods
 		for (typename SimulationTable::const_iterator it = simulations.begin();
 			it != simulations.end(); ++it)
 		{
+			std::string str;
+
+			size_t j = 0;
+			for (size_t i = 0; i < orderedStates.size(); ++i)
+			{
+				if (j < it->second.size())
+				{
+					if (orderedStates[i] == (it->second)[j])
+					{
+						str += '1';
+						++j;
+					}
+					else
+					{
+						str += '0';
+					}
+				}
+				else
+				{
+					str += '0';
+				}
+			}
+
 			SFTA_LOGGER_DEBUG("States simulating " + Convert::ToString(it->first)
-				+ ": " + Convert::ToString(it->second));
+				+ ": " + str);
 		}
 
 		// compute classes of equivalence relation ~ induced by symmetric closure

@@ -58,13 +58,11 @@ public:   // Public methods
 
 	OrderedVector()
 		: vec_()
-	{
-	}
+	{ }
 
 	explicit OrderedVector(const VectorType& vec)
 		: vec_(vec)
-	{
-	}
+	{ }
 
 
 	inline void push_back(const T& x)

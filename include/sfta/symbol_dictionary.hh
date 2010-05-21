@@ -80,8 +80,8 @@ public:   // Public methods
 			OutputSymbolType newSymbol = nextSymbol_;
 			i2a_.insert(std::make_pair(symbol, newSymbol));
 
-			SFTA_LOGGER_DEBUG("Adding new symbol: " + Convert::ToString(symbol)
-				+ " -> " + Convert::ToString(newSymbol));
+			//SFTA_LOGGER_DEBUG("Adding new symbol: " + Convert::ToString(symbol)
+			//	+ " -> " + Convert::ToString(newSymbol));
 
 			++nextSymbol_;
 			return newSymbol;

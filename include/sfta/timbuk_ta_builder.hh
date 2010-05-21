@@ -158,7 +158,7 @@ public:   // Public methods
 						lhs.push_back(states[i]);
 					}
 
-					SFTA_LOGGER_DEBUG("Adding transition: " + spl[0] + " -> " + spl[2]);
+					//SFTA_LOGGER_DEBUG("Adding transition: " + spl[0] + " -> " + spl[2]);
 
 					(ParentClass::director_->*ParentClass::addTransitionFunction_)
 						(symbol, lhs, rhs);

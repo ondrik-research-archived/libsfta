@@ -533,9 +533,9 @@ public:   // Public methods
 		const SymbolType& symbol, const LeftHandSideType& lhs,
 		const InputRightHandSideType& rhs)
 	{
-		SFTA_LOGGER_DEBUG("Adding transition for automaton "
-			+ Convert::ToString(regToken) + ": \"" + Convert::ToString(symbol)
-			+ Convert::ToString(lhs) + " -> " + Convert::ToString(rhs) + "\"");
+		//SFTA_LOGGER_DEBUG("Adding transition for automaton "
+		//	+ Convert::ToString(regToken) + ": \"" + Convert::ToString(symbol)
+		//	+ Convert::ToString(lhs) + " -> " + Convert::ToString(rhs) + "\"");
 
 		// retrieve the pointer to the root of the MTBDD
 		MTBDDRootType root = getRoot(regToken, lhs);
