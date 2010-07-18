@@ -31,7 +31,7 @@ CFLAGS         += -finline-functions
 CFLAGS         += -g
 
 # Path to CUDD library
-CUDD_PATH       = ../../diplomka_programy/cudd
+CUDD_PATH       = ../../cudd
 
 # Where to search for include files
 INCLUDE_PATHS   =

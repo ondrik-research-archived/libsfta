@@ -55,16 +55,6 @@ class SFTA::AbstractSharedMTBDD
 public:  // Public data types
 
 	/**
-	 * @brief  Type of Apply operation function pointers
-	 *
-	 * Data type for function pointers for functions that carry out the Apply
-	 * operation on the MTBDD.
-	 */
-	//typedef LeafType (*ApplyFunctionType)();
-
-	//typedef LeafType (*ApplyWithContextFunctionType)(const LeafType&, const LeafType&, void*);
-
-	/**
 	 * @brief  The container type for leafs
 	 *
 	 * The type that serves as a container of several leafs. This type is used
@@ -74,12 +64,35 @@ public:  // Public data types
 	 */
 	typedef std::vector<LeafType*> LeafContainer;
 
+
+	/**
+	 * @brief  The base class for functors that perform @c Apply operations
+	 *
+	 * Abstract class that defines the interface for functors that carry out
+	 * @c Apply operations.
+	 */
 	class AbstractApplyFunctorType
 	{
 	public:   // Public methods
 
-		virtual LeafType operator()(const LeafType&, const LeafType&) = 0;
+		/**
+		 * @brief  The operation of the functor
+		 *
+		 * Abstract method that performs the operation of the functor
+		 *
+		 * @param[in]  lhs  Left-hand side of the operation
+		 * @param[in]  rhs  Right-hand side of the operation
+		 *
+		 * @returns  Result of the operation
+		 */
+		virtual LeafType operator()(const LeafType& lhs, const LeafType& rhs) = 0;
 
+
+		/**
+		 * @brief  Destructor
+		 *
+		 * The destructor
+		 */
 		virtual ~AbstractApplyFunctorType()
 		{ }
 

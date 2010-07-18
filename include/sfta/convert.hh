@@ -12,9 +12,11 @@
 #define _SFTA_CONVERT_HH_
 
 // Standard library headers
+#include <set>
+#include <sstream>
+#include <stdexcept>
 #include <string>
 #include <vector>
-#include <sstream>
 
 
 // insert class to proper namespace
@@ -188,6 +190,33 @@ public:
 		// return the string
 		return oss.str();
 	}
+
+
+	/**
+	 * @brief  Converts a string to an object 
+	 *
+	 * Static method for conversion of a string to an object of any class with
+	 * the >> input operator
+	 *
+	 * @param[in]  str  The string for the conversion
+	 *
+	 * @returns  The object that corresponds to the string
+	 */
+	template <typename T>
+	static T FromString(const std::string& str)
+	{
+		T result;
+
+		// the input stream for the string
+		std::istringstream iss(str);
+		if (!(iss >> result))
+		{	// if there was an error
+			throw std::invalid_argument("SFTA::Private::Convert::FromString: Invalid argument");
+		}
+
+		return result;
+	}
+
 };
 
 #endif

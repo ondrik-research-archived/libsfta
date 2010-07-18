@@ -65,104 +65,90 @@ public:  // Public types
 
 
 	/**
-	 * @brief  Type of operations passed to Apply
+	 * @brief  The abstract class for an MTBDD Apply functor
 	 *
-	 * Type of operations passed to Apply function. All need to be of this type.
+	 * This class is an abstract class that defines the interface that all
+	 * functors that perform binary Apply operation on CUDD MTBDD need to
+	 * implement.
 	 */
-	typedef ValueType (*ApplyOperationType)(const ValueType&, const ValueType&, void*);
-
-
-	/**
-	 * @brief  Type of operations passed to monadic Apply
-	 *
-	 * Type of operations passed to monadic Apply function. All need to be of
-	 * this type.
-	 */
-	typedef ValueType (*MonadicApplyOperationType)(const ValueType&, void*);
-
-
-	/**
-	 * @brief  Wrapper for Apply callback function parameters
-	 *
-	 * This structure is a wrapper that contains all necessary parameters that
-	 * are needed for the Apply callback to work. In fact, it serves as an
-	 * envelope that we send to ourselves.
-	 */
-	struct ApplyCallbackParameters
+	class AbstractApplyFunctor
 	{
-	public:   // Public data members
-
-		/**
-		 * @brief  Pointer to the operation
-		 *
-		 * Pointer to the function that carries out the operation on sink nodes of
-		 * the MTBDD.
-		 */
-		ApplyOperationType Op;
-
-
-		/**
-		 * @brief  Arbitrary data
-		 *
-		 * Arbitrary data which will be used in the function that carries out the
-		 * operation.
-		 */
-		void* Data;
-
 	public:   // Public methods
 
 		/**
 		 * @brief  Constructor
 		 *
-		 * The constructor of the structure.
+		 * The constructor of the class
 		 */
-		ApplyCallbackParameters(ApplyOperationType op, void* data)
-			: Op(op), Data(data)
+		AbstractApplyFunctor()
 		{ }
 
+		/**
+		 * @brief  The operator
+		 *
+		 * The operator of the functor, that is the method that performs the
+		 * operation.
+		 *
+		 * @param[in]  lhs  Left-hand operand of the operation
+		 * @param[in]  rhs  Right-hand operand of the operation
+		 *
+		 * @returns  Result of the operation
+		 */
+		virtual ValueType operator()(const ValueType& lhs, const ValueType& rhs) = 0;
+
+		/**
+		 * @brief  Destructor
+		 *
+		 * Virtual destructor
+		 */
+		virtual ~AbstractApplyFunctor()
+		{ }
 	};
 
 
 	/**
-	 * @brief  Wrapper for monadic Apply callback function parameters
+	 * @brief  The abstract class for an MTBDD monadic Apply functor
 	 *
-	 * This structure is a wrapper that contains all necessary parameters that
-	 * are needed for the monadic Apply callback to work. In fact, it serves as
-	 * an envelope that we send to ourselves.
+	 * This class is an abstract class that defines the interface that all
+	 * functors that perform monadic Apply operation on CUDD MTBDD need to
+	 * implement.
 	 */
-	struct MonadicApplyCallbackParameters
+	class AbstractMonadicApplyFunctor
 	{
-	public:   // Public data members
-
-		/**
-		 * @brief  Pointer to the operation
-		 *
-		 * Pointer to the function that carries out the operation on a sink node of
-		 * the MTBDD.
-		 */
-		MonadicApplyOperationType Op;
-
-
-		/**
-		 * @brief  Arbitrary data
-		 *
-		 * Arbitrary data which will be used in the function that carries out the
-		 * operation.
-		 */
-		void* Data;
-
 	public:   // Public methods
+
 
 		/**
 		 * @brief  Constructor
 		 *
-		 * The constructor of the structure.
+		 * The constructor of the class
 		 */
-		MonadicApplyCallbackParameters(MonadicApplyOperationType op, void* data)
-			: Op(op), Data(data)
+		AbstractMonadicApplyFunctor()
 		{ }
 
+
+		/**
+		 * @brief  The operator
+		 *
+		 * The operator of the functor, that is the method that performs the
+		 * operation.
+		 *
+		 * @param[in]  val  The operand of the operation
+		 *
+		 * @returns  Result of the operation
+		 */
+		virtual ValueType operator()(const ValueType& val) = 0;
+
+
+		/**
+		 * @brief  Destructor
+		 *
+		 * Virtual destructor
+		 */
+		virtual ~AbstractMonadicApplyFunctor()
+		{ }
 	};
+
 
 public:  // Public data members
 
@@ -241,6 +227,7 @@ public:  // Public methods
 	 * @returns  Complement of \p node
 	 */
 	Node* AddCmpl(Node* node) const;
+
 
 	/**
 	 * @brief  Adds a new constant
@@ -349,14 +336,13 @@ public:  // Public methods
 	 * @see  ApplyCallbackParameters
 	 * @see  MonadicApply()
 	 *
-	 * @param[in]  lhs       Left-hand side MTBDD of Apply operation
-	 * @param[in]  rhs       Right-hand side MTBDD of Apply operation 
-	 * @param[in]  cbParams  Callback parameters
+	 * @param[in]  lhs   Left-hand side MTBDD of Apply operation
+	 * @param[in]  rhs   Right-hand side MTBDD of Apply operation 
+	 * @param[in]  func  Functor with Apply operation
 	 *
 	 * @returns  The resulting MTBDD
 	 */
-	Node* Apply(Node* lhs, Node* rhs,
-		ApplyCallbackParameters* cbParams) const;
+	Node* Apply(Node* lhs, Node* rhs, AbstractApplyFunctor* func) const;
 
 
 	/**
@@ -368,22 +354,36 @@ public:  // Public methods
 	 * @see  ApplyCallbackParameters
 	 * @see  Apply()
 	 *
-	 * @param[in]  root      Root of the MTBDD of monadic Apply operation
-	 * @param[in]  cbParams  Callback parameters
+	 * @param[in]  root  Root of the MTBDD of monadic Apply operation
+	 * @param[in]  func  Functor with monadic Apply operation
 	 *
 	 * @returns  The resulting MTBDD
 	 */
-	Node* MonadicApply(Node* root,
-		MonadicApplyCallbackParameters* cbParams) const;
+	Node* MonadicApply(Node* root, AbstractMonadicApplyFunctor* func) const;
 
 
-	std::string StoreToString(const std::vector<Node*>& nodes, const std::vector<std::string>& rootNames) const;
+	/**
+	 * @brief  Stores the MTBDDs in an internal format into a string
+	 *
+	 * Stores all given MTBDDs into a std::string using an internal format.
+	 *
+	 * @param[in]  nodes      List of nodes to be stored
+	 * @param[in]  rootNames  Names of roots of the MTBDD
+	 *
+	 * @returns  String with the internal representation of given MTBDDs
+	 *
+	 * @todo TODO: a function that performs inverse operation is missing: JUST
+	 * DO IT!
+	 */
+	std::string StoreToString(const std::vector<Node*>& nodes,
+		const std::vector<std::string>& rootNames) const;
 
 
 	/**
 	 * @brief  Dumps the MTBDD in Dot format
 	 *
-	 * Creates a Dot (http://www.graphviz.org) file with a representation of the MTBDD.
+	 * Creates a Dot (http://www.graphviz.org) file with a representation of
+	 * the MTBDD.
 	 *
 	 * @param[in]  nodes      Array of root nodes to be output to the file
 	 * @param[in]  rootNames  Array of names of root nodes

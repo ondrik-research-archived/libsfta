@@ -49,6 +49,15 @@ public:   // Public methods
 	 */
 	LogFixture();
 
+	/**
+	 * @brief  Destructor
+	 *
+	 * Virtual destructor
+	 */
+	virtual ~LogFixture()
+	{
+	}
+
 };
 
 #endif

@@ -248,17 +248,14 @@ DdNode* applyCallback(DdManager* dd, DdNode** f, DdNode** g, void* data)
 	assert(F    != static_cast<DdNode*>(0));
 	assert(G    != static_cast<DdNode*>(0));
 
-	// get callback parameters from the data container
-	CUDDFacade::ApplyCallbackParameters& params =
-		*(static_cast<CUDDFacade::ApplyCallbackParameters*>(data));
-
-	// Even further assertions
-	assert(params.Op != static_cast<CUDDFacade::ApplyOperationType>(0));
-
 	if (cuddIsConstant(F) && cuddIsConstant(G))
 	{	// in case we are at leaves
-		DdNode* res = cuddUniqueConst(dd,
-			params.Op(cuddV(F), cuddV(G), params.Data));
+
+		// get the functor from the container
+		CUDDFacade::AbstractApplyFunctor& func =
+			*(static_cast<CUDDFacade::AbstractApplyFunctor*>(data));
+
+		DdNode* res = cuddUniqueConst(dd, func(cuddV(F), cuddV(G)));
 
 		// check the return value
 		assert(res != static_cast<DdNode*>(0));
@@ -272,23 +269,21 @@ DdNode* applyCallback(DdManager* dd, DdNode** f, DdNode** g, void* data)
 }
 
 
-DdNode* monadicApplyCallback(DdManager* dd, DdNode * f, void* data)
+DdNode* monadicApplyCallback(DdManager* dd, DdNode* f, void* data)
 {
 	// Assertions
 	assert(dd   != static_cast<DdManager*>(0));
 	assert(f    != static_cast<DdNode*>(0));
 	assert(data != static_cast<void*>(0));
 
-	// get callback parameters from the data container
-	CUDDFacade::MonadicApplyCallbackParameters& params =
-		*(static_cast<CUDDFacade::MonadicApplyCallbackParameters*>(data));
-
-	// Even further assertions
-	assert(params.Op != static_cast<CUDDFacade::MonadicApplyOperationType>(0));
-
 	if (cuddIsConstant(f))
 	{	// in case we are at leaves
-		DdNode* res = cuddUniqueConst(dd, params.Op(cuddV(f), params.Data));
+
+		// get the functor from the container
+		CUDDFacade::AbstractMonadicApplyFunctor& func =
+			*(static_cast<CUDDFacade::AbstractMonadicApplyFunctor*>(data));
+
+		DdNode* res = cuddUniqueConst(dd, func(cuddV(f)));
 
 		// check the return value
 		assert(res != static_cast<DdNode*>(0));
@@ -303,16 +298,16 @@ DdNode* monadicApplyCallback(DdManager* dd, DdNode * f, void* data)
 
 
 CUDDFacade::Node* CUDDFacade::Apply(Node* lhs, Node* rhs,
-	ApplyCallbackParameters* cbParams) const
+	AbstractApplyFunctor* func) const
 {
 	// Assertions
 	assert(manager_ != static_cast<Manager*>(0));
 	assert(lhs != static_cast<Node*>(0));
 	assert(rhs != static_cast<Node*>(0));
-	assert(cbParams != static_cast<ApplyCallbackParameters*>(0));
+	assert(func != static_cast<AbstractApplyFunctor*>(0));
 
 	Node* res = fromCUDD(Cudd_addApplyWithData(
-		toCUDD(manager_), applyCallback, toCUDD(lhs), toCUDD(rhs), cbParams));
+		toCUDD(manager_), applyCallback, toCUDD(lhs), toCUDD(rhs), func));
 
 	// check the return value
 	assert(res != static_cast<Node*>(0));
@@ -325,15 +320,15 @@ CUDDFacade::Node* CUDDFacade::Apply(Node* lhs, Node* rhs,
 
 
 CUDDFacade::Node* CUDDFacade::MonadicApply(Node* root,
-	MonadicApplyCallbackParameters* cbParams) const
+	AbstractMonadicApplyFunctor* func) const
 {
 	// Assertions
 	assert(manager_ != static_cast<Manager*>(0));
 	assert(root != static_cast<Node*>(0));
-	assert(cbParams != static_cast<MonadicApplyCallbackParameters*>(0));
+	assert(func != static_cast<AbstractMonadicApplyFunctor*>(0));
 
 	Node* res = fromCUDD(Cudd_addMonadicApplyWithData(
-		toCUDD(manager_), monadicApplyCallback, toCUDD(root), cbParams));
+		toCUDD(manager_), monadicApplyCallback, toCUDD(root), func));
 
 	// check the return value
 	assert(res != static_cast<Node*>(0));
@@ -345,7 +340,8 @@ CUDDFacade::Node* CUDDFacade::MonadicApply(Node* root,
 }
 
 
-std::string CUDDFacade::StoreToString(const std::vector<Node*>& nodes, const std::vector<std::string>& rootNames) const
+std::string CUDDFacade::StoreToString(const std::vector<Node*>& nodes,
+	const std::vector<std::string>& rootNames) const
 {
 	// Assertions
 	assert(manager_ != static_cast<Manager*>(0));
@@ -390,7 +386,9 @@ std::string CUDDFacade::StoreToString(const std::vector<Node*>& nodes, const std
 			arrVarNames[i] = const_cast<char*>(varNames[i].c_str());
 		}
 
-		if (!Dddmp_cuddAddArrayStore(toCUDD(manager_), static_cast<char*>(0), nodes.size(), arrNodes, arrRootNames, arrVarNames, static_cast<int*>(0), DDDMP_MODE_TEXT, DDDMP_VARDEFAULT, static_cast<char*>(0), ff.Open()))
+		if (!Dddmp_cuddAddArrayStore(toCUDD(manager_), static_cast<char*>(0),
+			nodes.size(), arrNodes, arrRootNames, arrVarNames, static_cast<int*>(0),
+			DDDMP_MODE_TEXT, DDDMP_VARDEFAULT, static_cast<char*>(0), ff.Open()))
 		{	// in case there was a problem with storing the BDD
 			throw std::runtime_error("Could not store BDD to string!");
 		}
