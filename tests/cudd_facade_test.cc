@@ -37,6 +37,8 @@ public:  // Public types
 	typedef std::pair<std::string, bool> VariableOccurenceType;
 	typedef std::vector<VariableOccurenceType> VariableListType;
 	typedef std::pair<ValueType, VariableListType> ParserResultType;
+	typedef std::vector<std::string> ListOfTestCasesType;
+	typedef std::vector<CUDDFacade::Node*> NodeArray;
 
 protected:
 
@@ -171,6 +173,7 @@ protected:
 		return func.GetValue();
 	}
 
+
 	/*
 	 * format:   5*x1*x2*~x3*x4
 	 */
@@ -229,75 +232,89 @@ public:
 
 BOOST_FIXTURE_TEST_SUITE(suite, CUDDFacadeFixture)
 
-BOOST_AUTO_TEST_CASE(work_with_variables)
+BOOST_AUTO_TEST_CASE(standard_storage_test)
 {
 	boost::unit_test::unit_test_log.set_threshold_level(boost::unit_test::log_messages);
 
-	ParserResultType prsRes = parseExpression("5 * x1 * x2 * x3 * ~x4");
-	CUDDFacade::Node* root = setValue(prsRes.first, prsRes.second);
+	// set new background
+	CUDDFacade::Node* oldBackground = facade_.ReadBackground();
+	CUDDFacade::Node* background = facade_.AddConst(BDD_BACKGROUND_VALUE);
+	facade_.Ref(background);
+	facade_.SetBackground(background);
+	facade_.RecursiveDeref(oldBackground);
 
-	BOOST_CHECK(getValue(root, prsRes.second) == prsRes.first);
+	BOOST_CHECK(facade_.ReadBackground() == background);
 
-	facade_.RecursiveDeref(root);
+	ListOfTestCasesType testCases;
+	testCases.push_back(" 3 * ~x1 * ~x2 *  x3 *  x4");
+	testCases.push_back(" 4 * ~x1 *  x2 * ~x3 * ~x4");
+	testCases.push_back(" 9 *  x1 * ~x2 * ~x3 *  x4");
+	testCases.push_back("14 *  x1 *  x2 *  x3 * ~x4");
+	testCases.push_back("14 *  x1 *  x2 *  x3 * ~x4");
+	testCases.push_back("15 *  x1 *  x2 *  x3 *  x4");
 
-//	CUDDFacade::Node* x0 = facade.AddIthVar(0);
-//	facade.Ref(x0);
-//
-//	CUDDFacade::Node* not_x0 = facade.AddCmpl(x0);
-//	BOOST_CHECK(not_x0 != static_cast<CUDDFacade::Node*>(0));
-//	facade.Ref(not_x0);
-//
-//	CUDDFacade::Node* x2 = facade.AddIthVar(2);
-//	BOOST_CHECK(x2 != static_cast<CUDDFacade::Node*>(0));
-//	facade.Ref(x2);
-//
-//	CUDDFacade::Node* not_x2 = facade.AddCmpl(x2);
-//	BOOST_CHECK(not_x2 != static_cast<CUDDFacade::Node*>(0));
-//	facade.Ref(not_x2);
-//
-//	CUDDFacade::Node* const_three = facade.AddConst(3);
-//	BOOST_CHECK(const_three != static_cast<CUDDFacade::Node*>(0));
-//	facade.Ref(const_three);
-//
-//	CUDDFacade::Node* const_seven = facade.AddConst(7);
-//	BOOST_CHECK(const_seven != static_cast<CUDDFacade::Node*>(0));
-//	facade.Ref(const_seven);
-//
-//	CUDDFacade::Node* const_hundred = facade.AddConst(100);
-//	BOOST_CHECK(const_hundred != static_cast<CUDDFacade::Node*>(0));
-//	facade.Ref(const_hundred);
-//
-//	CUDDFacade::Node* old_bck = facade.ReadBackground();
-//	BOOST_CHECK(old_bck != static_cast<CUDDFacade::Node*>(0));
-//	facade.SetBackground(const_hundred);
-//	facade.RecursiveDeref(old_bck);
-//
-//	CUDDFacade::Node* three_x0 = facade.Times(const_three, x0);
-//	BOOST_CHECK(three_x0 != static_cast<CUDDFacade::Node*>(0));
-//	facade.Ref(three_x0);
-//
-//	CUDDFacade::Node* three_x0_not_x2 = facade.Times(three_x0, not_x2);
-//	BOOST_CHECK(three_x0_not_x2 != static_cast<CUDDFacade::Node*>(0));
-//	facade.Ref(three_x0_not_x2);
-//	facade.RecursiveDeref(three_x0);
-//
-//	std::vector<CUDDFacade::Node*> arr;
-//	arr.push_back(three_x0_not_x2);
-//
-//	std::vector<std::string> arrStr;
-//	arrStr.push_back("new root");
-//
-//	std::string str = facade.StoreToString(arr, arrStr);
-//	BOOST_TEST_MESSAGE("Output: " + str);
-//
-//	facade.RecursiveDeref(three_x0_not_x2);
-//	facade.RecursiveDeref(x0);
-//	facade.RecursiveDeref(not_x0);
-//	facade.RecursiveDeref(x2);
-//	facade.RecursiveDeref(not_x2);
-//	facade.RecursiveDeref(const_three);
-//	facade.RecursiveDeref(const_seven);
-//	facade.RecursiveDeref(const_hundred);
+	ListOfTestCasesType failedCases;
+	failedCases.push_back(" 1 * ~x1 * ~x2 * ~x3 *  x4");
+	failedCases.push_back(" 2 * ~x1 * ~x2 *  x3 * ~x4");
+	failedCases.push_back(" 5 * ~x1 *  x2 * ~x3 *  x4");
+	failedCases.push_back(" 6 * ~x1 *  x2 *  x3 * ~x4");
+	failedCases.push_back(" 7 * ~x1 *  x2 *  x3 *  x4");
+	failedCases.push_back(" 8 *  x1 * ~x2 * ~x3 * ~x4");
+	failedCases.push_back("10 *  x1 * ~x2 *  x3 * ~x4");
+	failedCases.push_back("11 *  x1 * ~x2 *  x3 *  x4");
+	failedCases.push_back("12 *  x1 *  x2 * ~x3 * ~x4");
+	failedCases.push_back("13 *  x1 *  x2 * ~x3 *  x4");
+	failedCases.push_back(" 5 *       ~x2 *       ~x4");
+
+	NodeArray testRootNodes;
+
+	for (ListOfTestCasesType::const_iterator itTests = testCases.begin();
+		itTests != testCases.end(); ++itTests)
+	{	// for each test case
+		ParserResultType prsRes = parseExpression(*itTests);
+		testRootNodes.push_back(setValue(prsRes.first, prsRes.second));
+	}
+
+	for (unsigned i = 0; i < testCases.size(); ++i)
+	{	// for every test case
+		ParserResultType prsRes = parseExpression(testCases[i]);
+		BOOST_CHECK_MESSAGE(getValue(testRootNodes[i], prsRes.second)
+			== prsRes.first, testCases[i] + " != "
+			+ Convert::ToString(getValue(testRootNodes[i], prsRes.second)));
+
+		for (ListOfTestCasesType::const_iterator itFailed = failedCases.begin();
+			itFailed != failedCases.end(); ++itFailed)
+		{	// for every test case that should fail
+			ParserResultType prsFailedRes = parseExpression(*itFailed);
+			BOOST_CHECK_MESSAGE(getValue(testRootNodes[i], prsFailedRes.second)
+				== BDD_BACKGROUND_VALUE, testCases[i] + " == "
+				+ Convert::ToString(getValue(testRootNodes[i], prsFailedRes.second)));
+		}
+	}
+
+
+	for (NodeArray::iterator itNodes = testRootNodes.begin();
+		itNodes != testRootNodes.end(); ++itNodes)
+	{	// dereference the nodes
+		facade_.RecursiveDeref(*itNodes);
+	}
 }
+
+BOOST_AUTO_TEST_CASE(background_value_test)
+{
+	// TODO
+}
+
+BOOST_AUTO_TEST_CASE(large_diagram_test)
+{
+	// TODO
+}
+
+BOOST_AUTO_TEST_CASE(boundary_cases)
+{
+	// TODO
+}
+
+
 
 BOOST_AUTO_TEST_SUITE_END()
