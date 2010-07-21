@@ -189,7 +189,9 @@ void CUDDFacade::SetBackground(Node* bck) const
 	assert(manager_ != static_cast<Manager*>(0));
 	assert(bck != static_cast<Node*>(0));
 
-	Cudd_SetBackground(toCUDD(manager_), toCUDD(bck));
+	throw std::logic_error("Setting background value of CUDD manager is not supported!");
+
+	//Cudd_SetBackground(toCUDD(manager_), toCUDD(bck));
 }
 
 

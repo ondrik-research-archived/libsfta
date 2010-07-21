@@ -19,6 +19,7 @@ using SFTA::Private::Convert;
 #define BOOST_TEST_MODULE CUDDFacade
 #include <boost/test/unit_test.hpp>
 #include <boost/algorithm/string.hpp>
+#include <boost/random/mersenne_twister.hpp>
 
 // testing headers
 #include "log_fixture.hh"
@@ -38,7 +39,8 @@ public:  // Public types
 	typedef std::vector<VariableOccurenceType> VariableListType;
 	typedef std::pair<ValueType, VariableListType> ParserResultType;
 	typedef std::vector<std::string> ListOfTestCasesType;
-	typedef std::vector<CUDDFacade::Node*> NodeArray;
+	typedef std::vector<CUDDFacade::Node*> NodeArrayType;
+	typedef std::vector<ValueType> ListOfValuesType;
 
 protected:
 
@@ -151,6 +153,7 @@ protected:
 						}
 						else
 						{	// in case we are overwriting an existing value
+							BOOST_TEST_MESSAGE(Convert::ToString(val_) + " (stored) and " + Convert::ToString(lhs) + " (lhs)");
 							throw std::logic_error("Collecting multiple values");
 						}
 					}
@@ -196,7 +199,7 @@ protected:
 
 			if (str.length() == 0)
 			{
-				throw std::invalid_argument("ParseExpression: invalid argument");
+				throw std::invalid_argument("parseExpression: invalid argument");
 			}
 
 			VariableOccurenceType var("", true);
@@ -236,15 +239,7 @@ BOOST_AUTO_TEST_CASE(standard_storage_test)
 {
 	boost::unit_test::unit_test_log.set_threshold_level(boost::unit_test::log_messages);
 
-	// set new background
-	CUDDFacade::Node* oldBackground = facade_.ReadBackground();
-	CUDDFacade::Node* background = facade_.AddConst(BDD_BACKGROUND_VALUE);
-	facade_.Ref(background);
-	facade_.SetBackground(background);
-	facade_.RecursiveDeref(oldBackground);
-
-	BOOST_CHECK(facade_.ReadBackground() == background);
-
+	// formulae that we wish to store in the BDD
 	ListOfTestCasesType testCases;
 	testCases.push_back(" 3 * ~x1 * ~x2 *  x3 *  x4");
 	testCases.push_back(" 4 * ~x1 *  x2 * ~x3 * ~x4");
@@ -253,6 +248,7 @@ BOOST_AUTO_TEST_CASE(standard_storage_test)
 	testCases.push_back("14 *  x1 *  x2 *  x3 * ~x4");
 	testCases.push_back("15 *  x1 *  x2 *  x3 *  x4");
 
+	// formulae that we want to check that are not in the BDD
 	ListOfTestCasesType failedCases;
 	failedCases.push_back(" 1 * ~x1 * ~x2 * ~x3 *  x4");
 	failedCases.push_back(" 2 * ~x1 * ~x2 *  x3 * ~x4");
@@ -266,17 +262,17 @@ BOOST_AUTO_TEST_CASE(standard_storage_test)
 	failedCases.push_back("13 *  x1 *  x2 * ~x3 *  x4");
 	failedCases.push_back(" 5 *       ~x2 *       ~x4");
 
-	NodeArray testRootNodes;
+	NodeArrayType testRootNodes;
 
 	for (ListOfTestCasesType::const_iterator itTests = testCases.begin();
 		itTests != testCases.end(); ++itTests)
-	{	// for each test case
+	{	// store each test case
 		ParserResultType prsRes = parseExpression(*itTests);
 		testRootNodes.push_back(setValue(prsRes.first, prsRes.second));
 	}
 
 	for (unsigned i = 0; i < testCases.size(); ++i)
-	{	// for every test case
+	{	// test that the test cases have been stored properly
 		ParserResultType prsRes = parseExpression(testCases[i]);
 		BOOST_CHECK_MESSAGE(getValue(testRootNodes[i], prsRes.second)
 			== prsRes.first, testCases[i] + " != "
@@ -292,29 +288,43 @@ BOOST_AUTO_TEST_CASE(standard_storage_test)
 		}
 	}
 
-
-	for (NodeArray::iterator itNodes = testRootNodes.begin();
+	for (NodeArrayType::iterator itNodes = testRootNodes.begin();
 		itNodes != testRootNodes.end(); ++itNodes)
 	{	// dereference the nodes
 		facade_.RecursiveDeref(*itNodes);
 	}
 }
 
-BOOST_AUTO_TEST_CASE(background_value_test)
-{
-	// TODO
-}
 
 BOOST_AUTO_TEST_CASE(large_diagram_test)
 {
+	boost::mt19937 prnGen(781436);
+
+	std::string formula = Convert::ToString(static_cast<ValueType>(prnGen()));
+
+	for (unsigned i = 0; i < 64; ++i)
+	{
+		formula += " * " + Convert::ToString((prnGen() % 2 == 0)? "" : "~")  + "x" + Convert::ToString(i);
+	}
+
+	BOOST_TEST_MESSAGE("Generated formula: " + formula);
+
 	// TODO
+	// formulae that we wish to store in the BDD
+	ListOfTestCasesType testCases;
+
+
+	// formulae that we want to check that are not in the BDD
+	ListOfTestCasesType failedCases;
+
+	NodeArrayType testRootNodes;
 }
+
 
 BOOST_AUTO_TEST_CASE(boundary_cases)
 {
 	// TODO
 }
-
 
 
 BOOST_AUTO_TEST_SUITE_END()

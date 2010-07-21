@@ -9,10 +9,6 @@
  *
  *****************************************************************************/
 
-// SFTA headers
-#include <sfta/cudd_facade.hh>
-#include <sfta/cudd_shared_mtbdd.hh>
-
 // testing header files
 #include "log_fixture.hh"
 
