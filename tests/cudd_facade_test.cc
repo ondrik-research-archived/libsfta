@@ -29,6 +29,9 @@ using SFTA::Private::Convert;
  *                                  Constants                                 *
  ******************************************************************************/
 
+/**
+ * Formulae for standard test cases to be stored in the MTBDD
+ */
 const char* const STANDARD_TEST_CASES[] =
 {
 	" 3 * ~x1 * ~x2 *  x3 *  x4",
@@ -39,10 +42,17 @@ const char* const STANDARD_TEST_CASES[] =
 	"15 *  x1 *  x2 *  x3 *  x4"
 };
 
+
+/**
+ * Number of formulae for standard test cases in the MTBDD
+ */
 const unsigned STANDARD_TEST_CASES_SIZE =
 	sizeof(STANDARD_TEST_CASES) / sizeof(const char* const);
 
 
+/**
+ * Formulae for standard test cases to be found not present in the MTBDD
+ */
 const char* const STANDARD_FAIL_CASES[] =
 {
 	" 1 * ~x1 * ~x2 * ~x3 *  x4",
@@ -57,12 +67,23 @@ const char* const STANDARD_FAIL_CASES[] =
 	"13 *  x1 *  x2 * ~x3 *  x4"
 };
 
+
+/**
+ * Number of formulae for standard test cases that are to be not found in the
+ * MTBDD
+ */
 const unsigned STANDARD_FAIL_CASES_SIZE =
 	sizeof(STANDARD_FAIL_CASES) / sizeof(const char* const);
 
 
+/**
+ * The seed of the pseudorandom number generator
+ */
 const unsigned PRNG_SEED = 781436;
 
+/**
+ * Parameters of the test of large formulae
+ */
 const unsigned LARGE_TEST_FORMULA_LENGTH = 64;
 const unsigned LARGE_TEST_FORMULA_CASES = 200;
 
@@ -71,6 +92,10 @@ const unsigned LARGE_TEST_FORMULA_CASES = 200;
  *                                  Fixtures                                  *
  ******************************************************************************/
 
+/**
+ * @brief  Fixture for the test of CUDDFacade
+ *
+ */
 class CUDDFacadeFixture : public LogFixture
 {
 public:  // Public types
