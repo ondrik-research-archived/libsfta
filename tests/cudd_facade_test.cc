@@ -7,8 +7,6 @@
  *    Test suite for CUDDFacade class.
  *
  *****************************************************************************/
-
-// SFTA headers
 #include <sfta/convert.hh>
 #include <sfta/cudd_facade.hh>
 using SFTA::Private::CUDDFacade;
@@ -23,6 +21,50 @@ using SFTA::Private::Convert;
 
 // testing headers
 #include "log_fixture.hh"
+
+//#define DEBUG 1
+
+
+/******************************************************************************
+ *                                  Constants                                 *
+ ******************************************************************************/
+
+const char* const STANDARD_TEST_CASES[] =
+{
+	" 3 * ~x1 * ~x2 *  x3 *  x4",
+	" 4 * ~x1 *  x2 * ~x3 * ~x4",
+	" 9 *  x1 * ~x2 * ~x3 *  x4",
+	"14 *  x1 *  x2 *  x3 * ~x4",
+	"14 *  x1 *  x2 *  x3 * ~x4",
+	"15 *  x1 *  x2 *  x3 *  x4"
+};
+
+const unsigned STANDARD_TEST_CASES_SIZE =
+	sizeof(STANDARD_TEST_CASES) / sizeof(const char* const);
+
+
+const char* const STANDARD_FAIL_CASES[] =
+{
+	" 1 * ~x1 * ~x2 * ~x3 *  x4",
+	" 2 * ~x1 * ~x2 *  x3 * ~x4",
+	" 5 * ~x1 *  x2 * ~x3 *  x4",
+	" 6 * ~x1 *  x2 *  x3 * ~x4",
+	" 7 * ~x1 *  x2 *  x3 *  x4",
+	" 8 *  x1 * ~x2 * ~x3 * ~x4",
+	"10 *  x1 * ~x2 *  x3 * ~x4",
+	"11 *  x1 * ~x2 *  x3 *  x4",
+	"12 *  x1 *  x2 * ~x3 * ~x4",
+	"13 *  x1 *  x2 * ~x3 *  x4"
+};
+
+const unsigned STANDARD_FAIL_CASES_SIZE =
+	sizeof(STANDARD_FAIL_CASES) / sizeof(const char* const);
+
+
+const unsigned PRNG_SEED = 781436;
+
+const unsigned LARGE_TEST_FORMULA_LENGTH = 64;
+const unsigned LARGE_TEST_FORMULA_CASES = 200;
 
 
 /******************************************************************************
@@ -54,8 +96,6 @@ public:  // Public types
 
 protected:
 
-	CUDDFacade facade_;
-
 	StringToUnsignedDictType varToNumDict_;
 
 	unsigned varCounter_;
@@ -65,8 +105,8 @@ protected:
 
 protected:
 
-	CUDDFacade::Node* extendBddByVariable(CUDDFacade::Node* bdd,
-		const VariableOccurenceType& var)
+	CUDDFacade::Node* extendBddByVariable(CUDDFacade& facade,
+		CUDDFacade::Node* bdd, const VariableOccurenceType& var)
 	{
 		// Assertions
 		assert(bdd != static_cast<CUDDFacade::Node*>(0));
@@ -82,29 +122,29 @@ protected:
 
 		// create the node for the new variable
 		unsigned varNum = itDict->second;
-		CUDDFacade::Node* varNode = facade_.AddIthVar(varNum);
-		facade_.Ref(varNode);
+		CUDDFacade::Node* varNode = facade.AddIthVar(varNum);
+		facade.Ref(varNode);
 
 		if (!isPositive)
 		{	// when the variable is complemented
 			CUDDFacade::Node* oldVar = varNode;
-			varNode = facade_.AddCmpl(varNode);
-			facade_.Ref(varNode);
-			facade_.RecursiveDeref(oldVar);
+			varNode = facade.AddCmpl(varNode);
+			facade.Ref(varNode);
+			facade.RecursiveDeref(oldVar);
 		}
 
 		// carry out the conjunction operation
-		CUDDFacade::Node* newBdd = facade_.Times(bdd, varNode);
-		facade_.Ref(newBdd);
-		facade_.RecursiveDeref(bdd);
-		facade_.RecursiveDeref(varNode);
+		CUDDFacade::Node* newBdd = facade.Times(bdd, varNode);
+		facade.Ref(newBdd);
+		facade.RecursiveDeref(bdd);
+		facade.RecursiveDeref(varNode);
 
 		return newBdd;
 	}
 
 
-	CUDDFacade::Node* extendBddByVariableList(CUDDFacade::Node* bdd,
-		const VariableListType& asgn)
+	CUDDFacade::Node* extendBddByVariableList(CUDDFacade& facade,
+		CUDDFacade::Node* bdd, const VariableListType& asgn)
 	{
 		// Assertions
 		assert(bdd != static_cast<CUDDFacade::Node*>(0));
@@ -112,32 +152,33 @@ protected:
 		for (VariableListType::const_iterator it = asgn.begin();
 			it != asgn.end(); ++it)
 		{	// for each variable in the assignment
-			bdd = extendBddByVariable(bdd, *it);
+			bdd = extendBddByVariable(facade, bdd, *it);
 		}
 
 		return bdd;
 	}
 
 
-	CUDDFacade::Node* setValue(ValueType value, const VariableListType& asgn)
+	CUDDFacade::Node* setValue(CUDDFacade& facade, ValueType value,
+		const VariableListType& asgn)
 	{
 		// create a node with the value
-		CUDDFacade::Node* node = facade_.AddConst(value);
-		facade_.Ref(node);
+		CUDDFacade::Node* node = facade.AddConst(value);
+		facade.Ref(node);
 
 		// create the BDD above the value
-		return extendBddByVariableList(node, asgn);
+		return extendBddByVariableList(facade, node, asgn);
 	}
 
 
-	ValueType getValue(CUDDFacade::Node* rootNode,
+	ValueType getValue(CUDDFacade& facade, CUDDFacade::Node* rootNode,
 		const VariableListType& asgn)
 	{
 		// create a node with the TRUE value
-		CUDDFacade::Node* node = facade_.AddConst(BDD_TRUE_VALUE);
-		facade_.Ref(node);
+		CUDDFacade::Node* node = facade.AddConst(BDD_TRUE_VALUE);
+		facade.Ref(node);
 
-		node = extendBddByVariableList(node, asgn);
+		node = extendBddByVariableList(facade, node, asgn);
 
 		class CollectorApplyFunctor : public CUDDFacade::AbstractApplyFunctor
 		{
@@ -157,12 +198,14 @@ protected:
 				{	// in case we are at the right point
 					if (lhs != BDD_BACKGROUND_VALUE)
 					{	// in case there is something sensible stored
-						if (val_ == BDD_BACKGROUND_VALUE)
+						if ((val_ == BDD_BACKGROUND_VALUE) || (val_ == lhs))
 						{	// in case we haven't collected any value yet
 							val_ = lhs;
 						}
 						else
 						{	// in case we are overwriting an existing value
+							BOOST_TEST_MESSAGE("val_ = " + Convert::ToString(val_)
+							  + ", lhs = " + Convert::ToString(lhs));
 							throw std::logic_error("Collecting multiple values");
 						}
 					}
@@ -178,9 +221,9 @@ protected:
 		};
 
 		CollectorApplyFunctor func;
-		CUDDFacade::Node* tmpNode = facade_.Apply(rootNode, node, &func);
-		facade_.RecursiveDeref(tmpNode);
-		facade_.RecursiveDeref(node);
+		CUDDFacade::Node* tmpNode = facade.Apply(rootNode, node, &func);
+		facade.RecursiveDeref(tmpNode);
+		facade.RecursiveDeref(node);
 
 		return func.GetValue();
 	}
@@ -189,7 +232,7 @@ protected:
 	/*
 	 * format:   5*x1*x2*~x3*x4
 	 */
-	ParserResultType parseExpression(std::string input)
+	static ParserResultType parseExpression(std::string input)
 	{
 		boost::trim(input);
 		std::vector<std::string> splitInput;
@@ -228,11 +271,41 @@ protected:
 			varList);
 	}
 
+	static std::string parserResultToString(const ParserResultType& prsRes)
+	{
+		std::string result = Convert::ToString(prsRes.first);
+
+		for (VariableListType::const_iterator itVars = prsRes.second.begin();
+			itVars != prsRes.second.end(); ++itVars)
+		{	// print all variables
+			result += " * " + Convert::ToString(((itVars->second)? " " : "~"))
+				+ itVars->first;
+		}
+
+		return result;
+	}
+
+	static void loadStandardTests(ListOfTestCasesType& testCases,
+		ListOfTestCasesType& failedCases)
+	{
+		// formulae that we wish to store in the BDD
+		for (unsigned i = 0; i < STANDARD_TEST_CASES_SIZE; ++i)
+		{	// load test cases
+			testCases.push_back(STANDARD_TEST_CASES[i]);
+		}
+
+		// formulae that we want to check that are not in the BDD
+		for (unsigned i = 0; i < STANDARD_FAIL_CASES_SIZE; ++i)
+		{	// load test cases
+			failedCases.push_back(STANDARD_FAIL_CASES[i]);
+		}
+	}
+
 
 public:
 
 	CUDDFacadeFixture()
-		: facade_(), varToNumDict_(), varCounter_(0)
+		: varToNumDict_(), varCounter_(0)
 	{
 		boost::unit_test::unit_test_log.set_threshold_level(
 			boost::unit_test::log_messages);
@@ -249,28 +322,12 @@ BOOST_FIXTURE_TEST_SUITE(suite, CUDDFacadeFixture)
 
 BOOST_AUTO_TEST_CASE(single_value_storage_test)
 {
-	// formulae that we wish to store in the BDD
-	ListOfTestCasesType testCases;
-	testCases.push_back(" 3 * ~x1 * ~x2 *  x3 *  x4");
-	testCases.push_back(" 4 * ~x1 *  x2 * ~x3 * ~x4");
-	testCases.push_back(" 9 *  x1 * ~x2 * ~x3 *  x4");
-	testCases.push_back("14 *  x1 *  x2 *  x3 * ~x4");
-	testCases.push_back("14 *  x1 *  x2 *  x3 * ~x4");
-	testCases.push_back("15 *  x1 *  x2 *  x3 *  x4");
+	CUDDFacade facade;
 
-	// formulae that we want to check that are not in the BDD
+	// load test cases
+	ListOfTestCasesType testCases;
 	ListOfTestCasesType failedCases;
-	failedCases.push_back(" 1 * ~x1 * ~x2 * ~x3 *  x4");
-	failedCases.push_back(" 2 * ~x1 * ~x2 *  x3 * ~x4");
-	failedCases.push_back(" 5 * ~x1 *  x2 * ~x3 *  x4");
-	failedCases.push_back(" 6 * ~x1 *  x2 *  x3 * ~x4");
-	failedCases.push_back(" 7 * ~x1 *  x2 *  x3 *  x4");
-	failedCases.push_back(" 8 *  x1 * ~x2 * ~x3 * ~x4");
-	failedCases.push_back("10 *  x1 * ~x2 *  x3 * ~x4");
-	failedCases.push_back("11 *  x1 * ~x2 *  x3 *  x4");
-	failedCases.push_back("12 *  x1 *  x2 * ~x3 * ~x4");
-	failedCases.push_back("13 *  x1 *  x2 * ~x3 *  x4");
-	failedCases.push_back(" 5 *       ~x2 *       ~x4");
+	loadStandardTests(testCases, failedCases);
 
 	NodeArrayType testRootNodes;
 
@@ -278,61 +335,46 @@ BOOST_AUTO_TEST_CASE(single_value_storage_test)
 		itTests != testCases.end(); ++itTests)
 	{	// store each test case
 		ParserResultType prsRes = parseExpression(*itTests);
-		testRootNodes.push_back(setValue(prsRes.first, prsRes.second));
+		testRootNodes.push_back(setValue(facade, prsRes.first, prsRes.second));
 	}
 
 	for (unsigned i = 0; i < testCases.size(); ++i)
 	{	// test that the test cases have been stored properly
 		ParserResultType prsRes = parseExpression(testCases[i]);
-		BOOST_CHECK_MESSAGE(getValue(testRootNodes[i], prsRes.second)
+		BOOST_CHECK_MESSAGE(getValue(facade, testRootNodes[i], prsRes.second)
 			== prsRes.first, testCases[i] + " != "
-			+ Convert::ToString(getValue(testRootNodes[i], prsRes.second)));
+			+ Convert::ToString(getValue(facade, testRootNodes[i], prsRes.second)));
 
 		for (ListOfTestCasesType::const_iterator itFailed = failedCases.begin();
 			itFailed != failedCases.end(); ++itFailed)
 		{	// for every test case that should fail
 			ParserResultType prsFailedRes = parseExpression(*itFailed);
-			BOOST_CHECK_MESSAGE(getValue(testRootNodes[i], prsFailedRes.second)
+			BOOST_CHECK_MESSAGE(getValue(facade, testRootNodes[i], prsFailedRes.second)
 				== BDD_BACKGROUND_VALUE, testCases[i] + " == "
-				+ Convert::ToString(getValue(testRootNodes[i], prsFailedRes.second)));
+				+ Convert::ToString(getValue(
+					facade, testRootNodes[i], prsFailedRes.second)));
 		}
 	}
 
 	for (NodeArrayType::iterator itNodes = testRootNodes.begin();
 		itNodes != testRootNodes.end(); ++itNodes)
 	{	// dereference the nodes
-		facade_.RecursiveDeref(*itNodes);
+		facade.RecursiveDeref(*itNodes);
 	}
 }
 
 
 BOOST_AUTO_TEST_CASE(composed_values_storage_test)
 {
-	// formulae that we wish to store in the BDD
+	CUDDFacade facade;
+
+	// load test cases
 	ListOfTestCasesType testCases;
-	testCases.push_back(" 3 * ~x1 * ~x2 *  x3 *  x4");
-	testCases.push_back(" 4 * ~x1 *  x2 * ~x3 * ~x4");
-	testCases.push_back(" 9 *  x1 * ~x2 * ~x3 *  x4");
-	testCases.push_back("14 *  x1 *  x2 *  x3 * ~x4");
-	testCases.push_back("14 *  x1 *  x2 *  x3 * ~x4");
-	testCases.push_back("15 *  x1 *  x2 *  x3 *  x4");
-
-	// formulae that we want to check that are not in the BDD
 	ListOfTestCasesType failedCases;
-	failedCases.push_back(" 1 * ~x1 * ~x2 * ~x3 *  x4");
-	failedCases.push_back(" 2 * ~x1 * ~x2 *  x3 * ~x4");
-	failedCases.push_back(" 5 * ~x1 *  x2 * ~x3 *  x4");
-	failedCases.push_back(" 6 * ~x1 *  x2 *  x3 * ~x4");
-	failedCases.push_back(" 7 * ~x1 *  x2 *  x3 *  x4");
-	failedCases.push_back(" 8 *  x1 * ~x2 * ~x3 * ~x4");
-	failedCases.push_back("10 *  x1 * ~x2 *  x3 * ~x4");
-	failedCases.push_back("11 *  x1 * ~x2 *  x3 *  x4");
-	failedCases.push_back("12 *  x1 *  x2 * ~x3 * ~x4");
-	failedCases.push_back("13 *  x1 *  x2 * ~x3 *  x4");
-	failedCases.push_back(" 5 *       ~x2 *       ~x4");
+	loadStandardTests(testCases, failedCases);
 
-	CUDDFacade::Node* node = facade_.ReadBackground();
-	facade_.Ref(node);
+	CUDDFacade::Node* node = facade.ReadBackground();
+	facade.Ref(node);
 
 	for (ListOfTestCasesType::const_iterator itTests = testCases.begin();
 		itTests != testCases.end(); ++itTests)
@@ -340,63 +382,260 @@ BOOST_AUTO_TEST_CASE(composed_values_storage_test)
 		CUDDFacade::Node* oldNode = node;
 
 		ParserResultType prsRes = parseExpression(*itTests);
-		CUDDFacade::Node* tmpNode = setValue(prsRes.first, prsRes.second);
+		CUDDFacade::Node* tmpNode = setValue(facade, prsRes.first, prsRes.second);
 
-		node = facade_.Apply(oldNode, tmpNode, new PlusApplyFunctor());
-		facade_.RecursiveDeref(oldNode);
-		facade_.RecursiveDeref(tmpNode);
+		PlusApplyFunctor plusApply;
+		node = facade.Apply(oldNode, tmpNode, &plusApply);
+		facade.RecursiveDeref(oldNode);
+		facade.RecursiveDeref(tmpNode);
 	}
 
-	for (unsigned i = 0; i < testCases.size(); ++i)
+	for (ListOfTestCasesType::const_iterator itTests = testCases.begin();
+		itTests != testCases.end(); ++itTests)
 	{	// test that the test cases have been stored properly
-		ParserResultType prsRes = parseExpression(testCases[i]);
-		BOOST_CHECK_MESSAGE(getValue(node, prsRes.second)
-			== prsRes.first, testCases[i] + " != "
-			+ Convert::ToString(getValue(node, prsRes.second)));
-
-		for (ListOfTestCasesType::const_iterator itFailed = failedCases.begin();
-			itFailed != failedCases.end(); ++itFailed)
-		{	// for every test case that should fail
-			ParserResultType prsFailedRes = parseExpression(*itFailed);
-			BOOST_CHECK_MESSAGE(getValue(node, prsFailedRes.second)
-				== BDD_BACKGROUND_VALUE, testCases[i] + " == "
-				+ Convert::ToString(getValue(node, prsFailedRes.second)));
-		}
+		ParserResultType prsRes = parseExpression(*itTests);
+		BOOST_CHECK_MESSAGE(getValue(facade, node, prsRes.second)
+			== prsRes.first, *itTests + " != "
+			+ Convert::ToString(getValue(facade, node, prsRes.second)));
 	}
 
-	facade_.RecursiveDeref(node);
+	for (ListOfTestCasesType::const_iterator itFailed = failedCases.begin();
+		itFailed != failedCases.end(); ++itFailed)
+	{	// for every test case that should fail
+		ParserResultType prsFailedRes = parseExpression(*itFailed);
+		BOOST_CHECK_MESSAGE(getValue(facade, node, prsFailedRes.second)
+			== BDD_BACKGROUND_VALUE, *itFailed + " == "
+			+ Convert::ToString(getValue(facade, node, prsFailedRes.second)));
+	}
+
+	facade.RecursiveDeref(node);
 }
 
 
 BOOST_AUTO_TEST_CASE(large_diagram_test)
 {
-	boost::mt19937 prnGen(781436);
+	CUDDFacade facade;
+	boost::mt19937 prnGen(PRNG_SEED);
 
-	std::string formula = Convert::ToString(static_cast<ValueType>(prnGen()));
-
-	for (unsigned i = 0; i < 64; ++i)
-	{
-		formula += " * " + Convert::ToString((prnGen() % 2 == 0)? "" : "~")  + "x" + Convert::ToString(i);
-	}
-
-	BOOST_TEST_MESSAGE("Generated formula: " + formula);
-
-	// TODO
 	// formulae that we wish to store in the BDD
 	ListOfTestCasesType testCases;
 
+	for (unsigned i = 0; i < LARGE_TEST_FORMULA_CASES; ++i)
+	{	// generate test cases
+		std::string formula = Convert::ToString(static_cast<ValueType>(prnGen()));
+
+		for (unsigned j = 0; j < LARGE_TEST_FORMULA_LENGTH; ++j)
+		{
+			if (prnGen() % 4 != 0)
+			{
+				formula += " * " + Convert::ToString((prnGen() % 2 == 0)? " " : "~")
+					+ "x" + Convert::ToString(j);
+			}
+		}
+
+		testCases.push_back(formula);
+	}
 
 	// formulae that we want to check that are not in the BDD
 	ListOfTestCasesType failedCases;
 
-	NodeArrayType testRootNodes;
+	for (unsigned i = 0; i < LARGE_TEST_FORMULA_CASES; ++i)
+	{	// generate failed test cases
+		std::string formula = Convert::ToString(static_cast<ValueType>(1));
+
+		for (unsigned j = 0; j < LARGE_TEST_FORMULA_LENGTH; ++j)
+		{
+			if (prnGen() % 31 != 0)
+			{
+				formula += " * " + Convert::ToString((prnGen() % 2 == 0)? " " : "~")
+					+ "x" + Convert::ToString(j);
+			}
+		}
+
+		failedCases.push_back(formula);
+	}
+
+	CUDDFacade::Node* node = facade.ReadBackground();
+	facade.Ref(node);
+
+	for (ListOfTestCasesType::const_iterator itTests = testCases.begin();
+		itTests != testCases.end(); ++itTests)
+	{	// store each test case
+		CUDDFacade::Node* oldNode = node;
+
+		ParserResultType prsRes = parseExpression(*itTests);
+		CUDDFacade::Node* tmpNode = setValue(facade, prsRes.first, prsRes.second);
+
+#if DEBUG
+		BOOST_TEST_MESSAGE("Stored " + parserResultToString(prsRes));
+		BOOST_TEST_MESSAGE("Size of BDD: "
+			+ Convert::ToString(facade.GetDagSize(node)));
+#endif
+
+		PlusApplyFunctor plusApply;
+		node = facade.Apply(oldNode, tmpNode, &plusApply);
+		facade.RecursiveDeref(oldNode);
+		facade.RecursiveDeref(tmpNode);
+	}
+
+	for (ListOfTestCasesType::const_iterator itTests = testCases.begin();
+		itTests != testCases.end(); ++itTests)
+	{	// test that the test cases have been stored properly
+#if DEBUG
+		BOOST_TEST_MESSAGE("Finding stored " + *itTests);
+#endif
+		ParserResultType prsRes = parseExpression(*itTests);
+		BOOST_CHECK_MESSAGE(getValue(facade, node, prsRes.second)
+			== prsRes.first, *itTests + " != "
+			+ Convert::ToString(getValue(facade, node, prsRes.second)));
+
+	}
+
+	for (ListOfTestCasesType::const_iterator itFailed = failedCases.begin();
+		itFailed != failedCases.end(); ++itFailed)
+	{	// for every test case that should fail
+#if DEBUG
+		BOOST_TEST_MESSAGE("Finding failed " + *itFailed);
+#endif
+		ParserResultType prsFailedRes = parseExpression(*itFailed);
+		BOOST_CHECK_MESSAGE(getValue(facade, node, prsFailedRes.second)
+			== BDD_BACKGROUND_VALUE, *itFailed + " == "
+			+ Convert::ToString(getValue(facade, node, prsFailedRes.second)));
+	}
+
+	facade.RecursiveDeref(node);
 }
 
 
-BOOST_AUTO_TEST_CASE(boundary_cases)
+BOOST_AUTO_TEST_CASE(no_variables_formula)
 {
-	// TODO
+	const char* const TEST_VALUE = "1337";
+
+	CUDDFacade facade;
+
+	ParserResultType prsRes = parseExpression(TEST_VALUE);
+	CUDDFacade::Node* node = setValue(facade, prsRes.first, prsRes.second);
+
+	BOOST_CHECK_MESSAGE(getValue(facade, node, prsRes.second)
+		== prsRes.first, Convert::ToString(TEST_VALUE) + " != "
+		+ Convert::ToString(getValue(facade, node, prsRes.second)));
+
+	facade.RecursiveDeref(node);
 }
 
+BOOST_AUTO_TEST_CASE(multiple_independent_bdds)
+{
+	CUDDFacade facade1;
+	CUDDFacade facade2;
+
+	// load test cases for the first BDD
+	ListOfTestCasesType testCases1;
+	ListOfTestCasesType failedCases1;
+	loadStandardTests(testCases1, failedCases1);
+
+	// load test cases for the second BDD
+	ListOfTestCasesType testCases2;
+	ListOfTestCasesType failedCases2;
+	loadStandardTests(failedCases2, testCases2);
+
+	CUDDFacade::Node* node1 = facade1.ReadBackground();
+	facade1.Ref(node1);
+
+	CUDDFacade::Node* node2 = facade2.ReadBackground();
+	facade2.Ref(node2);
+
+	for (ListOfTestCasesType::const_iterator itTests = testCases1.begin();
+		itTests != testCases1.end(); ++itTests)
+	{	// store each test case
+		CUDDFacade::Node* oldNode = node1;
+
+		ParserResultType prsRes = parseExpression(*itTests);
+		CUDDFacade::Node* tmpNode = setValue(facade1, prsRes.first, prsRes.second);
+
+#if DEBUG
+		BOOST_TEST_MESSAGE("Stored " + parserResultToString(prsRes));
+		BOOST_TEST_MESSAGE("Size of BDD: "
+			+ Convert::ToString(facade1.GetDagSize(node1)));
+#endif
+
+		PlusApplyFunctor plusApply;
+		node1 = facade1.Apply(oldNode, tmpNode, &plusApply);
+		facade1.RecursiveDeref(oldNode);
+		facade1.RecursiveDeref(tmpNode);
+	}
+
+	for (ListOfTestCasesType::const_iterator itTests = testCases2.begin();
+		itTests != testCases2.end(); ++itTests)
+	{	// store each test case
+		CUDDFacade::Node* oldNode = node2;
+
+		ParserResultType prsRes = parseExpression(*itTests);
+		CUDDFacade::Node* tmpNode = setValue(facade2, prsRes.first, prsRes.second);
+
+#if DEBUG
+		BOOST_TEST_MESSAGE("Stored " + parserResultToString(prsRes));
+		BOOST_TEST_MESSAGE("Size of BDD: "
+			+ Convert::ToString(facade2.GetDagSize(node2)));
+#endif
+
+		PlusApplyFunctor plusApply;
+		node2 = facade2.Apply(oldNode, tmpNode, &plusApply);
+		facade2.RecursiveDeref(oldNode);
+		facade2.RecursiveDeref(tmpNode);
+	}
+
+	for (ListOfTestCasesType::const_iterator itTests = testCases1.begin();
+		itTests != testCases1.end(); ++itTests)
+	{	// test that the test cases have been stored properly
+#if DEBUG
+		BOOST_TEST_MESSAGE("Finding stored " + *itTests);
+#endif
+		ParserResultType prsRes = parseExpression(*itTests);
+		BOOST_CHECK_MESSAGE(getValue(facade1, node1, prsRes.second)
+			== prsRes.first, *itTests + " != "
+			+ Convert::ToString(getValue(facade1, node1, prsRes.second)));
+
+	}
+
+	for (ListOfTestCasesType::const_iterator itTests = testCases2.begin();
+		itTests != testCases2.end(); ++itTests)
+	{	// test that the test cases have been stored properly
+#if DEBUG
+		BOOST_TEST_MESSAGE("Finding stored " + *itTests);
+#endif
+		ParserResultType prsRes = parseExpression(*itTests);
+		BOOST_CHECK_MESSAGE(getValue(facade2, node2, prsRes.second)
+			== prsRes.first, *itTests + " != "
+			+ Convert::ToString(getValue(facade2, node2, prsRes.second)));
+
+	}
+
+	for (ListOfTestCasesType::const_iterator itFailed = failedCases1.begin();
+		itFailed != failedCases1.end(); ++itFailed)
+	{	// for every test case that should fail
+#if DEBUG
+		BOOST_TEST_MESSAGE("Finding failed " + *itFailed);
+#endif
+		ParserResultType prsFailedRes = parseExpression(*itFailed);
+		BOOST_CHECK_MESSAGE(getValue(facade1, node1, prsFailedRes.second)
+			== BDD_BACKGROUND_VALUE, *itFailed + " == "
+			+ Convert::ToString(getValue(facade1, node1, prsFailedRes.second)));
+	}
+
+	for (ListOfTestCasesType::const_iterator itFailed = failedCases2.begin();
+		itFailed != failedCases2.end(); ++itFailed)
+	{	// for every test case that should fail
+#if DEBUG
+		BOOST_TEST_MESSAGE("Finding failed " + *itFailed);
+#endif
+		ParserResultType prsFailedRes = parseExpression(*itFailed);
+		BOOST_CHECK_MESSAGE(getValue(facade2, node2, prsFailedRes.second)
+			== BDD_BACKGROUND_VALUE, *itFailed + " == "
+			+ Convert::ToString(getValue(facade2, node2, prsFailedRes.second)));
+	}
+
+	facade1.RecursiveDeref(node1);
+	facade2.RecursiveDeref(node2);
+}
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -310,6 +310,18 @@ public:  // Public methods
 
 
 	/**
+	 * @brief  Gets the count of nodes of MTBDD of given node
+	 *
+	 * Returns the number of nodes of MTBDD that are rooted at given node
+	 *
+	 * @param[in]  node  The root of the MTBDD
+	 *
+	 * @returns  The number of nodes of MTBDD
+	 */
+	unsigned GetDagSize(Node* node) const;
+
+
+	/**
 	 * @brief  Multiplication of two nodes
 	 *
 	 * Performs either:

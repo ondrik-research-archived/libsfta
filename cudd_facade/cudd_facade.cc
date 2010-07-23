@@ -218,6 +218,18 @@ unsigned CUDDFacade::GetVarCount() const
 }
 
 
+unsigned CUDDFacade::GetDagSize(Node* node) const
+{
+	// Assertions
+	assert(manager_ != static_cast<Manager*>(0));
+
+	int size = Cudd_DagSize(toCUDD(node));
+	assert(size >= 0);
+
+	return static_cast<unsigned>(size);
+}
+
+
 CUDDFacade::Node* CUDDFacade::Times(Node* lhs, Node* rhs) const
 {
 	// Assertions
