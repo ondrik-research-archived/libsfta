@@ -236,6 +236,23 @@ CUDDFacade::Node* CUDDFacade::Times(Node* lhs, Node* rhs) const
 	assert(manager_ != static_cast<Manager*>(0));
 	assert(!(cuddIsConstant(toCUDD(lhs)) && cuddIsConstant(toCUDD(rhs))));
 
+// Note: This piece of code was used for testing the speed difference between
+// the cached and uncached version of times operation
+//
+//	class TimesApplyFunctor : public AbstractApplyFunctor
+//	{
+//	public:
+//		virtual ValueType operator()(const ValueType& lhs, const ValueType& rhs)
+//		{
+//			return lhs * rhs;
+//		}
+//
+//	};
+//
+//	TimesApplyFunctor timesFunctor;
+//
+//	Node* res = Apply(lhs, rhs, &timesFunctor);
+
 	Node* res = fromCUDD(Cudd_addApply(toCUDD(manager_), Cudd_addTimes,
 		toCUDD(lhs), toCUDD(rhs)));
 
@@ -326,9 +343,6 @@ CUDDFacade::Node* CUDDFacade::Apply(Node* lhs, Node* rhs,
 	// check the return value
 	assert(res != static_cast<Node*>(0));
 
-	// reference the result
-	Ref(res);
-
 	return res;
 }
 
@@ -346,9 +360,6 @@ CUDDFacade::Node* CUDDFacade::MonadicApply(Node* root,
 
 	// check the return value
 	assert(res != static_cast<Node*>(0));
-
-	// reference the result
-	Ref(res);
 
 	return res;
 }

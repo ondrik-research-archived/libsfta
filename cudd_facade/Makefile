@@ -29,6 +29,7 @@ CFLAGS         += -Weffc++
 CFLAGS         += -Woverloaded-virtual
 CFLAGS         += -finline-functions
 CFLAGS         += -g
+CFLAGS         += -pg
 
 # Path to CUDD library
 CUDD_PATH       = ../../cudd

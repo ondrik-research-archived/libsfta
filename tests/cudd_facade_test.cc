@@ -247,6 +247,7 @@ protected:
 
 		CollectorApplyFunctor func;
 		CUDDFacade::Node* tmpNode = facade.Apply(rootNode, node, &func);
+		facade.Ref(tmpNode);
 		facade.RecursiveDeref(tmpNode);
 		facade.RecursiveDeref(node);
 
@@ -411,6 +412,7 @@ BOOST_AUTO_TEST_CASE(composed_values_storage_test)
 
 		PlusApplyFunctor plusApply;
 		node = facade.Apply(oldNode, tmpNode, &plusApply);
+		facade.Ref(node);
 		facade.RecursiveDeref(oldNode);
 		facade.RecursiveDeref(tmpNode);
 	}
@@ -499,6 +501,7 @@ BOOST_AUTO_TEST_CASE(large_diagram_test)
 
 		PlusApplyFunctor plusApply;
 		node = facade.Apply(oldNode, tmpNode, &plusApply);
+		facade.Ref(node);
 		facade.RecursiveDeref(oldNode);
 		facade.RecursiveDeref(tmpNode);
 	}
@@ -513,7 +516,6 @@ BOOST_AUTO_TEST_CASE(large_diagram_test)
 		BOOST_CHECK_MESSAGE(getValue(facade, node, prsRes.second)
 			== prsRes.first, *itTests + " != "
 			+ Convert::ToString(getValue(facade, node, prsRes.second)));
-
 	}
 
 	for (ListOfTestCasesType::const_iterator itFailed = failedCases.begin();
@@ -585,6 +587,7 @@ BOOST_AUTO_TEST_CASE(multiple_independent_bdds)
 
 		PlusApplyFunctor plusApply;
 		node1 = facade1.Apply(oldNode, tmpNode, &plusApply);
+		facade1.Ref(node1);
 		facade1.RecursiveDeref(oldNode);
 		facade1.RecursiveDeref(tmpNode);
 	}
@@ -605,6 +608,7 @@ BOOST_AUTO_TEST_CASE(multiple_independent_bdds)
 
 		PlusApplyFunctor plusApply;
 		node2 = facade2.Apply(oldNode, tmpNode, &plusApply);
+		facade2.Ref(node2);
 		facade2.RecursiveDeref(oldNode);
 		facade2.RecursiveDeref(tmpNode);
 	}
@@ -619,7 +623,6 @@ BOOST_AUTO_TEST_CASE(multiple_independent_bdds)
 		BOOST_CHECK_MESSAGE(getValue(facade1, node1, prsRes.second)
 			== prsRes.first, *itTests + " != "
 			+ Convert::ToString(getValue(facade1, node1, prsRes.second)));
-
 	}
 
 	for (ListOfTestCasesType::const_iterator itTests = testCases2.begin();
@@ -632,7 +635,6 @@ BOOST_AUTO_TEST_CASE(multiple_independent_bdds)
 		BOOST_CHECK_MESSAGE(getValue(facade2, node2, prsRes.second)
 			== prsRes.first, *itTests + " != "
 			+ Convert::ToString(getValue(facade2, node2, prsRes.second)));
-
 	}
 
 	for (ListOfTestCasesType::const_iterator itFailed = failedCases1.begin();
