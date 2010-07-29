@@ -42,12 +42,26 @@ const char* const STANDARD_TEST_CASES[] =
 	"15 *  x1 *  x2 *  x3 *  x4"
 };
 
-
 /**
  * Number of formulae for standard test cases in the MTBDD
  */
 const unsigned STANDARD_TEST_CASES_SIZE =
 	sizeof(STANDARD_TEST_CASES) / sizeof(const char* const);
+
+
+/**
+ * Formulae for standard test cases represented by a table
+ */
+const char* const STANDARD_TEST_CASES_TABLE =
+	"|0|0|0|3|4|0|0|0|0|9|0|0|0|0|14|15|";
+
+
+/**
+ * Formulae for reindexed standard test case represented by a table. Boolean
+ * varibles at index 1 are moved to index 4
+ */
+const char* const REINDEXED_STANDARD_TEST_CASES_TABLE =
+	"|0|4|0|0|0|0|3|0|0|4|0|0|0|0|3|0|0|0|9|0|0|14|0|15|0|0|9|0|0|14|0|15|";
 
 
 /**
@@ -108,6 +122,8 @@ public:  // Public types
 	typedef std::vector<std::string> ListOfTestCasesType;
 	typedef std::vector<CUDDFacade::Node*> NodeArrayType;
 	typedef std::vector<ValueType> ListOfValuesType;
+	typedef std::vector<ValueType> ValueTableType;
+	typedef std::vector<signed char> AssignmentType;
 
 	class PlusApplyFunctor : public CUDDFacade::AbstractApplyFunctor
 	{
@@ -127,6 +143,9 @@ protected:
 
 	static const ValueType BDD_BACKGROUND_VALUE = 0;
 	static const ValueType BDD_TRUE_VALUE = 1;
+	static const signed char ASGN_TRUE = 1;
+	static const signed char ASGN_FALSE = 0;
+	static const signed char ASGN_UNKNOWN = -1;
 
 protected:
 
@@ -328,6 +347,117 @@ protected:
 	}
 
 
+	static void setValueTableValue(const AssignmentType& asgn, ValueType value,
+		ValueTableType& table, unsigned index, unsigned pos)
+	{
+		// Assertions
+		assert(index <= asgn.size());
+	
+		if (index == asgn.size())
+		{	// in case we are at the end of the assignment array
+			table[pos] = value;
+		}
+		else
+		{	// in case we are insed the assignment array
+			if (asgn[index] == ASGN_TRUE)
+			{
+				setValueTableValue(asgn, value, table, index+1,
+					pos + (1 << (asgn.size() - index - 1)));
+			}
+			else if (asgn[index] == ASGN_FALSE)
+			{
+				setValueTableValue(asgn, value, table, index+1, pos);
+			}
+			else
+			{	// in case the variable is not bound
+				setValueTableValue(asgn, value, table, index+1,
+					pos + (1 << (asgn.size() - index - 1)));
+				setValueTableValue(asgn, value, table, index+1, pos);
+			}
+		}
+	}
+	
+	
+	static void fillValueTableBlockForNode(const CUDDFacade& facade,
+		CUDDFacade::Node* node, AssignmentType& asgn, ValueTableType& table)
+	{
+		// Assertions
+		assert(node != static_cast<CUDDFacade::Node*>(0));
+	
+		if (facade.IsNodeConstant(node))
+		{	// in case we hit the bottom
+			setValueTableValue(asgn, facade.GetNodeValue(node), table, 0, 0);
+		}
+		else
+		{	// in case we are in the middle of the BDD
+			asgn[facade.GetNodeIndex(node)] = ASGN_TRUE;
+			fillValueTableBlockForNode(facade, facade.GetThenChild(node), asgn, table);
+			asgn[facade.GetNodeIndex(node)] = ASGN_FALSE;
+			fillValueTableBlockForNode(facade, facade.GetElseChild(node), asgn, table);
+			asgn[facade.GetNodeIndex(node)] = ASGN_UNKNOWN;
+		}
+	}
+	
+	
+	static ValueTableType GetValueTable(const CUDDFacade& facade,
+		CUDDFacade::Node* node)
+	{
+		// Assertions
+		assert(node != static_cast<CUDDFacade::Node*>(0));
+	
+		ValueTableType result(1 << facade.GetVarCount());
+		AssignmentType asgn(facade.GetVarCount(), ASGN_UNKNOWN);
+	
+		fillValueTableBlockForNode(facade, node, asgn, result);
+	
+		return result;
+	}
+
+
+	static std::string ValueTableToString(const ValueTableType& table)
+	{
+		std::string result = "|";
+
+		for (ValueTableType::const_iterator itTable = table.begin();
+				itTable != table.end(); ++itTable)
+		{
+			result += Convert::ToString(*itTable) + "|";
+		}
+
+		return result;
+	}
+
+	CUDDFacade::Node* CreateMTBDDForTestCases(CUDDFacade& facade,
+		const ListOfTestCasesType& testCases)
+	{
+		CUDDFacade::Node* node = facade.ReadBackground();
+		facade.Ref(node);
+
+		for (ListOfTestCasesType::const_iterator itTests = testCases.begin();
+				itTests != testCases.end(); ++itTests)
+		{	// store each test case
+			CUDDFacade::Node* oldNode = node;
+
+			ParserResultType prsRes = parseExpression(*itTests);
+			CUDDFacade::Node* tmpNode = setValue(facade, prsRes.first, prsRes.second);
+
+#if DEBUG
+			BOOST_TEST_MESSAGE("Stored " + parserResultToString(prsRes));
+			BOOST_TEST_MESSAGE("Size of BDD: "
+				+ Convert::ToString(facade1.GetDagSize(node1)));
+#endif
+
+			PlusApplyFunctor plusApply;
+			node = facade.Apply(oldNode, tmpNode, &plusApply);
+			facade.Ref(node);
+			facade.RecursiveDeref(oldNode);
+			facade.RecursiveDeref(tmpNode);
+		}
+
+		return node;
+	}
+
+
 public:
 
 	CUDDFacadeFixture()
@@ -338,6 +468,11 @@ public:
 	}
 
 };
+
+
+const signed char CUDDFacadeFixture::ASGN_TRUE;
+const signed char CUDDFacadeFixture::ASGN_FALSE;
+const signed char CUDDFacadeFixture::ASGN_UNKNOWN;
 
 
 /******************************************************************************
@@ -399,23 +534,7 @@ BOOST_AUTO_TEST_CASE(composed_values_storage_test)
 	ListOfTestCasesType failedCases;
 	loadStandardTests(testCases, failedCases);
 
-	CUDDFacade::Node* node = facade.ReadBackground();
-	facade.Ref(node);
-
-	for (ListOfTestCasesType::const_iterator itTests = testCases.begin();
-		itTests != testCases.end(); ++itTests)
-	{	// store each test case
-		CUDDFacade::Node* oldNode = node;
-
-		ParserResultType prsRes = parseExpression(*itTests);
-		CUDDFacade::Node* tmpNode = setValue(facade, prsRes.first, prsRes.second);
-
-		PlusApplyFunctor plusApply;
-		node = facade.Apply(oldNode, tmpNode, &plusApply);
-		facade.Ref(node);
-		facade.RecursiveDeref(oldNode);
-		facade.RecursiveDeref(tmpNode);
-	}
+	CUDDFacade::Node* node = CreateMTBDDForTestCases(facade, testCases);
 
 	for (ListOfTestCasesType::const_iterator itTests = testCases.begin();
 		itTests != testCases.end(); ++itTests)
@@ -482,29 +601,7 @@ BOOST_AUTO_TEST_CASE(large_diagram_test)
 		failedCases.push_back(formula);
 	}
 
-	CUDDFacade::Node* node = facade.ReadBackground();
-	facade.Ref(node);
-
-	for (ListOfTestCasesType::const_iterator itTests = testCases.begin();
-		itTests != testCases.end(); ++itTests)
-	{	// store each test case
-		CUDDFacade::Node* oldNode = node;
-
-		ParserResultType prsRes = parseExpression(*itTests);
-		CUDDFacade::Node* tmpNode = setValue(facade, prsRes.first, prsRes.second);
-
-#if DEBUG
-		BOOST_TEST_MESSAGE("Stored " + parserResultToString(prsRes));
-		BOOST_TEST_MESSAGE("Size of BDD: "
-			+ Convert::ToString(facade.GetDagSize(node)));
-#endif
-
-		PlusApplyFunctor plusApply;
-		node = facade.Apply(oldNode, tmpNode, &plusApply);
-		facade.Ref(node);
-		facade.RecursiveDeref(oldNode);
-		facade.RecursiveDeref(tmpNode);
-	}
+	CUDDFacade::Node* node = CreateMTBDDForTestCases(facade, testCases);
 
 	for (ListOfTestCasesType::const_iterator itTests = testCases.begin();
 		itTests != testCases.end(); ++itTests)
@@ -550,6 +647,7 @@ BOOST_AUTO_TEST_CASE(no_variables_formula)
 	facade.RecursiveDeref(node);
 }
 
+
 BOOST_AUTO_TEST_CASE(multiple_independent_bdds)
 {
 	CUDDFacade facade1;
@@ -565,53 +663,8 @@ BOOST_AUTO_TEST_CASE(multiple_independent_bdds)
 	ListOfTestCasesType failedCases2;
 	loadStandardTests(failedCases2, testCases2);
 
-	CUDDFacade::Node* node1 = facade1.ReadBackground();
-	facade1.Ref(node1);
-
-	CUDDFacade::Node* node2 = facade2.ReadBackground();
-	facade2.Ref(node2);
-
-	for (ListOfTestCasesType::const_iterator itTests = testCases1.begin();
-		itTests != testCases1.end(); ++itTests)
-	{	// store each test case
-		CUDDFacade::Node* oldNode = node1;
-
-		ParserResultType prsRes = parseExpression(*itTests);
-		CUDDFacade::Node* tmpNode = setValue(facade1, prsRes.first, prsRes.second);
-
-#if DEBUG
-		BOOST_TEST_MESSAGE("Stored " + parserResultToString(prsRes));
-		BOOST_TEST_MESSAGE("Size of BDD: "
-			+ Convert::ToString(facade1.GetDagSize(node1)));
-#endif
-
-		PlusApplyFunctor plusApply;
-		node1 = facade1.Apply(oldNode, tmpNode, &plusApply);
-		facade1.Ref(node1);
-		facade1.RecursiveDeref(oldNode);
-		facade1.RecursiveDeref(tmpNode);
-	}
-
-	for (ListOfTestCasesType::const_iterator itTests = testCases2.begin();
-		itTests != testCases2.end(); ++itTests)
-	{	// store each test case
-		CUDDFacade::Node* oldNode = node2;
-
-		ParserResultType prsRes = parseExpression(*itTests);
-		CUDDFacade::Node* tmpNode = setValue(facade2, prsRes.first, prsRes.second);
-
-#if DEBUG
-		BOOST_TEST_MESSAGE("Stored " + parserResultToString(prsRes));
-		BOOST_TEST_MESSAGE("Size of BDD: "
-			+ Convert::ToString(facade2.GetDagSize(node2)));
-#endif
-
-		PlusApplyFunctor plusApply;
-		node2 = facade2.Apply(oldNode, tmpNode, &plusApply);
-		facade2.Ref(node2);
-		facade2.RecursiveDeref(oldNode);
-		facade2.RecursiveDeref(tmpNode);
-	}
+	CUDDFacade::Node* node1 = CreateMTBDDForTestCases(facade1, testCases1);
+	CUDDFacade::Node* node2 = CreateMTBDDForTestCases(facade2, testCases2);
 
 	for (ListOfTestCasesType::const_iterator itTests = testCases1.begin();
 		itTests != testCases1.end(); ++itTests)
@@ -664,5 +717,81 @@ BOOST_AUTO_TEST_CASE(multiple_independent_bdds)
 	facade1.RecursiveDeref(node1);
 	facade2.RecursiveDeref(node2);
 }
+
+
+BOOST_AUTO_TEST_CASE(then_else_test)
+{
+	CUDDFacade facade;
+
+	// load test cases
+	ListOfTestCasesType testCases;
+	ListOfTestCasesType failedCases;
+	loadStandardTests(testCases, failedCases);
+
+	CUDDFacade::Node* node = CreateMTBDDForTestCases(facade, testCases);
+
+	ValueTableType table = GetValueTable(facade, node);
+
+	BOOST_CHECK_MESSAGE(ValueTableToString(table) == STANDARD_TEST_CASES_TABLE,
+		"Stored table " + ValueTableToString(table)
+		+ " is not equal to expected table "
+		+ Convert::ToString(STANDARD_TEST_CASES_TABLE));
+
+
+	facade.RecursiveDeref(node);
+}
+
+
+BOOST_AUTO_TEST_CASE(variable_index_change)
+{
+	CUDDFacade facade;
+
+	// load test cases
+	ListOfTestCasesType testCases;
+	ListOfTestCasesType failedCases;
+	loadStandardTests(testCases, failedCases);
+
+	CUDDFacade::Node* node = CreateMTBDDForTestCases(facade, testCases);
+
+	// changes the table
+	CUDDFacade::Node* tmpNode = facade.ChangeVariableIndex(node, 1, 4);
+	facade.Ref(tmpNode);
+	facade.RecursiveDeref(node);
+	node = tmpNode;
+
+	BOOST_CHECK_MESSAGE(ValueTableToString(GetValueTable(facade, node))
+		== REINDEXED_STANDARD_TEST_CASES_TABLE,
+		"Stored table " + ValueTableToString(GetValueTable(facade, node))
+		+ " is not equal to expected table "
+		+ Convert::ToString(REINDEXED_STANDARD_TEST_CASES_TABLE));
+
+
+	// should not change the table
+	tmpNode = facade.ChangeVariableIndex(node, 3, 3);
+	facade.Ref(tmpNode);
+	facade.RecursiveDeref(node);
+	node = tmpNode;
+
+	BOOST_CHECK_MESSAGE(ValueTableToString(GetValueTable(facade, node))
+		== REINDEXED_STANDARD_TEST_CASES_TABLE,
+		"Stored table " + ValueTableToString(GetValueTable(facade, node))
+		+ " is not equal to expected table "
+		+ Convert::ToString(REINDEXED_STANDARD_TEST_CASES_TABLE));
+
+
+	// should also not change the table
+	tmpNode = facade.ChangeVariableIndex(node, 7, 9);
+	facade.RecursiveDeref(node);
+	node = tmpNode;
+
+	BOOST_CHECK_MESSAGE(ValueTableToString(GetValueTable(facade, node))
+		== REINDEXED_STANDARD_TEST_CASES_TABLE,
+		"Stored table " + ValueTableToString(GetValueTable(facade, node))
+		+ " is not equal to expected table "
+		+ Convert::ToString(REINDEXED_STANDARD_TEST_CASES_TABLE));
+
+	facade.RecursiveDeref(node);
+}
+
 
 BOOST_AUTO_TEST_SUITE_END()

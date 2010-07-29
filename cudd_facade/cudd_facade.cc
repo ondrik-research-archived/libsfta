@@ -365,6 +365,106 @@ CUDDFacade::Node* CUDDFacade::MonadicApply(Node* root,
 }
 
 
+CUDDFacade::Node* CUDDFacade::GetThenChild(Node* node) const
+{
+	// Assertions
+	assert(manager_ != static_cast<Manager*>(0));
+	assert(!IsNodeConstant(node));
+
+	return fromCUDD(cuddT(toCUDD(node)));
+}
+
+
+CUDDFacade::Node* CUDDFacade::GetElseChild(Node* node) const
+{
+	// Assertions
+	assert(manager_ != static_cast<Manager*>(0));
+	assert(!IsNodeConstant(node));
+
+	return fromCUDD(cuddE(toCUDD(node)));
+}
+
+
+bool CUDDFacade::IsNodeConstant(Node* node) const
+{
+	// Assertions
+	assert(manager_ != static_cast<Manager*>(0));
+
+	return Cudd_IsConstant(node);
+}
+
+
+unsigned CUDDFacade::GetNodeIndex(Node* node) const
+{
+	// Assertions
+	assert(manager_ != static_cast<Manager*>(0));
+	assert(!IsNodeConstant(node));
+
+	return toCUDD(node)->index;
+}
+
+
+CUDDFacade::Node* CUDDFacade::ChangeVariableIndex(Node* root,
+	unsigned oldIndex, unsigned newIndex) const
+{
+	// Assertions
+	assert(manager_ != static_cast<Manager*>(0));
+	assert(root != static_cast<Node*>(0));
+
+	if (IsNodeConstant(root))
+	{	// in case the node is constant
+		return root;
+	}
+
+	unsigned currentIndex = GetNodeIndex(root);
+
+	if (currentIndex == oldIndex)
+	{	// in case we hit a node with the desired variable index
+		Node* thenChild = GetThenChild(root);
+		Node* elseChild = GetElseChild(root);
+
+		root = static_cast<Node*>(0);
+
+		do
+		{
+			toCUDD(manager_)->reordered = 0;
+			root = fromCUDD(cuddUniqueInter(toCUDD(manager_), newIndex,
+				toCUDD(thenChild), toCUDD(elseChild)));
+		} while (toCUDD(manager_)->reordered == 1);
+
+		return root;
+	}
+	else
+	{
+		Node* thenChild = ChangeVariableIndex(GetThenChild(root),
+			oldIndex, newIndex);
+		Node* elseChild = ChangeVariableIndex(GetElseChild(root),
+			oldIndex, newIndex);
+
+		root = static_cast<Node*>(0);
+
+		do
+		{
+			toCUDD(manager_)->reordered = 0;
+			root = fromCUDD(cuddUniqueInter(toCUDD(manager_), currentIndex,
+				toCUDD(thenChild), toCUDD(elseChild)));
+		} while (toCUDD(manager_)->reordered == 1);
+
+		return root;
+	}
+}
+
+
+CUDDFacade::ValueType CUDDFacade::GetNodeValue(Node* node) const
+{
+	// Assertions
+	assert(manager_ != static_cast<Manager*>(0));
+	assert(IsNodeConstant(node));
+
+	return toCUDD(node)->type.value;
+}
+
+
 std::string CUDDFacade::StoreToString(const std::vector<Node*>& nodes,
 	const std::vector<std::string>& rootNames) const
 {
@@ -455,7 +555,6 @@ std::string CUDDFacade::StoreToString(const std::vector<Node*>& nodes,
 	ff.Close();
 	return ff.GetContent();
 }
-
 
 
 void CUDDFacade::DumpDot(const std::vector<Node*>& nodes,

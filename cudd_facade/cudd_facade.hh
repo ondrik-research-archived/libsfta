@@ -375,6 +375,90 @@ public:  // Public methods
 
 
 	/**
+	 * @brief  Gets node's "then" child
+	 *
+	 * Returns the "then" child (i.e. the child for the 1 arc) of a node. Note
+	 * that constant nodes cannot be passed.
+	 *
+	 * @param[in]  node  The node the child of which is to be got (cannot be
+	 *                   constant)
+	 *
+	 * @returns  The "then" child of the node
+	 */
+	Node* GetThenChild(Node* node) const;
+
+
+	/**
+	 * @brief  Gets node's "else" child
+	 *
+	 * Returns the "else" child (i.e. the child for the 0 arc) of a node. Note
+	 * that constant nodes cannot be passed.
+	 *
+	 * @param[in]  node  The node the child of which is to be got (cannot be
+	 *                   constant)
+	 *
+	 * @returns  The "else" child of the node
+	 */
+	Node* GetElseChild(Node* node) const;
+
+
+	/**
+	 * @brief  Returns whether the node is constant
+	 *
+	 * This method returns a Boolean value determining whether the input node is
+	 * constant.
+	 *
+	 * @param[in]  node  The input node
+	 *
+	 * @returns  Is the node constant?
+	 */
+	bool IsNodeConstant(Node* node) const;
+
+
+	/**
+	 * @brief  Gets the variable index of the node
+	 *
+	 * Returns the index of the Boolean variable that is represented by the
+	 * node. Note that constant node cannot be passed to the method.
+	 *
+	 * @param[in]  node  The input node
+	 *
+	 * @returns  The index of the Boolean variable represented by the node.
+	 */
+	unsigned GetNodeIndex(Node* node) const;
+
+
+	/**
+	 * @brief  Changes the index of a variable
+	 *
+	 * Changes the index of all nodes that represent the Boolean variable with
+	 * given index in an MTBDD rooted at given node. Note that the MTBDD needs
+	 * to be correctly formed, the behaviour is undefined otherwise.
+	 *
+	 * @param[in]  root      The root of the MTBDD
+	 * @param[in]  oldIndex  The old index of the variable
+	 * @param[in]  newIndex  The new index of the variable
+	 *
+	 * @returns  MTBDD with reindexed variables
+	 */
+	Node* ChangeVariableIndex(Node* root, unsigned oldIndex,
+		unsigned newIndex) const;
+
+
+	/**
+	 * @brief  Gets the value of a node
+	 *
+	 * Returns the value of a constant node. Note that the input node really
+	 * needs to be constant.
+	 *
+	 * @param[in]  node  The input node
+	 *
+	 * @returns  The value of the node
+	 */
+	ValueType GetNodeValue(Node* node) const;
+
+
+	/**
 	 * @brief  Stores the MTBDDs in an internal format into a string
 	 *
 	 * Stores all given MTBDDs into a std::string using an internal format.
