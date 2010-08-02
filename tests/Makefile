@@ -26,7 +26,7 @@ CFLAGS         += -finline-functions
 CFLAGS         += -Wold-style-cast
 CFLAGS         += -fdiagnostics-show-option
 CFLAGS         += -g
-CFLAGS         += -pg
+#CFLAGS         += -pg
 #CFLAGS         += -O2
 #CFLAGS         += -march=core2
 #CFLAGS         += -mtune=core2

@@ -417,13 +417,10 @@ CUDDFacade::Node* CUDDFacade::ChangeVariableIndex(Node* root,
 	}
 
 	unsigned currentIndex = GetNodeIndex(root);
-
 	if (currentIndex == oldIndex)
 	{	// in case we hit a node with the desired variable index
 		Node* thenChild = GetThenChild(root);
 		Node* elseChild = GetElseChild(root);
-
-		root = static_cast<Node*>(0);
 
 		do
 		{
@@ -441,12 +438,48 @@ CUDDFacade::Node* CUDDFacade::ChangeVariableIndex(Node* root,
 		Node* elseChild = ChangeVariableIndex(GetElseChild(root),
 			oldIndex, newIndex);
 
-		root = static_cast<Node*>(0);
-
 		do
 		{
 			toCUDD(manager_)->reordered = 0;
 			root = fromCUDD(cuddUniqueInter(toCUDD(manager_), currentIndex,
+				toCUDD(thenChild), toCUDD(elseChild)));
+		} while (toCUDD(manager_)->reordered == 1);
+
+		return root;
+	}
+}
+
+
+CUDDFacade::Node* CUDDFacade::RemoveVariables(Node* root,
+	AbstractNodePredicateFunctor* predicate, AbstractApplyFunctor* merger) const
+{
+	// Assertions
+	assert(manager_ != static_cast<Manager*>(0));
+	assert(root != static_cast<Node*>(0));
+	assert(predicate != static_cast<AbstractNodePredicateFunctor*>(0));
+	assert(merger != static_cast<AbstractApplyFunctor*>(0));
+
+	if (IsNodeConstant(root))
+	{	// in case the node is constant
+		return root;
+	}
+
+	Node* thenChild = RemoveVariables(GetThenChild(root), predicate, merger);
+	Node* elseChild = RemoveVariables(GetElseChild(root), predicate, merger);
+
+	unsigned index = GetNodeIndex(root);
+	if ((*predicate)(index))
+	{	// in case the node is to be removed
+		root = Apply(elseChild, thenChild, merger);
+
+		return root;
+	}
+	else
+	{	// in case the node is to stay
+		do
+		{
+			toCUDD(manager_)->reordered = 0;
+			root = fromCUDD(cuddUniqueInter(toCUDD(manager_), index,
 				toCUDD(thenChild), toCUDD(elseChild)));
 		} while (toCUDD(manager_)->reordered == 1);
 

@@ -150,6 +150,48 @@ public:  // Public types
 	};
 
 
+	/**
+	 * @brief  The abstract class for a functor for predicates over nodes
+	 *
+	 * This is an abstract class defining the interface for operations that
+	 * needs to implement a predicate over the index of a node.
+	 */
+	class AbstractNodePredicateFunctor
+	{
+	public:   // Public methods
+
+
+		/**
+		 * @brief  Constructor
+		 *
+		 * The constructor of the class
+		 */
+		AbstractNodePredicateFunctor()
+		{ }
+
+
+		/**
+		 * @brief  The predicate operator
+		 *
+		 * This operation is a predicate over node index.
+		 *
+		 * @param[in]  index  Index of the variable
+		 *
+		 * @returns  True iff the predicate is for the index evaluated to true
+		 */
+		virtual bool operator()(unsigned index) = 0;
+
+
+		/**
+		 * @brief  Destructor
+		 *
+		 * Virtual destructor
+		 */
+		virtual ~AbstractNodePredicateFunctor()
+		{ }
+	};
+
+
 public:  // Public data members
 
 	/**
@@ -443,6 +485,27 @@ public:  // Public methods
 	 */
 	Node* ChangeVariableIndex(Node* root, unsigned oldIndex,
 		unsigned newIndex) const;
+
+
+	/**
+	 * @brief  Removes variables from MTBDD
+	 *
+	 * Removes nodes corresponding to Boolean variables from given MTBDD. The
+	 * variables to be removed are defined by predicate functor. When a variable
+	 * node is removed, its children are handled by a merger functor and a new
+	 * node is returned.
+	 * 
+	 * @param[in]  root       The root of the MTBDD from which variables are
+	 *                        to be removed
+	 * @param[in]  predicate  The functor that determines whether the root node
+	 *                        variable should be removed
+	 * @param[in]  merger     The functor that determines merge operation for
+	 *                        children nodes
+	 *
+	 * @returns  MTBDD with removed variables
+	 */
+	Node* RemoveVariables(Node* root, AbstractNodePredicateFunctor* predicate,
+		AbstractApplyFunctor* merger) const;
 
 
 	/**

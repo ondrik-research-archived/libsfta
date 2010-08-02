@@ -65,6 +65,22 @@ const char* const REINDEXED_STANDARD_TEST_CASES_TABLE =
 
 
 /**
+ * Formulae for standard test case with one trimmed variable (1) represented
+ * by a table.
+ */
+const char* const TRIMMED_ONE_VAR_STANDARD_TEST_CASES_TABLE =
+	"|4|0|0|3|4|0|0|3|0|9|14|15|0|9|14|15|";
+
+
+/**
+ * Formulae for standard test case with two trimmed variables (1 and 3)
+ * represented by a table.
+ */
+const char* const TRIMMED_TWO_VAR_STANDARD_TEST_CASES_TABLE =
+	"|4|4|3|3|4|4|3|3|9|9|29|29|9|9|29|29|";
+
+
+/**
  * Formulae for standard test cases to be found not present in the MTBDD
  */
 const char* const STANDARD_FAIL_CASES[] =
@@ -124,16 +140,6 @@ public:  // Public types
 	typedef std::vector<ValueType> ListOfValuesType;
 	typedef std::vector<ValueType> ValueTableType;
 	typedef std::vector<signed char> AssignmentType;
-
-	class PlusApplyFunctor : public CUDDFacade::AbstractApplyFunctor
-	{
-	public:
-
-		virtual ValueType operator()(const ValueType& lhs, const ValueType& rhs)
-		{
-			return (lhs != BDD_BACKGROUND_VALUE)? lhs : rhs;
-		}
-	};
 
 protected:
 
@@ -352,7 +358,7 @@ protected:
 	{
 		// Assertions
 		assert(index <= asgn.size());
-	
+
 		if (index == asgn.size())
 		{	// in case we are at the end of the assignment array
 			table[pos] = value;
@@ -376,14 +382,14 @@ protected:
 			}
 		}
 	}
-	
-	
+
+
 	static void fillValueTableBlockForNode(const CUDDFacade& facade,
 		CUDDFacade::Node* node, AssignmentType& asgn, ValueTableType& table)
 	{
 		// Assertions
 		assert(node != static_cast<CUDDFacade::Node*>(0));
-	
+
 		if (facade.IsNodeConstant(node))
 		{	// in case we hit the bottom
 			setValueTableValue(asgn, facade.GetNodeValue(node), table, 0, 0);
@@ -397,19 +403,19 @@ protected:
 			asgn[facade.GetNodeIndex(node)] = ASGN_UNKNOWN;
 		}
 	}
-	
-	
+
+
 	static ValueTableType GetValueTable(const CUDDFacade& facade,
 		CUDDFacade::Node* node)
 	{
 		// Assertions
 		assert(node != static_cast<CUDDFacade::Node*>(0));
-	
+
 		ValueTableType result(1 << facade.GetVarCount());
 		AssignmentType asgn(facade.GetVarCount(), ASGN_UNKNOWN);
-	
+
 		fillValueTableBlockForNode(facade, node, asgn, result);
-	
+
 		return result;
 	}
 
@@ -446,6 +452,16 @@ protected:
 			BOOST_TEST_MESSAGE("Size of BDD: "
 				+ Convert::ToString(facade1.GetDagSize(node1)));
 #endif
+
+			class PlusApplyFunctor : public CUDDFacade::AbstractApplyFunctor
+			{
+			public:
+
+				virtual ValueType operator()(const ValueType& lhs, const ValueType& rhs)
+				{
+					return (lhs != BDD_BACKGROUND_VALUE)? lhs : rhs;
+				}
+			};
 
 			PlusApplyFunctor plusApply;
 			node = facade.Apply(oldNode, tmpNode, &plusApply);
@@ -781,6 +797,7 @@ BOOST_AUTO_TEST_CASE(variable_index_change)
 
 	// should also not change the table
 	tmpNode = facade.ChangeVariableIndex(node, 7, 9);
+	facade.Ref(tmpNode);
 	facade.RecursiveDeref(node);
 	node = tmpNode;
 
@@ -789,6 +806,82 @@ BOOST_AUTO_TEST_CASE(variable_index_change)
 		"Stored table " + ValueTableToString(GetValueTable(facade, node))
 		+ " is not equal to expected table "
 		+ Convert::ToString(REINDEXED_STANDARD_TEST_CASES_TABLE));
+
+	facade.RecursiveDeref(node);
+}
+
+BOOST_AUTO_TEST_CASE(variable_trimming)
+{
+	CUDDFacade facade;
+
+	// load test cases
+	ListOfTestCasesType testCases;
+	ListOfTestCasesType failedCases;
+	loadStandardTests(testCases, failedCases);
+
+	CUDDFacade::Node* node = CreateMTBDDForTestCases(facade, testCases);
+
+	class FirstVariablePredicateFunctor
+		: public CUDDFacade::AbstractNodePredicateFunctor
+	{
+	public:
+
+		virtual bool operator()(unsigned index)
+		{
+			return (index == 1);
+		}
+	};
+
+	class AdditionApplyFunctor : public CUDDFacade::AbstractApplyFunctor
+	{
+	public:
+
+		virtual ValueType operator()(const ValueType& lhs, const ValueType& rhs)
+		{
+			return lhs + rhs;
+		}
+	};
+
+	FirstVariablePredicateFunctor predicateFirst;
+	AdditionApplyFunctor merge;
+
+	// remove the first variable
+	CUDDFacade::Node* tmpNode = facade.RemoveVariables(node,
+		&predicateFirst, &merge);
+	facade.Ref(tmpNode);
+	facade.RecursiveDeref(node);
+	node = tmpNode;
+
+	BOOST_CHECK_MESSAGE(ValueTableToString(GetValueTable(facade, node))
+		== TRIMMED_ONE_VAR_STANDARD_TEST_CASES_TABLE,
+		"Stored table " + ValueTableToString(GetValueTable(facade, node))
+		+ " is not equal to expected table "
+		+ Convert::ToString(TRIMMED_ONE_VAR_STANDARD_TEST_CASES_TABLE));
+
+	class ThirdVariablePredicateFunctor
+		: public CUDDFacade::AbstractNodePredicateFunctor
+	{
+	public:
+
+		virtual bool operator()(unsigned index)
+		{
+			return (index == 3);
+		}
+	};
+
+	ThirdVariablePredicateFunctor predicateThird;
+
+	// remove the second variable
+	tmpNode = facade.RemoveVariables(node, &predicateThird, &merge);
+	facade.Ref(tmpNode);
+	facade.RecursiveDeref(node);
+	node = tmpNode;
+
+	BOOST_CHECK_MESSAGE(ValueTableToString(GetValueTable(facade, node))
+		== TRIMMED_TWO_VAR_STANDARD_TEST_CASES_TABLE,
+		"Stored table " + ValueTableToString(GetValueTable(facade, node))
+		+ " is not equal to expected table "
+		+ Convert::ToString(TRIMMED_TWO_VAR_STANDARD_TEST_CASES_TABLE));
 
 	facade.RecursiveDeref(node);
 }
