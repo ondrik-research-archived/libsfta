@@ -887,4 +887,29 @@ BOOST_AUTO_TEST_CASE(variable_trimming)
 }
 
 
+BOOST_AUTO_TEST_CASE(storing_and_loading)
+{
+	CUDDFacade facade;
+
+	// load test cases
+	ListOfTestCasesType testCases;
+	ListOfTestCasesType failedCases;
+	loadStandardTests(testCases, failedCases);
+
+	CUDDFacade::Node* node = CreateMTBDDForTestCases(facade, testCases);
+
+	std::vector<CUDDFacade::Node*> nodeVec;
+	nodeVec.push_back(node);
+
+	std::vector<std::string> rootNames;
+
+	std::string result = facade.StoreToString(nodeVec, rootNames);
+
+	BOOST_TEST_MESSAGE("Stored string: " + result);
+
+
+
+	facade.RecursiveDeref(node);
+}
+
 BOOST_AUTO_TEST_SUITE_END()

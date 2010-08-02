@@ -527,7 +527,8 @@ public:  // Public methods
 	 * Stores all given MTBDDs into a std::string using an internal format.
 	 *
 	 * @param[in]  nodes      List of nodes to be stored
-	 * @param[in]  rootNames  Names of roots of the MTBDD
+	 * @param[in]  rootNames  Names of roots of the MTBDD. If roots' names are
+	 *                        to be omitted, pass empty vector.
 	 *
 	 * @returns  String with the internal representation of given MTBDDs
 	 *
