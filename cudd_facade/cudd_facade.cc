@@ -589,6 +589,30 @@ std::pair<CUDDFacade*, CUDDFacade::StringNodeMapType>
 
 	StringNodeMapType nodeDict;
 
+//Dddmp_cuddAddArrayLoad (
+//  DdManager *ddMgr                  /* IN: DD Manager */,
+//  Dddmp_RootMatchType rootMatchMode /* IN: storing mode selector */,
+//  char **rootmatchnames             /* IN: sorted names for loaded roots */,
+//  Dddmp_VarMatchType varMatchMode   /* IN: storing mode selector */,
+//  char **varmatchnames              /* IN: array of variable names, by ids */,
+//  int *varmatchauxids               /* IN: array of variable auxids, by ids */,
+//  int *varcomposeids                /* IN: array of new ids, by ids */,
+//  int mode                          /* IN: requested input file format */,
+//  char *file                        /* IN: file name */,
+//  FILE *fp                          /* IN: file pointer */,
+//  DdNode ***pproots                 /* OUT: array of returned BDD roots */
+//  )
+
+//	Dddmp_cuddAddArrayLoad(facade->manager_, 
+//
+//
+//
+//		static_cast<char*>(0),
+//		file,
+//
+//
+//			)
+
 	return make_pair(facade, nodeDict);
 }
 
