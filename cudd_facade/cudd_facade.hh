@@ -12,8 +12,9 @@
 #ifndef _SFTA_CUDD_FACADE_HH_
 #define _SFTA_CUDD_FACADE_HH_
 
-#include <vector>
+#include <map>
 #include <string>
+#include <vector>
 
 
 // insert the class into proper namespace
@@ -62,6 +63,14 @@ public:  // Public types
 	 * transformed to this inside the facade. This type is never defined!
 	 */
 	struct Node;
+
+
+	/**
+	 * @brief  String to node directory
+	 *
+	 * The type that maps strings (names of nodes) to nodes of the MTBDD.
+	 */
+	typedef std::map<std::string, Node*> StringNodeMapType;
 
 
 	/**
@@ -526,17 +535,30 @@ public:  // Public methods
 	 *
 	 * Stores all given MTBDDs into a std::string using an internal format.
 	 *
-	 * @param[in]  nodes      List of nodes to be stored
-	 * @param[in]  rootNames  Names of roots of the MTBDD. If roots' names are
-	 *                        to be omitted, pass empty vector.
+	 * @param[in]  nodeDictionary  Dictionary assigning node names their
+	 *                             respective nodes
 	 *
 	 * @returns  String with the internal representation of given MTBDDs
 	 *
 	 * @todo TODO: a function that performs inverse operation is missing: JUST
 	 * DO IT!
 	 */
-	std::string StoreToString(const std::vector<Node*>& nodes,
-		const std::vector<std::string>& rootNames) const;
+	std::string StoreToString(const StringNodeMapType& nodeDictionary) const;
+
+
+	/**
+	 * @brief  Loads MTBDDs from a string in an internal format
+	 *
+	 * Loads MTBDDs from a string with their representation in an internal
+	 * format. The returned value is a pair of a CUDDFacade object and
+	 * dictionary of root nodes with their names.
+	 *
+	 * @param[in]  
+	 *
+	 * @todo TODO
+	 */
+	static std::pair<CUDDFacade*, StringNodeMapType> LoadFromString(
+		const std::string& str);
 
 
 	/**

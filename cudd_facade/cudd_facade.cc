@@ -498,12 +498,11 @@ CUDDFacade::ValueType CUDDFacade::GetNodeValue(Node* node) const
 }
 
 
-std::string CUDDFacade::StoreToString(const std::vector<Node*>& nodes,
-	const std::vector<std::string>& rootNames) const
+std::string CUDDFacade::StoreToString(
+	const StringNodeMapType& nodeDictionary) const
 {
 	// Assertions
 	assert(manager_ != static_cast<Manager*>(0));
-	assert((rootNames.size() == 0) || (nodes.size() == rootNames.size()));
 
 	// arrays to be passed to the CUDD function
 	DdNode** arrNodes   = static_cast<DdNode**>(0);
@@ -514,26 +513,19 @@ std::string CUDDFacade::StoreToString(const std::vector<Node*>& nodes,
 	FakeFile ff;
 
 	SFTA_LOGGER_DEBUG("Storing a diagram with "
-		+ Convert::ToString(nodes.size()) + " nodes to string");
+		+ Convert::ToString(nodeDictionary.size()) + " nodes to string");
 
 	try
 	{	// try block due to possible memory errors
+		arrRootNames = new char*[nodeDictionary.size()];
+		arrNodes = new DdNode*[nodeDictionary.size()];
+		unsigned i = 0;
 
-		// create the array of nodes
-		arrNodes = new DdNode*[nodes.size()];
-		for (size_t i = 0; i < nodes.size(); ++i)
-		{	// insert the nodes to the array
-			arrNodes[i] = toCUDD(nodes[i]);
-		}
-
-		if (rootNames.size() > 0)
-		{	// if there are names of roots
-			arrRootNames = new char*[rootNames.size()];
-
-			for (size_t i = 0; i < rootNames.size(); ++i)
-			{	// copy names of roots
-				arrRootNames[i] = const_cast<char*>(rootNames[i].c_str());
-			}
+		for (StringNodeMapType::const_iterator itSN = nodeDictionary.begin();
+			itSN != nodeDictionary.end(); ++itSN, ++i)
+		{	// extract two arrays from the dictionary
+			arrRootNames[i] = const_cast<char*>((itSN->first).c_str());
+			arrNodes[i] = toCUDD(itSN->second);
 		}
 
 		std::vector<std::string> varNames;
@@ -545,7 +537,7 @@ std::string CUDDFacade::StoreToString(const std::vector<Node*>& nodes,
 		}
 
 		if (!Dddmp_cuddAddArrayStore(toCUDD(manager_), static_cast<char*>(0),
-			nodes.size(), arrNodes, arrRootNames, arrVarNames, static_cast<int*>(0),
+			nodeDictionary.size(), arrNodes, arrRootNames, arrVarNames, static_cast<int*>(0),
 			DDDMP_MODE_TEXT, DDDMP_VARDEFAULT, static_cast<char*>(0), ff.Open()))
 		{	// in case there was a problem with storing the BDD
 			throw std::runtime_error("Could not store BDD to string!");
@@ -587,6 +579,17 @@ std::string CUDDFacade::StoreToString(const std::vector<Node*>& nodes,
 
 	ff.Close();
 	return ff.GetContent();
+}
+
+
+std::pair<CUDDFacade*, CUDDFacade::StringNodeMapType>
+	CUDDFacade::LoadFromString(const std::string& str)
+{
+	CUDDFacade* facade = new CUDDFacade();
+
+	StringNodeMapType nodeDict;
+
+	return make_pair(facade, nodeDict);
 }
 
 

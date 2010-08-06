@@ -898,18 +898,33 @@ BOOST_AUTO_TEST_CASE(storing_and_loading)
 
 	CUDDFacade::Node* node = CreateMTBDDForTestCases(facade, testCases);
 
-	std::vector<CUDDFacade::Node*> nodeVec;
-	nodeVec.push_back(node);
+	CUDDFacade::StringNodeMapType nodeDict;
+	nodeDict["root"] = node;
 
-	std::vector<std::string> rootNames;
-
-	std::string result = facade.StoreToString(nodeVec, rootNames);
+	std::string result = facade.StoreToString(nodeDict);
 
 	BOOST_TEST_MESSAGE("Stored string: " + result);
 
+	std::pair<CUDDFacade*, CUDDFacade::StringNodeMapType> loadedBdd
+		= CUDDFacade::LoadFromString(result);
 
+	std::auto_ptr<CUDDFacade> loadedFacade
+		= std::auto_ptr<CUDDFacade>(loadedBdd.first);
+	CUDDFacade::Node* loadedRoot = loadedBdd.second["root"];
+
+	BOOST_CHECK(loadedRoot != static_cast<CUDDFacade::Node*>(0));
+
+	BOOST_CHECK_MESSAGE(
+		ValueTableToString(GetValueTable(*loadedFacade, loadedRoot))
+		== ValueTableToString(GetValueTable(facade, node)), "Stored table "
+		+ ValueTableToString(GetValueTable(facade, node))
+		+ " is not equal to loaded table "
+		+ ValueTableToString(GetValueTable(*loadedFacade, node)));
+
+	loadedFacade->RecursiveDeref(loadedRoot);
 
 	facade.RecursiveDeref(node);
 }
+
 
 BOOST_AUTO_TEST_SUITE_END()
