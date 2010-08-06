@@ -24,13 +24,41 @@ FakeFile::FakeFile()
 	  bufferSize_(0),
 		ptrFile_(static_cast<FILE*>(0)),
 		hasBeenOpened_(false),
-		isClosed_(false)
+		isClosed_(false),
+		writeMode_(false)
 { }
 
 
-FILE* FakeFile::Open()
+FILE* FakeFile::OpenWrite()
 {
-	if ((ptrFile_ = open_memstream(&ptrBuffer_, &bufferSize_)) == static_cast<FILE*>(0))
+	if (hasBeenOpened_)
+	{	// in case the stream has already been opened
+		throw std::runtime_error("Opening memory stream more than once");
+	}
+
+	if ((ptrFile_ = open_memstream(&ptrBuffer_, &bufferSize_))
+		== static_cast<FILE*>(0))
+	{	// in case the stream could not be created
+		throw std::runtime_error("Could not create memory stream");
+	}
+
+	hasBeenOpened_ = true;
+	isClosed_ = false;
+	writeMode_ = true;
+
+	return ptrFile_;
+}
+
+
+FILE* FakeFile::OpenRead(std::string str)
+{
+	if (hasBeenOpened_)
+	{	// in case the stream has already been opened
+		throw std::runtime_error("Opening memory stream more than once");
+	}
+
+	if ((ptrFile_ = fmemopen(const_cast<char*>(str.c_str()), str.length(), "r"))
+		== static_cast<FILE*>(0))
 	{	// in case the stream could not be created
 		throw std::runtime_error("Could not create memory stream");
 	}
@@ -75,6 +103,11 @@ std::string FakeFile::GetContent() const
 		throw std::runtime_error("Attempt to read content of unclosed file");
 	}
 
+	if (!writeMode_)
+	{	// in case the file has not been opened for writing
+		throw std::runtime_error("Attempt to read content of read-only file");
+	}
+
 	return std::string(ptrBuffer_, bufferSize_);
 }
 
@@ -95,5 +128,8 @@ FakeFile::~FakeFile()
 	}
 
 	// free the memory used for the buffer
-	free(ptrBuffer_);
+	if (ptrBuffer_ != static_cast<char*>(0))
+	{	// in case some buffer has been allocated
+		free(ptrBuffer_);
+	}
 }

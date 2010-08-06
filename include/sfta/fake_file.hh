@@ -73,6 +73,14 @@ private:  // Private data members
 	 */
 	bool isClosed_;
 
+	/**
+	 * @brief  Denotes whether the mock file has been opened in write mode
+	 *
+	 * A Boolean value that denotes whether the mock file represented by the
+	 * object has been opened in write mode.
+	 */
+	bool writeMode_;
+
 
 private:  // Private methods
 
@@ -110,14 +118,29 @@ public:   // Public methods
 
 
 	/**
-	 * @brief  The method that opens the mock stream
+	 * @brief  The method that opens the mock stream for writing
 	 *
 	 * Opens the mock stream and returns the @c FILE* pointer so that it can be
-	 * handled using a UNIX file pointer in the common way
+	 * handled using a UNIX file pointer in the common way. The stream is opened
+	 * only for writing.
 	 *
 	 * @returns  UNIX @c FILE* pointer
 	 */
-	FILE* Open();
+	FILE* OpenWrite();
+
+
+	/**
+	 * @brief  The method that opens the mock stream for reading
+	 *
+	 * Opens the mock stream and returns the @c FILE* pointer so that it can be
+	 * handled using a UNIX file pointer in the common way. The stream is opened
+	 * only for reading.
+	 *
+	 * @param[in]  str  The string to be inserted into the stream
+	 *
+	 * @returns  UNIX @c FILE* pointer
+	 */
+	FILE* OpenRead(std::string str);
 
 
 	/**

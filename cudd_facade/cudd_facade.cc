@@ -538,7 +538,7 @@ std::string CUDDFacade::StoreToString(
 
 		if (!Dddmp_cuddAddArrayStore(toCUDD(manager_), static_cast<char*>(0),
 			nodeDictionary.size(), arrNodes, arrRootNames, arrVarNames, static_cast<int*>(0),
-			DDDMP_MODE_TEXT, DDDMP_VARDEFAULT, static_cast<char*>(0), ff.Open()))
+			DDDMP_MODE_TEXT, DDDMP_VARDEFAULT, static_cast<char*>(0), ff.OpenWrite()))
 		{	// in case there was a problem with storing the BDD
 			throw std::runtime_error("Could not store BDD to string!");
 		}
@@ -589,6 +589,9 @@ std::pair<CUDDFacade*, CUDDFacade::StringNodeMapType>
 
 	StringNodeMapType nodeDict;
 
+	// fake FILE* manager
+	FakeFile ff;
+
 //Dddmp_cuddAddArrayLoad (
 //  DdManager *ddMgr                  /* IN: DD Manager */,
 //  Dddmp_RootMatchType rootMatchMode /* IN: storing mode selector */,
@@ -608,7 +611,7 @@ std::pair<CUDDFacade*, CUDDFacade::StringNodeMapType>
 //
 //
 //		static_cast<char*>(0),
-//		file,
+//		ff.OpenRead(str),
 //
 //
 //			)
