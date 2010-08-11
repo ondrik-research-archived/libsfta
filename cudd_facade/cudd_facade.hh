@@ -539,9 +539,6 @@ public:  // Public methods
 	 *                             respective nodes
 	 *
 	 * @returns  String with the internal representation of given MTBDDs
-	 *
-	 * @todo TODO: a function that performs inverse operation is missing: JUST
-	 * DO IT!
 	 */
 	std::string StoreToString(const StringNodeMapType& nodeDictionary) const;
 
@@ -558,7 +555,7 @@ public:  // Public methods
 	 * @todo TODO
 	 */
 	static std::pair<CUDDFacade*, StringNodeMapType> LoadFromString(
-		const std::string& str);
+		const std::string& str, const std::vector<std::string>& rootNames);
 
 
 	/**

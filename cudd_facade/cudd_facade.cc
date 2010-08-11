@@ -583,7 +583,8 @@ std::string CUDDFacade::StoreToString(
 
 
 std::pair<CUDDFacade*, CUDDFacade::StringNodeMapType>
-	CUDDFacade::LoadFromString(const std::string& str)
+	CUDDFacade::LoadFromString(const std::string& str,
+	const std::vector<std::string>& rootNames)
 {
 	CUDDFacade* facade = new CUDDFacade();
 
@@ -591,6 +592,19 @@ std::pair<CUDDFacade*, CUDDFacade::StringNodeMapType>
 
 	// fake FILE* manager
 	FakeFile ff;
+
+	char** arrRootNames = new char*[rootNames.size()];
+
+	for (unsigned i = 0; i < rootNames.size(); ++i)
+	{	// copy root names
+		arrRootNames[i] = new char[rootNames[i].length() + 1];
+		strncpy(arrRootNames[i], rootNames[i].c_str(), rootNames[i].length());
+		arrRootNames[i][rootNames[i].length()] = '\0';
+	}
+
+	char** varNames = static_cast<char**>(0);
+
+	DdNode** roots = static_cast<DdNode**>(0);
 
 //Dddmp_cuddAddArrayLoad (
 //  DdManager *ddMgr                  /* IN: DD Manager */,
@@ -606,17 +620,31 @@ std::pair<CUDDFacade*, CUDDFacade::StringNodeMapType>
 //  DdNode ***pproots                 /* OUT: array of returned BDD roots */
 //  )
 
-//	Dddmp_cuddAddArrayLoad(facade->manager_, 
-//
-//
-//
-//		static_cast<char*>(0),
-//		ff.OpenRead(str),
-//
-//
-//			)
 
-	return make_pair(facade, nodeDict);
+
+	int rootCount = Dddmp_cuddAddArrayLoad(toCUDD(facade->manager_),
+		DDDMP_ROOT_MATCHNAMES, arrRootNames, DDDMP_VAR_MATCHIDS, varNames,
+		static_cast<int*>(0), static_cast<int*>(0), DDDMP_MODE_TEXT,
+		static_cast<char*>(0), ff.OpenRead(str), &roots);
+
+	if (rootCount <= 0)
+	{	// in case there was an error loading the MTBDD
+		throw std::runtime_error("Error loading MTBDD!");
+	}
+
+	for (int i = 0; i < rootCount; ++i)
+	{	// read root nodes
+		nodeDict[rootNames[i]] = fromCUDD(roots[i]);
+	}
+
+	for (unsigned i = 0; i < rootNames.size(); ++i)
+	{	// delete root names
+		delete [] arrRootNames[i];
+	}
+
+	delete [] arrRootNames;
+
+	return std::make_pair(facade, nodeDict);
 }
 
 

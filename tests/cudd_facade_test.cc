@@ -903,10 +903,11 @@ BOOST_AUTO_TEST_CASE(storing_and_loading)
 
 	std::string result = facade.StoreToString(nodeDict);
 
-	BOOST_TEST_MESSAGE("Stored string: " + result);
+	std::vector<std::string> arrRoots;
+	arrRoots.push_back("root");
 
 	std::pair<CUDDFacade*, CUDDFacade::StringNodeMapType> loadedBdd
-		= CUDDFacade::LoadFromString(result);
+		= CUDDFacade::LoadFromString(result, arrRoots);
 
 	std::auto_ptr<CUDDFacade> loadedFacade
 		= std::auto_ptr<CUDDFacade>(loadedBdd.first);
