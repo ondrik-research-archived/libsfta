@@ -81,6 +81,13 @@ const char* const TRIMMED_TWO_VAR_STANDARD_TEST_CASES_TABLE =
 
 
 /**
+ * Formulae for squared standard test cases represented by a table
+ */
+const char* const SQUARED_TEST_CASES_TABLE =
+	"|0|0|0|9|16|0|0|0|0|81|0|0|0|0|196|225|";
+
+
+/**
  * Formulae for standard test cases to be found not present in the MTBDD
  */
 const char* const STANDARD_FAIL_CASES[] =
@@ -924,6 +931,43 @@ BOOST_AUTO_TEST_CASE(storing_and_loading)
 
 	loadedFacade->RecursiveDeref(loadedRoot);
 
+	facade.RecursiveDeref(node);
+}
+
+
+BOOST_AUTO_TEST_CASE(monadic_apply)
+{
+	CUDDFacade facade;
+
+	// load test cases
+	ListOfTestCasesType testCases;
+	ListOfTestCasesType failedCases;
+	loadStandardTests(testCases, failedCases);
+
+	CUDDFacade::Node* node = CreateMTBDDForTestCases(facade, testCases);
+
+	class SquareMonadicApplyFunctor
+		: public CUDDFacade::AbstractMonadicApplyFunctor
+	{
+	public:
+
+		virtual ValueType operator()(const ValueType& val)
+		{
+			return val*val;
+		}
+	};
+
+	SquareMonadicApplyFunctor squarer;
+	CUDDFacade::Node* squaredNode = facade.MonadicApply(node, &squarer);
+	facade.Ref(squaredNode);
+
+	BOOST_CHECK_MESSAGE(ValueTableToString(GetValueTable(facade, squaredNode))
+		== SQUARED_TEST_CASES_TABLE,
+		"Stored table " + ValueTableToString(GetValueTable(facade, squaredNode))
+		+ Convert::ToString(" is not equal to expected table ")
+		+ SQUARED_TEST_CASES_TABLE);
+
+	facade.RecursiveDeref(squaredNode);
 	facade.RecursiveDeref(node);
 }
 
