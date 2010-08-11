@@ -550,9 +550,12 @@ public:  // Public methods
 	 * format. The returned value is a pair of a CUDDFacade object and
 	 * dictionary of root nodes with their names.
 	 *
-	 * @param[in]  
+	 * @param[in]  str        The string with the representation of the MTBDD
+	 * @param[in]  rootNames  Vector of names of roots that are to be loaded
+	 *                        from the string
 	 *
-	 * @todo TODO
+	 * @returns  Pair of a CUDDFacade and a map that maps strings (root names)
+	 *           to nodes (roots)
 	 */
 	static std::pair<CUDDFacade*, StringNodeMapType> LoadFromString(
 		const std::string& str, const std::vector<std::string>& rootNames);
