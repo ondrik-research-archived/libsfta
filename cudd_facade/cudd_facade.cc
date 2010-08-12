@@ -29,10 +29,6 @@
 using namespace SFTA::Private;
 
 
-// Setting the logging category name for Log4cpp
-const char* CUDDFacade::LOG_CATEGORY_NAME = "cudd_facade";
-
-
 // A set of functions that converts between SFTA and CUDD manager and node
 // types. 
 namespace SFTA

@@ -201,17 +201,6 @@ public:  // Public types
 	};
 
 
-public:  // Public data members
-
-	/**
-	 * @brief  Logging category name for Log4cpp
-	 *
-	 * Name of the logging category that this class uses for logging using
-	 * Log4cpp.
-	 */
-	static const char* LOG_CATEGORY_NAME;
-
-
 private: // Private data members
 
 	/**
