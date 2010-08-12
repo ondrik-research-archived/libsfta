@@ -137,31 +137,127 @@ class CUDDFacadeFixture : public LogFixture
 {
 public:  // Public types
 
+	/**
+	 * @brief  Type of MTBDD value
+	 *
+	 * The type that is used for leaves of MTBDD.
+	 */
 	typedef unsigned ValueType;
+
+	/**
+	 * @brief  String to unsigned dictionary
+	 *
+	 * Dictionary that maps string to unsigned.
+	 */
 	typedef std::map<std::string, unsigned> StringToUnsignedDictType;
+
+	/**
+	 * @brief  Type for variable occurence
+	 *
+	 * Type that holds name of a variable and information whether it occurs in
+	 * positive or negative.
+	 */
 	typedef std::pair<std::string, bool> VariableOccurenceType;
+
+	/**
+	 * @brief  List of variable occurences
+	 *
+	 * List of variable occurences of type VariableOccurenceType.
+	 */
 	typedef std::vector<VariableOccurenceType> VariableListType;
+
+	/**
+	 * @brief  Parser result type
+	 *
+	 * Result type of the parser of formulae.
+	 */
 	typedef std::pair<ValueType, VariableListType> ParserResultType;
+
+	/**
+	 * @brief  List of test cases
+	 *
+	 * List of strings with formulae for test cases.
+	 */
 	typedef std::vector<std::string> ListOfTestCasesType;
+
+	/**
+	 * @brief  Node array
+	 *
+	 * Array of nodes.
+	 */
 	typedef std::vector<CUDDFacade::Node*> NodeArrayType;
+
+	/**
+	 * @brief  List of values
+	 *
+	 * List of values of ValueType.
+	 */
 	typedef std::vector<ValueType> ListOfValuesType;
+
+	/**
+	 * @brief  Table of values
+	 *
+	 * Table that holds values of ValueType.
+	 */
 	typedef std::vector<ValueType> ValueTableType;
+
+	/**
+	 * @brief  Type of assignment
+	 *
+	 * Type of value that is assigned to boolean variables.
+	 */
 	typedef std::vector<signed char> AssignmentType;
 
 protected:
 
+	/**
+	 * Dictionary translating variables to their indices.
+	 */
 	StringToUnsignedDictType varToNumDict_;
 
+	/**
+	 * Counter of known variables.
+	 */
 	unsigned varCounter_;
 
+	/**
+	 * Value used as the background value for the MTBDD
+	 */
 	static const ValueType BDD_BACKGROUND_VALUE = 0;
+
+	/**
+	 * Value used as a @c TRUE value for projection BDD.
+	 */
 	static const ValueType BDD_TRUE_VALUE = 1;
+
+	/**
+	 * @c TRUE value for variable assignment.
+	 */
 	static const signed char ASGN_TRUE = 1;
+
+	/**
+	 * @c TRUE value for variable assignment.
+	 */
 	static const signed char ASGN_FALSE = 0;
+
+	/**
+	 * @c UNKNOWN value for variable assignment.
+	 */
 	static const signed char ASGN_UNKNOWN = -1;
 
 protected:
 
+	/**
+	 * @brief  Extends an MTBDD by one variable
+	 *
+	 * Extends an MTBDD by one variable (either positive or negative).
+	 *
+	 * @param[in]  facade  CUDDFacade object
+	 * @param[in]  bdd     MTBDD that is to be extended
+	 * @param[in]  var     Variable that extends the MTBDD
+	 *
+	 * @returns  Extended MTBDD 
+	 */
 	CUDDFacade::Node* extendBddByVariable(CUDDFacade& facade,
 		CUDDFacade::Node* bdd, const VariableOccurenceType& var)
 	{
@@ -200,6 +296,19 @@ protected:
 	}
 
 
+	/**
+	 * @brief  Extends MTBDD by a list of variables
+	 *
+	 * Extends MTBDD by a list of variables.
+	 *
+	 * @param[in]  facade  CUDDFacade object
+	 * @param[in]  bdd     MTBDD to be extended
+	 * @param[in]  asgn    List of variables
+	 *
+	 * @returns  MTBDD extended by given variables
+	 *
+	 * @see extendBddByVariable
+	 */
 	CUDDFacade::Node* extendBddByVariableList(CUDDFacade& facade,
 		CUDDFacade::Node* bdd, const VariableListType& asgn)
 	{
@@ -216,6 +325,19 @@ protected:
 	}
 
 
+	/**
+	 * @brief  Sets value of MTBDD leaf
+	 *
+	 * Sets value of MTBDD leaf at given assignment 
+	 *
+	 * @param[in]  facade  CUDDFacade object
+	 * @param[in]  value   The value that should be set to the leaf
+	 * @param[in]  asgn    Assignment to boolean variables of the MTBDD that
+	 *                     determines the leaf the value of which is to be set
+	 *
+	 * @returns  New MTBDD with the value at given position set to the requested
+	 *           one
+	 */
 	CUDDFacade::Node* setValue(CUDDFacade& facade, ValueType value,
 		const VariableListType& asgn)
 	{
@@ -228,6 +350,18 @@ protected:
 	}
 
 
+	/**
+	 * @brief  Gets value of MTBDD leaf
+	 *
+	 * Returns the value found at given MTBDD leaf.
+	 *
+	 * @param[in]  facade    CUDDFacade object
+	 * @param[in]  rootNode  MTBDD where we are looking
+	 * @param[in]  asgn      Assignment to boolean variables of the MTBDD that
+	 *                       determines the leaf the value of which is to be got
+	 *
+	 * @returns  Value of the leaf of MTBDD at given position
+	 */
 	ValueType getValue(CUDDFacade& facade, CUDDFacade::Node* rootNode,
 		const VariableListType& asgn)
 	{
@@ -287,8 +421,22 @@ protected:
 	}
 
 
-	/*
-	 * format:   5*x1*x2*~x3*x4
+	/**
+	 * @brief  Parser of formulae for test cases
+	 *
+	 * Parser of formulae for test cases. An example of the format of a formula
+	 * follows:
+	 *                   5 * x1 * x2 * ~x3 * x4
+	 *
+	 * "5": value that is saved to the leaf
+	 * "*": times symbol
+	 * "x1", "x2", "x3", "x4": Boolean variables of the MTBDD (can be arbitrary
+	 *                         strings)
+	 * "~": denotes that the Boolean variable that follows is complemented 
+	 *
+	 * @param[in]  input  The input string
+	 * 
+	 * @returns  Parser result
 	 */
 	static ParserResultType parseExpression(std::string input)
 	{
@@ -329,6 +477,15 @@ protected:
 			varList);
 	}
 
+	/**
+	 * @brief  Transforms parser result to string
+	 *
+	 * Transforms parser result to string.
+	 *
+	 * @param[in]  prsRes  Parser result
+	 *
+	 * @returns  String that represents the parser result
+	 */
 	static std::string parserResultToString(const ParserResultType& prsRes)
 	{
 		std::string result = Convert::ToString(prsRes.first);
@@ -343,6 +500,16 @@ protected:
 		return result;
 	}
 
+	/**
+	 * @brief  Loads standard tests
+	 *
+	 * A routine that loads passed structures with standard tests.
+	 *
+	 * @param[out]  testCases    Reference to list of test cases that is to be
+	 *                           filled
+	 * @param[out]  failedCases  Reference to list of failing test cases that is
+	 *                           to be filled
+	 */
 	static void loadStandardTests(ListOfTestCasesType& testCases,
 		ListOfTestCasesType& failedCases)
 	{
@@ -360,6 +527,17 @@ protected:
 	}
 
 
+	/**
+	 * @brief  Sets value of value table
+	 *
+	 * Sets value at given position in the value table.
+	 *
+	 * @param[in]    asgn   Assignment for which we wish to set the value
+	 * @param[in]    value  The value to be set
+	 * @param[out]   table  Value table where the value should be set
+	 * @param[in]    index  Index of the variable
+	 * @param[in]    pos    Position in the value table
+	 */
 	static void setValueTableValue(const AssignmentType& asgn, ValueType value,
 		ValueTableType& table, unsigned index, unsigned pos)
 	{
@@ -391,6 +569,16 @@ protected:
 	}
 
 
+	/**
+	 * @brief  Fills value table block for node
+	 *
+	 * Fills value table block for given node.
+	 *
+	 * @param[in]   facade  CUDDFacade object
+	 * @param[in]   node    Node for which table block is to be filled
+	 * @param[out]  asgn    Assignment for which we wish to fill the table
+	 * @param[out]  table   Table that we are filling
+	 */
 	static void fillValueTableBlockForNode(const CUDDFacade& facade,
 		CUDDFacade::Node* node, AssignmentType& asgn, ValueTableType& table)
 	{
@@ -412,6 +600,16 @@ protected:
 	}
 
 
+	/**
+	 * @brief  Gets value table
+	 *
+	 * Returns value table of given MTBDD.
+	 *
+	 * @param[in]  facade  CUDDFacade object
+	 * @param[in]  node    MTBDD for which we wish to get the value table
+	 *
+	 * @returns  The value table
+	 */
 	static ValueTableType GetValueTable(const CUDDFacade& facade,
 		CUDDFacade::Node* node)
 	{
@@ -427,6 +625,15 @@ protected:
 	}
 
 
+	/**
+	 * @brief  Converts a value table to a string
+	 *
+	 * Converts a value table to a string.
+	 *
+	 * @param[in]  table  Value table to be converted into a string
+	 *
+	 * @returns  String representation of the value table
+	 */
 	static std::string ValueTableToString(const ValueTableType& table)
 	{
 		std::string result = "|";
@@ -440,6 +647,17 @@ protected:
 		return result;
 	}
 
+
+	/**
+	 * @brief  Creates MTBDD for test cases
+	 *
+	 * Creates MTBDD for test cases.
+	 *
+	 * @param[in]  facade     CUDDFacade object
+	 * @param[in]  testCases  List of test cases
+	 *
+	 * @returns  The MTBDD with the test cases
+	 */
 	CUDDFacade::Node* CreateMTBDDForTestCases(CUDDFacade& facade,
 		const ListOfTestCasesType& testCases)
 	{
