@@ -16,6 +16,8 @@
 #include <string>
 #include <vector>
 
+#include "abstract_mtbdd_facade.hh"
+
 
 // insert the class into proper namespace
 namespace SFTA { namespace Private { class CUDDFacade; } }
@@ -33,8 +35,10 @@ namespace SFTA { namespace Private { class CUDDFacade; } }
  * also takes care not to let any CUDD-specific type spoil global namespace.
  */
 class SFTA::Private::CUDDFacade
+	: public SFTA::Private::AbstractMTBDDFacade<unsigned>
 {
 public:  // Public types
+
 
 	/**
 	 * @brief  MTBDD sink node type
@@ -74,89 +78,27 @@ public:  // Public types
 
 
 	/**
-	 * @brief  The abstract class for an MTBDD Apply functor
+	 * @brief  Parent class
 	 *
-	 * This class is an abstract class that defines the interface that all
-	 * functors that perform binary Apply operation on CUDD MTBDD need to
-	 * implement.
+	 * The parent class.
 	 */
-	class AbstractApplyFunctor
-	{
-	public:   // Public methods
-
-		/**
-		 * @brief  Constructor
-		 *
-		 * The constructor of the class
-		 */
-		AbstractApplyFunctor()
-		{ }
-
-		/**
-		 * @brief  The operator
-		 *
-		 * The operator of the functor, that is the method that performs the
-		 * operation.
-		 *
-		 * @param[in]  lhs  Left-hand operand of the operation
-		 * @param[in]  rhs  Right-hand operand of the operation
-		 *
-		 * @returns  Result of the operation
-		 */
-		virtual ValueType operator()(const ValueType& lhs, const ValueType& rhs) = 0;
-
-		/**
-		 * @brief  Destructor
-		 *
-		 * Virtual destructor
-		 */
-		virtual ~AbstractApplyFunctor()
-		{ }
-	};
+	typedef AbstractMTBDDFacade<unsigned> ParentClass;
 
 
 	/**
-	 * @brief  The abstract class for an MTBDD monadic Apply functor
+	 * @brief  CUDD type of abstract Apply functor
 	 *
-	 * This class is an abstract class that defines the interface that all
-	 * functors that perform monadic Apply operation on CUDD MTBDD need to
-	 * implement.
+	 * CUDD type of abstract functor for Apply operation.
 	 */
-	class AbstractMonadicApplyFunctor
-	{
-	public:   // Public methods
+	typedef ParentClass::AbstractApplyFunctor AbstractApplyFunctor;
 
 
-		/**
-		 * @brief  Constructor
-		 *
-		 * The constructor of the class
-		 */
-		AbstractMonadicApplyFunctor()
-		{ }
-
-
-		/**
-		 * @brief  The operator
-		 *
-		 * The operator of the functor, that is the method that performs the
-		 * operation.
-		 *
-		 * @param[in]  val  The operand of the operation
-		 *
-		 * @returns  Result of the operation
-		 */
-		virtual ValueType operator()(const ValueType& val) = 0;
-
-
-		/**
-		 * @brief  Destructor
-		 *
-		 * Virtual destructor
-		 */
-		virtual ~AbstractMonadicApplyFunctor()
-		{ }
-	};
+	/**
+	 * @brief  CUDD type of abstract monadic Apply functor
+	 *
+	 * CUDD type of abstract functor for monadic Apply operation.
+	 */
+	typedef ParentClass::AbstractMonadicApplyFunctor AbstractMonadicApplyFunctor;
 
 
 	/**
