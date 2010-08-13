@@ -21,9 +21,9 @@ namespace SFTA
 {
 	template
 	<
-		typename RootType,
-		typename LeafType,
-		class VariableAssignmentType
+		typename Root,
+		typename Leaf,
+		class VariableAssignment
 	>
 	class AbstractSharedMTBDD;
 }
@@ -37,28 +37,53 @@ namespace SFTA
  * Abstract class that defines a high-level interface for classes implementing
  * shared multi-terminal BDD (MTBDD).
  *
- * @tparam  RootType                The type of the root of a MTBDD. Is used
- *                                  to reference the root.
- * @tparam  LeafType                The type of a leaf of a MTBDD.
- * @tparam  VariableAssignmentType  The type that is used for representation
- *                                  of Boolean variable assignment, i.e.
- *                                  representation of a path in the BDD.
+ * @tparam  Root                The type of the root of a MTBDD. Is used to
+ *                              reference the root.
+ * @tparam  Leaf                The type of a leaf of a MTBDD.
+ * @tparam  VariableAssignment  The type that is used for representation of
+ *                              Boolean variable assignment, i.e.
+ *                              representation of a path in the BDD.
  */
 template
 <
-	typename RootType,
-	typename LeafType,
-	class VariableAssignmentType
+	typename Root,
+	typename Leaf,
+	class VariableAssignment
 >
 class SFTA::AbstractSharedMTBDD
 {
 public:  // Public data types
 
+
+	/**
+	 * @brief  Type of a leaf
+	 *
+	 * Type of a leaf of MTBDD.
+	 */
+	typedef Leaf LeafType;
+
+
+	/**
+	 * @brief  Type of a root
+	 *
+	 * Type of a root of MTBDD.
+	 */
+	typedef Root RootType;
+
+
+	/**
+	 * @brief  Type of variable assignment
+	 *
+	 * Type of variable assignment.
+	 */
+	typedef VariableAssignment VariableAssignmentType;
+
+
 	/**
 	 * @brief  The container type for leafs
 	 *
 	 * The type that serves as a container of several leafs. This type is used
-	 * for example byt the GetValue() method.
+	 * for example by the GetValue() method.
 	 *
 	 * @see  GetValue()
 	 */
@@ -74,6 +99,7 @@ public:  // Public data types
 	class AbstractApplyFunctorType
 	{
 	public:   // Public methods
+
 
 		/**
 		 * @brief  The operation of the functor
@@ -98,13 +124,14 @@ public:  // Public data types
 
 	};
 
+
 public:  // Public methods
 
 	/**
 	 * @brief  Sets the value of a leaf
 	 *
 	 * This function sets the value of a leaf at a position determined by the root
-	 * of the MTBDD and assignments to boolean variables.
+	 * of the MTBDD and assignments to Boolean variables.
 	 *
 	 * @see  GetValue()
 	 *
@@ -121,7 +148,8 @@ public:  // Public methods
 	 * @brief  Gets references to leaves
 	 *
 	 * This function returns a container with all leaves that are reachable by
-	 * given variable assignment.
+	 * given variable assignment. Note that the references in the container may
+	 * be made invalid by following operations on the MTBDD.
 	 *
 	 * @see  LeafContainer
 	 * @see  SetValue()
@@ -141,7 +169,7 @@ public:  // Public methods
 	 *
 	 * Performs given Apply operation on two MTBDD specified by their roots.
 	 *
-	 * @see  AbstractSharedMTBDD::ApplyFunctionType
+	 * @see  AbstractSharedMTBDD::AbstractApplyFunctorType
 	 *
 	 * @param[in]  lhs   Left-hand side MTBDD
 	 * @param[in]  rhs   Right-hand side MTBDD
@@ -202,7 +230,7 @@ public:  // Public methods
 	 * generate a diagram using GraphViz (http://www.graphviz.org/) Dot tool.
 	 *
 	 * @param[in]  filename  Name of the output file (preferably with .dot
-	 *                       extension
+	 *                       extension)
 	 */
 	virtual void DumpToDotFile(const std::string& filename) const = 0;
 
