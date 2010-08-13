@@ -28,10 +28,10 @@ namespace SFTA
 {
 	template
 	<
-		typename RootType,
-		typename LeafType,
-		class VariableAssignmentType,
-		template <typename, typename> class LeafAllocator,
+		typename Root,
+		typename Leaf,
+		class VariableAssignment,
+		template <typename, typename, class> class LeafAllocator,
 		template <typename, typename> class RootAllocator
 	>
 	class CUDDSharedMTBDD;
@@ -49,27 +49,26 @@ namespace SFTA
  *
  * @see  SFTA::Private::CUDDFacade
  *
- * @tparam  RootType                The type for the root of a MTBDD. Is used
- *                                  to reference the root.
- * @tparam  LeafType                The type of a leaf of a MTBDD.
- * @tparam  VariableAssignmentType  The type that is used for representation
- *                                  of Boolean variable assignment, i.e.
- *                                  representation of a path in the BDD.
- * @tparam  LeafAllocator           The allocator that is used to allocate
- *                                  memory for leafs and (in case it is
- *                                  necessary) provide binding between the
- *                                  leafs and handles stored in the MTBDD. The
- *                                  allocator should behave in such a way,
- *                                  that for leafs that are equal should
- *                                  generate handles that are also equal.
- * @tparam  RootAllocator           The allocator for root nodes of MTBDDs.
+ * @tparam  Root                The type for the root of a MTBDD. Is used to
+ *                              reference the root.
+ * @tparam  Leaf                The type of a leaf of a MTBDD.
+ * @tparam  VariableAssignment  The type that is used for representation of
+ *                              Boolean variable assignment, i.e.
+ *                              representation of a path in the BDD.
+ * @tparam  LeafAllocator       The allocator that is used to allocate for
+ *                              leafs and (in case it is necessary) provide
+ *                              binding between the leafs and handles stored
+ *                              in the MTBDD. The allocator should behave in
+ *                              such a way, that for leafs that are equal
+ *                              should generate handles that are also equal.
+ * @tparam  RootAllocator       The allocator for root nodes of MTBDDs.
  */
 template
 <
 	typename Root,
 	typename Leaf,
-	class VariableAssignmentType,
-	template <typename, typename> class LeafAllocator,
+	class VariableAssignment,
+	template <typename, typename, class> class LeafAllocator,
 	template <typename, typename> class RootAllocator
 >
 class SFTA::CUDDSharedMTBDD
@@ -77,12 +76,13 @@ class SFTA::CUDDSharedMTBDD
 		<
 			Root,
 			Leaf,
-			VariableAssignmentType
+			VariableAssignment
 		>,
 		protected LeafAllocator
 		<
 			Leaf,
-			SFTA::Private::CUDDFacade::ValueType
+			SFTA::Private::CUDDFacade::ValueType,
+			SFTA::Private::CUDDFacade::AbstractMonadicApplyFunctor
 		>,
 		protected RootAllocator
 		<
@@ -91,6 +91,7 @@ class SFTA::CUDDSharedMTBDD
 		>
 {
 public:    // Public data types
+
 
 	/**
 	 * @brief  Type of a leaf
@@ -108,7 +109,16 @@ public:    // Public data types
 	typedef Root RootType;
 
 
+	/**
+	 * @brief  Type of variable assignment
+	 *
+	 * Type of variable assignment.
+	 */
+	typedef VariableAssignment VariableAssignmentType;
+
+
 private:   // Private data types
+
 
 	/**
 	 * @brief  The type of the parent class
@@ -122,6 +132,22 @@ private:   // Private data types
 		VariableAssignmentType
 	>
 	ParentClass;
+
+
+	/**
+	 * @brief  The type of this class
+	 *
+	 * The data type of this class with correct template instantiation.
+	 */
+	typedef CUDDSharedMTBDD
+	<
+		RootType,
+		LeafType,
+		VariableAssignmentType,
+		LeafAllocator,
+		RootAllocator
+	>
+	ThisClass;
 
 
 public:    // Public data types
@@ -147,7 +173,8 @@ private:   // Private data types
 	typedef LeafAllocator
 	<
 		LeafType,
-		SFTA::Private::CUDDFacade::ValueType
+		SFTA::Private::CUDDFacade::ValueType,
+		SFTA::Private::CUDDFacade::AbstractMonadicApplyFunctor
 	>
 	LA;
 
@@ -206,286 +233,86 @@ private:   // Private data types
 
 
 	/**
-	 * @brief  The type for an array of leaf handles
+	 * @brief  Generic Apply functor
 	 *
-	 * The type that represents an array of leaf handles.
+	 * Apply functor that can generically carry out an arbitrary operation
+	 * defined on higher level, i.e. using the leaves of CUDDSharedMTBDD
 	 */
-	typedef std::vector<typename LA::HandleType> LeafHandleArray;
-
-
-	/**
-	 * @brief  Wrapper for Apply callback function parameters
-	 *
-	 * This structure is a wrapper that contains all necessary parameters that
-	 * are needed for the Apply callback to work. In fact, it serves as an
-	 * envelope that we send to ourselves.
-	 */
-	struct ApplyCallbackParameters
+	class GenericApplyFunctor : public CUDDFacade::AbstractApplyFunctor
 	{
-	public:   // Public data members
+	private:
 
-		/**
-		 * @brief  Pointer to the operation
-		 *
-		 * Pointer to the function that carries out the operation on leave nodes of
-		 * the MTBDD.
-		 */
-		typename ParentClass::AbstractApplyFunctorType* Op;
+		CUDDSharedMTBDD* mtbdd_;
+		typename ParentClass::AbstractApplyFunctorType* func_;
 
+	private:
 
-		/**
-		 * @brief  MTBDD that provides the context
-		 *
-		 * MTBDD which is used to provide the context, in which the operation
-		 * takes place.
-		 */
-		CUDDSharedMTBDD* SharedMTBDD;
+		GenericApplyFunctor(const GenericApplyFunctor&);
+		GenericApplyFunctor& operator=(const GenericApplyFunctor&);
 
-	public:   // Public methods
+	public:
 
-		/**
-		 * @brief  Constructor
-		 *
-		 * The constructor of the structure.
-		 */
-		ApplyCallbackParameters(typename ParentClass::AbstractApplyFunctorType* op,
-			CUDDSharedMTBDD* bdd)
-			: Op(op), SharedMTBDD(bdd)
-		{ }
-
-	};
-
-	struct ApplyWithContextCallbackParameters
-	{
-	public:   // Public data members
-
-		/**
-		 * @brief  Pointer to the operation
-		 *
-		 * Pointer to the function that carries out the operation on leave nodes of
-		 * the MTBDD.
-		 */
-		typename ParentClass::ApplyWithContextFunctionType Op;
-
-
-		/**
-		 * @brief  MTBDD that provides the context
-		 *
-		 * MTBDD which is used to provide the context, in which the operation
-		 * takes place.
-		 */
-		CUDDSharedMTBDD* SharedMTBDD;
-
-		void* Context;
-
-	public:   // Public methods
-
-		/**
-		 * @brief  Constructor
-		 *
-		 * The constructor of the structure.
-		 */
-		ApplyWithContextCallbackParameters(
-			typename ParentClass::ApplyWithContextFunctionType op,
-			CUDDSharedMTBDD* bdd, void* context)
-			: Op(op), SharedMTBDD(bdd), Context(context)
-		{ }
-
-	};
-
-	/**
-	 * @brief   Static class with apply functions for MTBDD
-	 *
-	 * Static class that is used to provide a separate namespace for apply
-	 * functions for MTBDD. Note that a namespace cannot be declared inside
-	 * a class in C++, that is why a static class is used.
-	 */
-	class ApplyFunctions
-	{
-	private:  // Private methods
-
-		/**
-		 * @brief  Private constructor
-		 *
-		 * Private default constructor which should disable creating an instance
-		 * of the class.
-		 */
-		ApplyFunctions();
-
-
-		/**
-		 * @brief  Private copy constructor
-		 *
-		 * Private copy constructor which should disable creating an instance of
-		 * the class.
-		 *
-		 * @param[in]  func  ApplyFunctions object
-		 */
-		ApplyFunctions(const ApplyFunctions& func);
-
-
-		/**
-		 * @brief  Private assignment operator
-		 *
-		 * Private assignment operator which should disable creating an instance
-		 * of the class.
-		 *
-		 * @param[in]  func  ApplyFunctions object
-		 *
-		 * @returns  Reference to the assigned object
-		 */
-		ApplyFunctions& operator=(const ApplyFunctions& func);
-
-
-		/**
-		 * @brief  Destructor
-		 *
-		 * Private destructor which should disable creating an instance of the
-		 * class.
-		 */
-		~ApplyFunctions();
-
-
-	public:   // Public methods
-
-		/**
-		 * @brief  Overwrites not-0 nodes with their right equivalent
-		 *
-		 * This is an Apply operation that substitutes each sink node in the
-		 * left-hand side MTBDD by the respective sink node in the right-hand side
-		 * MTBDD in case it is not bottom.
-		 *
-		 * @see  SFTA::Private::CUDDFacade::Apply()
-		 *
-		 * @param[in]  lhs   Left-hand side MTBDD sink node
-		 * @param[in]  rhs   Right-hand side MTBDD sink node
-		 * @param[in]  data  Pointer to data (not used, pass 0 pointer)
-		 *
-		 * @returns  Sink node after the operation
-		 */
-		static typename LA::HandleType overwriteByRight(
-			const typename LA::HandleType& lhs, const typename LA::HandleType& rhs,
-			void* data)
+		GenericApplyFunctor(CUDDSharedMTBDD* mtbdd,
+			typename ParentClass::AbstractApplyFunctorType* func)
+			: mtbdd_(mtbdd), func_(func)
 		{
 			// Assertions
-			assert(data == data);  // just to make the compiler happy
-
-			return (rhs == LA::BOTTOM)? lhs : rhs;
+			assert(mtbdd != static_cast<CUDDSharedMTBDD*>(0));
+			assert(func
+				!= static_cast<typename ParentClass::AbstractApplyFunctorType*>(0));
 		}
 
-
-		/**
-		 * @brief  Creates a projection according to the right MTBDD
-		 *
-		 * This is an Apply operation that creates a projection according to the
-		 * right-hand side MTBDD. Places where there is a zero in the right-hand
-		 * side MTBDD are removed (that is bottom is assigned to them).
-		 *
-		 * @see  SFTA::Private::CUDDFacade::Apply()
-		 *
-		 * @param[in]  lhs   Left-hand side MTBDD sink node
-		 * @param[in]  rhs   Right-hand side MTBDD sink node
-		 * @param[in]  data  Pointer to data (not used)
-		 *
-		 * @returns  Sink node after the operation
-		 */
-		static typename LA::HandleType projectByRight(
-			const typename LA::HandleType& lhs, const typename LA::HandleType& rhs,
-			void* data)
+		virtual CUDDFacade::ValueType operator()(const CUDDFacade::ValueType& lhs,
+			const CUDDFacade::ValueType& rhs)
 		{
-			// Assertions
-			assert(data == data);  // just to make the compiler happy
-
-			return (rhs == LA::BOTTOM)? LA::BOTTOM : lhs;
-		}
-
-
-		/**
-		 * @brief  Collects values from the leaves of a MTBDD
-		 *
-		 * This is a monadic Apply operation that collects non-bottom values from
-		 * all leaves into a container.
-		 *
-		 * @see  SFTA::Private::CUDDFacade::MonadicApply()
-		 *
-		 * @param[in]  node  MTBDD's sink node
-		 * @param[in]  data  Pointer to SFTA::CUDDSharedMTBDD::LeafHandleArray
-		 *
-		 * @returns  Unchanged node value
-		 */
-		static typename LA::HandleType collectLeaves(
-			const typename LA::HandleType& node, void* data)
-		{
-			// Assertions
-			assert(static_cast<LeafHandleArray*>(data)
-				!= static_cast<LeafHandleArray*>(0));
-
-			// cast the data to proper data type
-			LeafHandleArray& leaves = *(static_cast<LeafHandleArray*>(data));
-
-			for (typename LeafHandleArray::const_iterator it = leaves.begin();
-				it != leaves.end(); ++it)
-			{	// try to find whether the leaf is already there
-				if (*it == node)
-				{
-					return node;
-				}
-			}
-
-			leaves.push_back(node);
-
-			return node;
-		}
-
-
-		/**
-		 * @brief  Performs generic Apply operation
-		 *
-		 * This is an Apply operation that performs generic Apply operation on two
-		 * MTBDDs. Which Apply operation to be performed is given by the @c data
-		 * parameter, which contains ApplyCallbackParameters with pointer to the
-		 * function and the MTBDD which is to serve as the context for the
-		 * operation.
-		 *
-		 * @see  ApplyCallbackParameters
-		 * @see  Apply()
-		 *
-		 * @param[in]  lhs   Left-hand side MTBDD sink node
-		 * @param[in]  rhs   Right-hand side MTBDD sink node
-		 * @param[in]  data  Pointer to ApplyCallbackParameters
-		 *
-		 * @returns  Result of the operation
-		 */
-		static typename LA::HandleType genericApply(
-			const typename LA::HandleType& lhs,
-			const typename LA::HandleType& rhs, void* data)
-		{
-			// Assertions
-			assert(static_cast<ApplyCallbackParameters*>(data)
-				!= static_cast<ApplyCallbackParameters*>(0));
-
-			// extract low-level callback parameters
-			ApplyCallbackParameters& params =
-				*(static_cast<ApplyCallbackParameters*>(data));
-
-			// get the MTBDD
-			CUDDSharedMTBDD& mtbdd = *(params.SharedMTBDD);
-
-			//SFTA_LOGGER_DEBUG("Performing generic apply on "
-			//	+ Convert::ToString(mtbdd.LA::getLeafOfHandle(lhs))
-			//	+ " and " + Convert::ToString(mtbdd.LA::getLeafOfHandle(rhs)));
-
 			// perform the operation
-			typename LA::LeafType res = (*params.Op)(
-				mtbdd.LA::getLeafOfHandle(lhs), mtbdd.LA::getLeafOfHandle(rhs));
+			typename LA::LeafType res = (*func_)(
+				mtbdd_->LA::getLeafOfHandle(lhs), mtbdd_->LA::getLeafOfHandle(rhs));
 
 			// create a leaf and return its handle
-			return mtbdd.LA::createLeaf(res);
+			return mtbdd_->LA::createLeaf(res);
+		}
+	};
+
+
+	/**
+	 * @brief  Projection Apply functor
+	 *
+	 * Apply functor that makes a projection of the left-hand side MTBDD with
+	 * respect to the right-hand side MTBDD.
+	 */
+	class ProjectByRightApplyFunctor : public CUDDFacade::AbstractApplyFunctor
+	{
+	public:
+
+		virtual CUDDFacade::ValueType operator()(const CUDDFacade::ValueType& lhs,
+			const CUDDFacade::ValueType& rhs)
+		{
+			return (rhs == LA::BOTTOM)? LA::BOTTOM : lhs;
+		}
+	};
+
+
+	/**
+	 * @brief  Overwriting Apply functor
+	 *
+	 * Apply functor that overwrites values in an MTBDD with non-bottom values
+	 * in the right-hand side MTBDD.
+	 */
+	class OverwriteByRightApplyFunctor : public CUDDFacade::AbstractApplyFunctor
+	{
+	public:
+
+		virtual CUDDFacade::ValueType operator()(const CUDDFacade::ValueType& lhs,
+			const CUDDFacade::ValueType& rhs)
+		{
+			return (rhs == LA::BOTTOM)? lhs : rhs;
 		}
 	};
 
 
 private:  // Private data members
+
 
 	/**
 	 * @brief  Interface to CUDD
@@ -499,15 +326,6 @@ private:  // Private data members
 
 
 	/**
-	 * @brief  The name of the Log4cpp category for logging
-	 *
-	 * The name of the Log4cpp category used for logging messages from this
-	 * class.
-	 */
-	static const char* LOG_CATEGORY_NAME;
-
-
-	/**
 	 * @brief  Root for the bottom
 	 *
 	 * Root that points directly to the bottom of the MTBDD.
@@ -516,6 +334,7 @@ private:  // Private data members
 
 
 private:  // Private methods
+
 
 	/**
 	 * @brief  Gets the i-th variable
@@ -527,6 +346,8 @@ private:  // Private methods
 	 * @param[in]  i  The index of the variable
 	 *
 	 * @returns  The variable
+	 *
+	 * @todo TODO Use function that defines number of variables
 	 */
 	inline CUDDFacade::Node* getIthVariable(size_t i)
 	{
@@ -546,6 +367,8 @@ private:  // Private methods
 	 * @param[in]  i  The index of the variable
 	 *
 	 * @returns  Complement of the variable
+	 *
+	 * @todo TODO Use function that defines number of variables
 	 */
 	inline CUDDFacade::Node* getIthVariableNot(size_t i)
 	{
@@ -566,6 +389,8 @@ private:  // Private methods
 	 * @param[in]  value  Value for given variable assignment
 	 *
 	 * @returns  Root of created MTBDD
+	 *
+	 * @todo TODO Use function that defines number of variables
 	 */
 	RootType createMTBDDForVariableAssignment(
 		const VariableAssignmentType& vars, const LeafType& value)
@@ -618,6 +443,8 @@ private:  // Private methods
 	 * @param[in]  vars   Variable assignment
 	 *
 	 * @returns  Root of projection MTBDD
+	 *
+	 * @todo  TODO Use function that defines number of variables
 	 */
 	RootType createMTBDDForVariableProjection(const VariableAssignmentType& vars)
 	{
@@ -700,12 +527,12 @@ public:   // Public methods
 
 		// create the MTBDD with given value at given position
 		RootType mtbddAsgn = createMTBDDForVariableAssignment(asgn, value);
-		// create parameters of Apply function that pass correct callback function
-		CUDDFacade::ApplyCallbackParameters params(
-			ApplyFunctions::overwriteByRight, static_cast<void*>(this));
+
+		OverwriteByRightApplyFunctor overwriter;
+
 		// carry out the Apply operation
 		CUDDFacade::Node* res = cudd_.Apply(RA::getHandleOfRoot(root),
-			RA::getHandleOfRoot(mtbddAsgn), &params);
+			RA::getHandleOfRoot(mtbddAsgn), &overwriter);
 
 		// remove the temporary MTBDD
 		cudd_.RecursiveDeref(RA::getHandleOfRoot(mtbddAsgn));
@@ -727,33 +554,73 @@ public:   // Public methods
 
 		// create the projection MTBDD for given variable assignment
 		RootType mtbddAsgn = createMTBDDForVariableProjection(asgn);
-		// create parameters of Apply function that pass correct callback function
-		CUDDFacade::ApplyCallbackParameters params(
-			ApplyFunctions::projectByRight, static_cast<void*>(this));
+
+		ProjectByRightApplyFunctor projector;
+
 		// carry out the Apply operation
 		CUDDFacade::Node* res = cudd_.Apply(RA::getHandleOfRoot(root),
-			RA::getHandleOfRoot(mtbddAsgn), &params);
+			RA::getHandleOfRoot(mtbddAsgn), &projector);
 
 		// remove the temporary MTBDD
 		cudd_.RecursiveDeref(RA::getHandleOfRoot(mtbddAsgn));
 		RA::eraseRoot(mtbddAsgn);
 
-		// create container for handles of leaves that are at the position
-		LeafHandleArray leavesHandles;
-		// create parameters of monadic Apply function that pass correct callback
-		// function and container for handles of leaves
-		CUDDFacade::MonadicApplyCallbackParameters paramsMon(
-			ApplyFunctions::collectLeaves, static_cast<void*>(&leavesHandles));
-		// carry out the monadic Apply operation
-		CUDDFacade::Node* monRes = cudd_.MonadicApply(res, &paramsMon);
+		/**
+		 * Monadic Apply functor that collects all distinct leaves of given MTBDD
+		 * into an array.
+		 */
+		class CollectLeavesMonadicApplyFunctor
+			: public CUDDFacade::AbstractMonadicApplyFunctor
+		{
+		public: 
+
+			typedef std::set<typename LA::HandleType> LeafHandleSet;
+
+		private:
+
+			LeafHandleSet leaves_;
+
+		public:
+
+			CollectLeavesMonadicApplyFunctor()
+				: leaves_()
+			{	}
+
+			virtual CUDDFacade::ValueType operator()(const CUDDFacade::ValueType& val)
+			{
+				typename LeafHandleSet::const_iterator itLeaves;
+				if ((itLeaves = leaves_.find(val)) == leaves_.end())
+				{	// in case the value has not been found in the set
+					leaves_.insert(val);
+				}
+
+				return val;
+			}
+
+			const LeafHandleSet& GetLeaves() const
+			{
+				return leaves_;
+			}
+		};
+
+		CollectLeavesMonadicApplyFunctor collector;
+
+		// carry out the monadic apply operation
+		CUDDFacade::Node* monRes = cudd_.MonadicApply(res, &collector);
 
 		// remove temporary MTBDDs
 		cudd_.RecursiveDeref(res);
 		cudd_.RecursiveDeref(monRes);
 
+		// get reference to the result
+		const typename CollectLeavesMonadicApplyFunctor::LeafHandleSet& leafSet
+			= collector.GetLeaves();
+
 		typename ParentClass::LeafContainer leaves;
-		for (typename LeafHandleArray::const_iterator it = leavesHandles.begin();
-			it != leavesHandles.end(); ++it)
+		for (typename
+			CollectLeavesMonadicApplyFunctor::LeafHandleSet::const_iterator it
+			= leafSet.begin();
+			it != leafSet.end(); ++it)
 		{	// for each leaf handle
 			if (*it != LA::BOTTOM)
 			{
@@ -780,17 +647,12 @@ public:   // Public methods
 		assert(func
 			!= static_cast<typename ParentClass::AbstractApplyFunctorType*>(0));
 
-		// create parameters of high-level Apply function that pass correct
-		// callback function and this object as the context
-		ApplyCallbackParameters params(func, this);
-		// create parameters of low-level Apply function that pass correct
-		// callback function and abovementioned parameters for the high-level
-		// Apply function
-		CUDDFacade::ApplyCallbackParameters cuddFacadeParams(
-			ApplyFunctions::genericApply, static_cast<void*>(&params));
+
+		GenericApplyFunctor applier(this, func);
+
 		// carry out the Apply operation
 		CUDDFacade::Node* res = cudd_.Apply(RA::getHandleOfRoot(lhs),
-			RA::getHandleOfRoot(rhs), &cuddFacadeParams);
+			RA::getHandleOfRoot(rhs), &applier);
 
 		return RA::allocateRoot(res);
 	}
@@ -814,15 +676,19 @@ public:   // Public methods
 	 */
 	void EraseRoot(RootType root)
 	{
-		// First, for every leaf, call proper release function
+		// @todo  TODO  First, for every leaf, call proper release function
 
-		// create parameters of monadic Apply function that pass correct callback
-		// function and this object to provide context
-		CUDDFacade::MonadicApplyCallbackParameters paramsMon(
-			LA::leafReleaser, static_cast<void*>(this));
+//		// create parameters of monadic Apply function that pass correct callback
+//		// function and this object to provide context
+//		CUDDFacade::MonadicApplyCallbackParameters paramsMon(
+//			LA::leafReleaser, static_cast<void*>(this));
+//		// carry out the monadic Apply operation
+//		CUDDFacade::Node* monRes = cudd_.MonadicApply(RA::getHandleOfRoot(root),
+//			&paramsMon);
+
 		// carry out the monadic Apply operation
 		CUDDFacade::Node* monRes = cudd_.MonadicApply(RA::getHandleOfRoot(root),
-			&paramsMon);
+			LA::getReleaser());
 
 		// remove temporary MTBDDs
 		cudd_.RecursiveDeref(monRes);
@@ -848,18 +714,16 @@ public:   // Public methods
 	{
 		// the array of roots
 		RootArray roots = RA::getAllRoots();
-		// the array of root nodes
-		std::vector<CUDDFacade::Node*> nodes(roots.size());
-		// the array of root names
-		std::vector<std::string> rootNames(roots.size());
+
+		// dictionary to store pointers to roots
+		CUDDFacade::StringNodeMapType rootDict;
 
 		for (size_t i = 0; i < roots.size(); ++i)
-		{	// insert all root nodes and respective names
-			nodes[i] = RA::getHandleOfRoot(roots[i]);
-			rootNames[i] = Convert::ToString(roots[i]);
+		{	// insert all pointers to roots
+			rootDict[Convert::ToString(roots[i])] = RA::getHandleOfRoot(roots[i]);
 		}
 
-		return cudd_.StoreToString(nodes, rootNames);
+		return cudd_.StoreToString(rootDict);
 	}
 
 
@@ -907,18 +771,5 @@ public:   // Public methods
 		}
 	}
 };
-
-
-// Setting the logging category name for Log4cpp
-template
-<
-	typename R,
-	typename L,
-	class VAT,
-	template <typename, typename> class LA,
-	template <typename, typename> class RA
->
-const char* SFTA::CUDDSharedMTBDD<R, L, VAT, LA, RA>::LOG_CATEGORY_NAME
-	= "cudd_shared_mtbdd";
 
 #endif

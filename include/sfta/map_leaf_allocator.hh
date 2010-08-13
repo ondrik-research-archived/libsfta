@@ -20,7 +20,8 @@ namespace SFTA
 		template
 		<
 			typename Leaf,
-			typename Handle
+			typename Handle,
+			class AbstractMonadicApplyFunctor
 		>
 		struct MapLeafAllocator;
 	}
@@ -37,13 +38,17 @@ namespace SFTA
  * 
  * @see  SFTA::CUDDSharedMTBDD
  *
- * @tparam  Leaf    The type of leaf.
- * @tparam  Handle  The type of handle.
+ * @tparam  Leaf                         The type of leaf.
+ * @tparam  Handle                       The type of handle.
+ * @tparam  AbstractMonadicApplyFunctor  The type of the monadic Apply functor
+ *                                       of the underlying MTBDD package
+ *                                       facade.
  */
 template
 <
 	typename Leaf,
-	typename Handle
+	typename Handle,
+	class AbstractMonadicApplyFunctor
 >
 struct SFTA::Private::MapLeafAllocator
 {
@@ -64,7 +69,6 @@ public:   // Public data types
 	 */
 	typedef Handle HandleType;
 
-
 private:  // Private data types
 
 	/**
@@ -81,6 +85,25 @@ private:  // Private data types
 	 * The type of the Convert class.
 	 */
 	typedef SFTA::Private::Convert Convert;
+
+private:   // Private data types
+
+
+		/**
+		 * @brief  Leaf releaser
+		 *
+		 * Monadic Apply functor that properly releases leaves.
+		 */
+		class ReleaserMonadicApplyFunctor : public AbstractMonadicApplyFunctor
+		{
+		public:
+
+			virtual HandleType operator()(const HandleType& val)
+			{
+				// @todo  TODO  Properly release the leaf
+				return val;
+			}
+		};
 
 
 private:  // Private data members
@@ -103,12 +126,11 @@ private:  // Private data members
 
 
 	/**
-	 * @brief  The name of the Log4cpp category for logging
+	 * @brief  Leaf releaser
 	 *
-	 * The name of the Log4cpp category used for logging messages from this
-	 * class.
+	 * Monadic Apply functor that is used when a leaf is released.
 	 */
-	static const char* LOG_CATEGORY_NAME;
+	AbstractMonadicApplyFunctor* releaser_;
 
 
 protected:// Protected data memebers
@@ -120,6 +142,10 @@ protected:// Protected data memebers
 	 */
 	static const HandleType BOTTOM;
 
+private:  // Private methods
+
+	MapLeafAllocator(const MapLeafAllocator&);
+	MapLeafAllocator& operator=(const MapLeafAllocator&);
 
 protected:// Protected methods
 
@@ -129,7 +155,7 @@ protected:// Protected methods
 	 * The default constructor
 	 */
 	MapLeafAllocator()
-		: asocArr_(), nextIndex_(1)
+		: asocArr_(), nextIndex_(1), releaser_(new ReleaserMonadicApplyFunctor())
 	{
 		// initialize the value of bottom
 		asocArr_[BOTTOM] = LeafType();
@@ -245,27 +271,17 @@ protected:// Protected methods
 
 
 	/**
-	 * @brief  Monadic Apply function to call when a leaf is released
+	 * @brief  Gets the release functor
 	 *
-	 * A static function that is to be the operation performed by monadic Apply
-	 * on a MTBDD whenever it is released.
+	 * Returns the release monadic Apply functor. This functor takes care of
+	 * properly releasing given leaf.
 	 *
-	 * @see  CUDDFacade::MonadicApplyCallbackParameters
-	 *
-	 * @param[in]  node  The leaf node of the MTBDD
-	 * @param[in]  data  Pointer to MapLeafAllocator
-	 *
-	 * @returns  The input leaf node
+	 * @returns  Proper release monadic Apply functor
 	 */
-	static HandleType leafReleaser(const HandleType& node, void* data)
+	inline AbstractMonadicApplyFunctor* getLeafReleaser()
 	{
-		// Assertions
-		assert(static_cast<MapLeafAllocator*>(data)
-			!= static_cast<MapLeafAllocator*>(0));
-
-		return node;
+		return releaser_;
 	}
-
 
 	/**
 	 * @brief  Destructor
@@ -278,21 +294,14 @@ protected:// Protected methods
 };
 
 
-// Setting the logging category name for Log4cpp
-template
-<
-	typename L,
-	typename H
->
-const char* SFTA::Private::MapLeafAllocator<L, H>::LOG_CATEGORY_NAME = "map_leaf_allocator";
-
-
 // The bottom of the MTBDD
 template
 <
 	typename L,
-	typename H
+	typename H,
+	class AMAF
 >
-const typename SFTA::Private::MapLeafAllocator<L, H>::HandleType SFTA::Private::MapLeafAllocator<L, H>::BOTTOM = 0;
+const typename SFTA::Private::MapLeafAllocator<L, H, AMAF>::HandleType
+	SFTA::Private::MapLeafAllocator<L, H, AMAF>::BOTTOM = 0;
 
 #endif
