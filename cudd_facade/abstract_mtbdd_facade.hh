@@ -16,7 +16,10 @@ namespace SFTA
 {
 	namespace Private
 	{
-		template <class Leaf>
+		template
+		<
+			typename Leaf
+		>
 		class AbstractMTBDDFacade;
 	}
 }
@@ -34,7 +37,7 @@ namespace SFTA
  */
 template
 <
-	class Leaf
+	typename Leaf
 >
 class SFTA::Private::AbstractMTBDDFacade
 {
