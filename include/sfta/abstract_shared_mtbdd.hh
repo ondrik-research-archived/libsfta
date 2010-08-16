@@ -183,6 +183,23 @@ public:  // Public methods
 
 
 	/**
+	 * @brief  Monadic Apply function for an MTBDD
+	 *
+	 * Performs given monadic Apply operation on an MTBDD specified by its root.
+	 *
+	 * @see  AbstractSharedMTBDD::AbstractMonadicApplyFunctorType
+	 *
+	 * @param[in]  root  Root of the MTBDD
+	 * @param[in]  func  The operation to be performed on all leaves of
+	 *                   given MTBDD
+	 *
+	 * @returns  Root of the MTBDD with the result of the operation
+	 */
+	virtual RootType MonadicApply(const RootType& root,
+		AbstractMonadicApplyFunctorType* func) = 0;
+
+
+	/**
 	 * @brief  Creates a new root of a MTBDD
 	 *
 	 * Creates a new MTBDD represented by its root. All paths in the new MTBDD
