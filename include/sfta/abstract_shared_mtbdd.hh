@@ -221,16 +221,6 @@ public:  // Public methods
 
 
 	/**
-	 * @brief  Returns root value for the bottom
-	 *
-	 * This method returns the value of the root that points to bottom
-	 *
-	 * @returns  Value of the root for bottom
-	 */
-	virtual RootType GetRootForBottom() const = 0;
-
-
-	/**
 	 * @brief  Serializes the MTBDD into a string
 	 *
 	 * This function serializes the MTBDD into a string
