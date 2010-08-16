@@ -80,9 +80,9 @@ public:  // Public data types
 
 
 	/**
-	 * @brief  The container type for leafs
+	 * @brief  The container type for leaves
 	 *
-	 * The type that serves as a container of several leafs. This type is used
+	 * The type that serves as a container of several leaves. This type is used
 	 * for example by the GetValue() method.
 	 *
 	 * @see  GetValue()
@@ -176,7 +176,7 @@ public:  // Public methods
 	 * @param[in]  func  The operation to be performed on respective leaves of
 	 *                   given MTBDDs
 	 *
-	 * @returns  Root of a MTBDD with the result of the operation
+	 * @returns  Root of the MTBDD with the result of the operation
 	 */
 	virtual RootType Apply(const RootType& lhs, const RootType& rhs,
 		AbstractApplyFunctorType* func) = 0;
