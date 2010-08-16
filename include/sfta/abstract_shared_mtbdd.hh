@@ -125,6 +125,41 @@ public:  // Public data types
 	};
 
 
+	/**
+	 * @brief  The base class for functors that perform monadic @c Apply
+	 *         operations
+	 *
+	 * Abstract class that defines the interface for functors that carry out
+	 * monadic @c Apply operations.
+	 */
+	class AbstractMonadicApplyFunctorType
+	{
+	public:   // Public methods
+
+
+		/**
+		 * @brief  The operation of the functor
+		 *
+		 * Abstract method that performs the operation of the functor
+		 *
+		 * @param[in]  val  Operand of the operation
+		 *
+		 * @returns  Result of the operation
+		 */
+		virtual LeafType operator()(const LeafType& val) = 0;
+
+
+		/**
+		 * @brief  Destructor
+		 *
+		 * The destructor
+		 */
+		virtual ~AbstractMonadicApplyFunctorType()
+		{ }
+
+	};
+
+
 public:  // Public methods
 
 	/**
