@@ -134,22 +134,6 @@ private:   // Private data types
 	ParentClass;
 
 
-	/**
-	 * @brief  The type of this class
-	 *
-	 * The data type of this class with correct template instantiation.
-	 */
-	typedef CUDDSharedMTBDD
-	<
-		RootType,
-		LeafType,
-		VariableAssignmentType,
-		LeafAllocator,
-		RootAllocator
-	>
-	ThisClass;
-
-
 public:    // Public data types
 
 	/**
