@@ -89,21 +89,21 @@ private:  // Private data types
 private:   // Private data types
 
 
-		/**
-		 * @brief  Leaf releaser
-		 *
-		 * Monadic Apply functor that properly releases leaves.
-		 */
-		class ReleaserMonadicApplyFunctor : public AbstractMonadicApplyFunctor
-		{
-		public:
+	/**
+	 * @brief  Leaf releaser
+	 *
+	 * Monadic Apply functor that properly releases leaves.
+	 */
+	class ReleaserMonadicApplyFunctor : public AbstractMonadicApplyFunctor
+	{
+	public:
 
-			virtual HandleType operator()(const HandleType& val)
-			{
-				// @todo  TODO  Properly release the leaf
-				return val;
-			}
-		};
+		virtual HandleType operator()(const HandleType& val)
+		{
+			// @todo  TODO  Properly release the leaf
+			return val;
+		}
+	};
 
 
 private:  // Private data members
