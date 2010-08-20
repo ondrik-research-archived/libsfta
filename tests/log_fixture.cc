@@ -9,6 +9,9 @@
  *
  *****************************************************************************/
 
+// Boost headers
+#include <boost/test/unit_test.hpp>
+
 // testing header files
 #include "log_fixture.hh"
 
@@ -18,6 +21,8 @@ bool LogFixture::logInitialized_ = false;
 
 LogFixture::LogFixture()
 {
+	boost::unit_test::unit_test_log.set_threshold_level(boost::unit_test::log_messages);
+
 	if (!logInitialized_)
 	{	// if the logging has not been initialized yet
 		logInitialized_ = true;
