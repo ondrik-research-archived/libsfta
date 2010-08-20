@@ -346,14 +346,6 @@ private:  // Private data members
 	CUDDFacade cudd_;
 
 
-	/**
-	 * @brief  Root for the bottom
-	 *
-	 * Root that points directly to the bottom of the MTBDD.
-	 */
-	RootType bottom_;
-
-
 private:  // Private methods
 
 
@@ -507,24 +499,16 @@ private:  // Private methods
 
 public:   // Public methods
 
+
 	/**
 	 * @brief  Constructor
 	 *
 	 * The constructor of CUDDSharedMTBDD.
 	 */
-	CUDDSharedMTBDD() : cudd_(), bottom_()
+	CUDDSharedMTBDD() : cudd_()
 	{
 		// set the bottom
 		LA::setBottom(LeafType());
-
-		CUDDFacade::Node* btm = cudd_.AddConst(LA::BOTTOM);
-		cudd_.Ref(btm);
-		cudd_.SetBackground(btm);
-
-		CUDDFacade::Node* node = cudd_.ReadBackground();
-		cudd_.Ref(node);
-
-		bottom_ = RA::allocateRoot(node);
 	}
 
 
@@ -721,12 +705,6 @@ public:   // Public methods
 	virtual void SetBottomValue(const LeafType& bottom)
 	{
 		LA::setBottom(bottom);
-	}
-
-
-	virtual RootType GetRootForBottom() const
-	{
-		return bottom_;
 	}
 
 
