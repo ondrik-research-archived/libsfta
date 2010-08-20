@@ -703,10 +703,7 @@ public:
 
 	CUDDFacadeFixture()
 		: varToNumDict_(), varCounter_(0)
-	{
-		boost::unit_test::unit_test_log.set_threshold_level(
-			boost::unit_test::log_messages);
-	}
+	{ }
 
 };
 
