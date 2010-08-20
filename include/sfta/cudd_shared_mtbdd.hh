@@ -392,6 +392,33 @@ private:  // Private methods
 
 
 	/**
+	 * @brief  Gets node for variable assignment value
+	 *
+	 * Gets node at index @f$i@f$ for given variable assignment.
+	 *
+	 * @param[in]  i    Index of the node
+	 * @param[in]  val  Value of the variable assignment
+	 *
+	 * @returns  Node for given variable assignment
+	 */
+	inline CUDDFacade::Node* getNodeForVariableAssignmentValue(size_t i, char val)
+	{
+		switch (val)
+		{
+			case VariableAssignmentType::ONE:
+				return getIthVariable(i);
+			case VariableAssignmentType::ZERO:
+				return getIthVariableNot(i);
+			case VariableAssignmentType::DONT_CARE:
+				return static_cast<CUDDFacade::Node*>(0);
+			default:
+				throw std::runtime_error("Invalid variable assignment type passed "
+					" to getNodeForVariableAssignmentValue()!");
+		}
+	}
+
+
+	/**
 	 * @brief  Creates a new MTBDD for a variable assignment
 	 *
 	 * Creates a new MTBDD in the shared MTBDD for given variable assignment @c
@@ -415,30 +442,16 @@ private:  // Private methods
 		for (size_t i = 0; i < vars.Size(); ++i)
 		{	// for all variables
 			CUDDFacade::Node* var = static_cast<CUDDFacade::Node*>(0);
-			if (vars.GetIthVariableValue(i) == VariableAssignmentType::ONE)
-			{	// in case the variable has value '1'
-				var = getIthVariable(i);
+			if ((var = getNodeForVariableAssignmentValue(i,
+				vars.GetIthVariableValue(i))) !=
+				static_cast<typename CUDDFacade::Node*>(0))
+			{
+				CUDDFacade::Node* tmp = cudd_.Times(node, var);
+				cudd_.Ref(tmp);
+				cudd_.RecursiveDeref(node);
+				cudd_.RecursiveDeref(var);
+				node = tmp;
 			}
-			else if (vars.GetIthVariableValue(i) == VariableAssignmentType::ZERO)
-			{	// in case the variable has value '0'
-				var = getIthVariableNot(i);
-			}
-			else if (vars.GetIthVariableValue(i)
-				== VariableAssignmentType::DONT_CARE)
-			{	// in case the variable is not in the assignment
-				continue;
-			}
-			else
-			{	// in case something else occured
-				throw std::runtime_error("Invalid variable assignment type returned "
-					"by VariableAssignmentType::GetIthVariableValue()!");
-			}
-
-			CUDDFacade::Node* tmp = cudd_.Times(node, var);
-			cudd_.Ref(tmp);
-			cudd_.RecursiveDeref(node);
-			cudd_.RecursiveDeref(var);
-			node = tmp;
 		}
 
 		return RA::allocateRoot(node);
@@ -467,30 +480,16 @@ private:  // Private methods
 		for (size_t i = 0; i < vars.Size(); ++i)
 		{	// for all variables
 			CUDDFacade::Node* var = static_cast<CUDDFacade::Node*>(0);
-			if (vars.GetIthVariableValue(i) == VariableAssignmentType::ONE)
-			{	// in case the variable has value '1'
-				var = getIthVariable(i);
+			if ((var = getNodeForVariableAssignmentValue(i,
+				vars.GetIthVariableValue(i))) !=
+				static_cast<typename CUDDFacade::Node*>(0))
+			{
+				CUDDFacade::Node* tmp = cudd_.Times(node, var);
+				cudd_.Ref(tmp);
+				cudd_.RecursiveDeref(node);
+				cudd_.RecursiveDeref(var);
+				node = tmp;
 			}
-			else if (vars.GetIthVariableValue(i) == VariableAssignmentType::ZERO)
-			{	// in case the variable has value '0'
-				var = getIthVariableNot(i);
-			}
-			else if (vars.GetIthVariableValue(i)
-				== VariableAssignmentType::DONT_CARE)
-			{	// in case the variable is not in the assignment
-				continue;
-			}
-			else
-			{	// in case something else occured
-				throw std::runtime_error("Invalid variable assignment type returned "
-					"by VariableAssignmentType::GetIthVariableValue()!");
-			}
-
-			CUDDFacade::Node* tmp = cudd_.Times(node, var);
-			cudd_.Ref(tmp);
-			//cudd_.RecursiveDeref(node);
-			//cudd_.RecursiveDeref(var);
-			node = tmp;
 		}
 
 		return RA::allocateRoot(node);
