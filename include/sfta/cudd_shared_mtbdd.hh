@@ -661,18 +661,11 @@ public:   // Public methods
 	}
 
 
-	/**
-	 * @brief  Erases a root
-	 *
-	 * Erases given root and dereferences proper MTBDD
-	 *
-	 * @param[in]  root  The root of the MTBDD to be erased
-	 */
-	void EraseRoot(RootType root)
+	virtual void EraseRoot(RootType root)
 	{
 		// carry out the monadic Apply operation
 		CUDDFacade::Node* monRes = cudd_.MonadicApply(RA::getHandleOfRoot(root),
-			LA::getReleaser());
+			LA::getLeafReleaser());
 
 		// remove temporary MTBDDs
 		cudd_.RecursiveDeref(monRes);
