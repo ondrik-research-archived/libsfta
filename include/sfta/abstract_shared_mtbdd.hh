@@ -184,7 +184,8 @@ public:  // Public methods
 	 *
 	 * This function returns a container with all leaves that are reachable by
 	 * given variable assignment. Note that the references in the container may
-	 * be made invalid by following operations on the MTBDD.
+	 * be made invalid by following operations on the MTBDD. All the items in
+	 * the container are guaranteed to be unique.
 	 *
 	 * @see  LeafContainer
 	 * @see  SetValue()
@@ -243,6 +244,16 @@ public:  // Public methods
 	 * @returns  A root of a new MTBDD
 	 */
 	virtual RootType CreateRoot() = 0;
+
+
+	/**
+	 * @brief  Erases a root
+	 *
+	 * Erases given root and dereferences proper MTBDD
+	 *
+	 * @param[in]  root  The root of the MTBDD to be erased
+	 */
+	virtual void EraseRoot(RootType root) = 0;
 
 
 	/**
