@@ -4,7 +4,8 @@
  *  Copyright (c) 2010  Ondra Lengal <ondra@lengal.net>
  *
  *  Description:
- *    Test suite for CUDDSharedMTBDD class.
+ *    Test suite for CUDDSharedMTBDD class with roots as unsigneds and vectors
+ *    of unsigneds as leaves.
  *
  *****************************************************************************/
 
@@ -19,7 +20,7 @@ using SFTA::CUDDSharedMTBDD;
 
 // Boost headers
 #define BOOST_TEST_DYN_LINK
-#define BOOST_TEST_MODULE CUDDSharedMTBDD
+#define BOOST_TEST_MODULE CUDDSharedMTBDDUV
 #include <boost/test/unit_test.hpp>
 
 // testing headers
@@ -30,12 +31,12 @@ using SFTA::CUDDSharedMTBDD;
  *                                  Fixtures                                  *
  ******************************************************************************/
 
-class CUDDSharedMTBDDFixture : public LogFixture
+class CUDDSharedMTBDDUnsignedVectorFixture : public LogFixture
 {
 private:
 
-	CUDDSharedMTBDDFixture(const CUDDSharedMTBDDFixture& fixture);
-	CUDDSharedMTBDDFixture& operator=(const CUDDSharedMTBDDFixture& rhs);
+	CUDDSharedMTBDDUnsignedVectorFixture(const CUDDSharedMTBDDUnsignedVectorFixture& fixture);
+	CUDDSharedMTBDDUnsignedVectorFixture& operator=(const CUDDSharedMTBDDUnsignedVectorFixture& rhs);
 
 public:
 
@@ -48,10 +49,8 @@ public:
 
 public:
 
-	CUDDSharedMTBDDFixture()
-	{
-		boost::unit_test::unit_test_log.set_threshold_level(boost::unit_test::log_messages);
-	}
+	CUDDSharedMTBDDUnsignedVectorFixture()
+	{ }
 
 };
 
@@ -85,7 +84,7 @@ public:
 //};
 
 
-BOOST_FIXTURE_TEST_SUITE(suite, CUDDSharedMTBDDFixture)
+BOOST_FIXTURE_TEST_SUITE(suite, CUDDSharedMTBDDUnsignedVectorFixture)
 
 BOOST_AUTO_TEST_CASE(setters_and_getters_test)
 {
