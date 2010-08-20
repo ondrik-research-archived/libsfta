@@ -262,6 +262,49 @@ private:   // Private data types
 
 
 	/**
+	 * @brief  Generic monadic Apply functor
+	 *
+	 * Monadic Apply functor that can generically carry out an arbitrary
+	 * operation defined on higher level, i.e. using the leaves of
+	 * CUDDSharedMTBDD
+	 */
+	class GenericMonadicApplyFunctor
+		: public CUDDFacade::AbstractMonadicApplyFunctor
+	{
+	private:
+
+		CUDDSharedMTBDD* mtbdd_;
+		typename ParentClass::AbstractMonadicApplyFunctorType* func_;
+
+	private:
+
+		GenericMonadicApplyFunctor(const GenericMonadicApplyFunctor&);
+		GenericMonadicApplyFunctor& operator=(const GenericMonadicApplyFunctor&);
+
+	public:
+
+		GenericMonadicApplyFunctor(CUDDSharedMTBDD* mtbdd,
+			typename ParentClass::AbstractMonadicApplyFunctorType* func)
+			: mtbdd_(mtbdd), func_(func)
+		{
+			// Assertions
+			assert(mtbdd != static_cast<CUDDSharedMTBDD*>(0));
+			assert(func
+				!= static_cast<typename ParentClass::AbstractMonadicApplyFunctorType*>(0));
+		}
+
+		virtual CUDDFacade::ValueType operator()(const CUDDFacade::ValueType& val)
+		{
+			// perform the operation
+			typename LA::LeafType res = (*func_)(mtbdd_->LA::getLeafOfHandle(val));
+
+			// create a leaf and return its handle
+			return mtbdd_->LA::createLeaf(res);
+		}
+	};
+
+
+	/**
 	 * @brief  Projection Apply functor
 	 *
 	 * Apply functor that makes a projection of the left-hand side MTBDD with
