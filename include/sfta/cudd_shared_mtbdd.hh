@@ -195,14 +195,6 @@ private:   // Private data types
 
 
 	/**
-	 * @brief  The type for an array of variables
-	 *
-	 * The type for storage of an array of variables.
-	 */
-	typedef std::vector<CUDDFacade::Node*> VariableArrayType;
-
-
-	/**
 	 * @brief  The type for an array of roots
 	 *
 	 * The type that represents an array of roots.
