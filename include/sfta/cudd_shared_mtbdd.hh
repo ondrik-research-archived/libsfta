@@ -511,30 +511,11 @@ public:   // Public methods
 	}
 
 
-	/**
-	 * @brief  Sets the value of a sink node
-	 *
-	 * This method sets the value of a sink node of given MTBDD at variable
-	 * assignment denoted by @c asgn to given value.
-	 *
-	 * @see  GetValue()
-	 *
-	 * @param[in]  root   Root of the MTBDD in which the value is to be changed
-	 * @param[in]  asgn   Variable assignment determining the sink node
-	 * @param[in]  value  Value to which the sink node is to be changed
-	 */
 	virtual void SetValue(const RootType& root,
 		const VariableAssignmentType& asgn, const LeafType& value)
 	{
-		//SFTA_LOGGER_DEBUG("Setting value of root " + Convert::ToString(root)
-		//	+ " at " + Convert::ToString(asgn) + " to " + Convert::ToString(value));
-
-		// create the MTBDD with given value at given position
 		RootType mtbddAsgn = createMTBDDForVariableAssignment(asgn, value);
-
 		OverwriteByRightApplyFunctor overwriter;
-
-		// carry out the Apply operation
 		CUDDFacade::Node* res = cudd_.Apply(RA::getHandleOfRoot(root),
 			RA::getHandleOfRoot(mtbddAsgn), &overwriter);
 
@@ -553,15 +534,8 @@ public:   // Public methods
 	virtual typename ParentClass::LeafContainer GetValue(const RootType& root,
 		const VariableAssignmentType& asgn)
 	{
-		//SFTA_LOGGER_DEBUG("Reading value of root " + Convert::ToString(root)
-		//	+ " at " + Convert::ToString(asgn));
-
-		// create the projection MTBDD for given variable assignment
 		RootType mtbddAsgn = createMTBDDForVariableProjection(asgn);
-
 		ProjectByRightApplyFunctor projector;
-
-		// carry out the Apply operation
 		CUDDFacade::Node* res = cudd_.Apply(RA::getHandleOfRoot(root),
 			RA::getHandleOfRoot(mtbddAsgn), &projector);
 
@@ -576,7 +550,7 @@ public:   // Public methods
 		class CollectLeavesMonadicApplyFunctor
 			: public CUDDFacade::AbstractMonadicApplyFunctor
 		{
-		public: 
+		public:
 
 			typedef std::set<typename LA::HandleType> LeafHandleSet;
 
@@ -608,8 +582,6 @@ public:   // Public methods
 		};
 
 		CollectLeavesMonadicApplyFunctor collector;
-
-		// carry out the monadic apply operation
 		CUDDFacade::Node* monRes = cudd_.MonadicApply(res, &collector);
 
 		// remove temporary MTBDDs
@@ -631,9 +603,6 @@ public:   // Public methods
 				leaves.push_back(&LA::getLeafOfHandle(*it));
 			}
 		}
-
-		//SFTA_LOGGER_DEBUG("Read value of root " + Convert::ToString(root)
-		//	+ " at " + Convert::ToString(asgn) + ": " + Convert::ToString(leaves));
 
 		return leaves;
 	}
@@ -701,16 +670,6 @@ public:   // Public methods
 	 */
 	void EraseRoot(RootType root)
 	{
-		// @todo  TODO  First, for every leaf, call proper release function
-
-//		// create parameters of monadic Apply function that pass correct callback
-//		// function and this object to provide context
-//		CUDDFacade::MonadicApplyCallbackParameters paramsMon(
-//			LA::leafReleaser, static_cast<void*>(this));
-//		// carry out the monadic Apply operation
-//		CUDDFacade::Node* monRes = cudd_.MonadicApply(RA::getHandleOfRoot(root),
-//			&paramsMon);
-
 		// carry out the monadic Apply operation
 		CUDDFacade::Node* monRes = cudd_.MonadicApply(RA::getHandleOfRoot(root),
 			LA::getReleaser());
