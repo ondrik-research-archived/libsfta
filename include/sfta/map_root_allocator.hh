@@ -120,6 +120,12 @@ protected:// protected methods
 	{
 		arr_[nextIndex_] = handle;
 		++nextIndex_;
+
+		if (nextIndex_ == 0)
+		{	// in case we ran out of indices
+			throw std::runtime_error("MapRootAllocator ran out of roots!");
+		}
+
 		return nextIndex_ - 1;
 	}
 
