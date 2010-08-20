@@ -45,7 +45,7 @@ namespace SFTA
  *
  * Class that implements shared multi-terminal BDD based on CUDD package
  * (namely using the SFTA::Private::CUDDFacade interface). The class properly
- * manages its resources. 
+ * manages its resources.
  *
  * @see  SFTA::Private::CUDDFacade
  *
@@ -55,11 +55,11 @@ namespace SFTA
  * @tparam  VariableAssignment  The type that is used for representation of
  *                              Boolean variable assignment, i.e.
  *                              representation of a path in the BDD.
- * @tparam  LeafAllocator       The allocator that is used to allocate for
- *                              leafs and (in case it is necessary) provide
- *                              binding between the leafs and handles stored
+ * @tparam  LeafAllocator       The allocator that is used to allocate
+ *                              leaves and (in case it is necessary) provide
+ *                              binding between the leaves and handles stored
  *                              in the MTBDD. The allocator should behave in
- *                              such a way, that for leafs that are equal
+ *                              such a way, that for leaves that are equal
  *                              should generate handles that are also equal.
  * @tparam  RootAllocator       The allocator for root nodes of MTBDDs.
  */
@@ -136,11 +136,12 @@ private:   // Private data types
 
 public:    // Public data types
 
+
 	/**
-	 * @brief  The container type for leafs
+	 * @brief  The container type for leaves
 	 *
-	 * The type that serves as a container of several leafs. This type is used
-	 * for example byt the GetValue() method.
+	 * The type that serves as a container of several leaves. This type is used
+	 * by the GetValue() method.
 	 *
 	 * @see  GetValue()
 	 */
@@ -148,6 +149,7 @@ public:    // Public data types
 
 
 private:   // Private data types
+
 
 	/**
 	 * @brief  The type of the leaf allocator
@@ -365,14 +367,14 @@ private:  // Private methods
 	/**
 	 * @brief  Creates a new MTBDD for a variable assignment
 	 *
-	 * Creates a new MTBDD in the shared MTBDD for given variable assignment
-	 * @c vars = @f$(x_1, x_2, \dots, x_n)@f$ equal to given value and returns
+	 * Creates a new MTBDD in the shared MTBDD for given variable assignment @c
+	 * vars = @f$(x_1, x_2, \dots, x_n)@f$ equal to the given value and returns
 	 * the root of the MTBDD.
 	 *
 	 * @param[in]  vars   Variable assignment
 	 * @param[in]  value  Value for given variable assignment
 	 *
-	 * @returns  Root of created MTBDD
+	 * @returns  The root of the created MTBDD
 	 *
 	 * @todo TODO Use function that defines number of variables
 	 */
@@ -630,7 +632,6 @@ public:   // Public methods
 		// Assertions
 		assert(func
 			!= static_cast<typename ParentClass::AbstractApplyFunctorType*>(0));
-
 
 		GenericApplyFunctor applier(this, func);
 
