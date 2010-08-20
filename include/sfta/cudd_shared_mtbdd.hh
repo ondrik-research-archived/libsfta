@@ -661,6 +661,28 @@ public:   // Public methods
 	}
 
 
+	/**
+	 * @brief  @copybrief  SFTA::AbstractSharedMTBDD::MonadicApply()
+	 *
+	 * @copydetails  SFTA::AbstractSharedMTBDD::MonadicApply()
+	 */
+	virtual RootType MonadicApply(const RootType& root,
+		typename ParentClass::AbstractMonadicApplyFunctorType* func)
+	{
+		// Assertions
+		assert(func
+			!= static_cast<typename ParentClass::AbstractMonadicApplyFunctorType*>(0));
+
+		GenericMonadicApplyFunctor applier(this, func);
+
+		// carry out the monadic Apply operation
+		CUDDFacade::Node* res = cudd_.MonadicApply(RA::getHandleOfRoot(root),
+			&applier);
+
+		return RA::allocateRoot(res);
+	}
+
+
 	virtual RootType CreateRoot()
 	{
 		CUDDFacade::Node* node = cudd_.ReadBackground();
