@@ -155,11 +155,9 @@ protected:// Protected methods
 	 * The default constructor
 	 */
 	MapLeafAllocator()
-		: asocArr_(), nextIndex_(1), releaser_(new ReleaserMonadicApplyFunctor())
-	{
-		// initialize the value of bottom
-		asocArr_[BOTTOM] = LeafType();
-	}
+		: asocArr_(), nextIndex_(BOTTOM + 1),
+		releaser_(new ReleaserMonadicApplyFunctor())
+	{ }
 
 
 	/**
@@ -289,7 +287,9 @@ protected:// Protected methods
 	 * The destructor.
 	 */
 	~MapLeafAllocator()
-	{ }
+	{
+		delete releaser_;
+	}
 
 };
 
