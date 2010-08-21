@@ -211,7 +211,7 @@ public:
 		std::istringstream iss(str);
 		if (!(iss >> result))
 		{	// if there was an error
-			throw std::invalid_argument("SFTA::Private::Convert::FromString: Invalid argument");
+			throw std::invalid_argument(__func__ + std::string(": invalid argument"));
 		}
 
 		return result;
