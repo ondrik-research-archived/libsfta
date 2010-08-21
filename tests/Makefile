@@ -82,9 +82,11 @@ RANLIB          = ranlib
 #                                 Rules                                       #
 ###############################################################################
 
-.PHONY: all cudd_facade sfta clean test
+.PHONY: all cudd_facade sfta clean test libs
 
-all: cudd_facade sfta $(EXE_FILES)
+all: libs $(EXE_FILES)
+
+libs: cudd_facade sfta
 
 cudd_facade:
 	cd ../cudd_facade ; make
