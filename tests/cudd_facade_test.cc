@@ -7,16 +7,19 @@
  *    Test suite for CUDDFacade class.
  *
  *****************************************************************************/
+
+// SFTA headers
 #include <sfta/convert.hh>
 #include <sfta/cudd_facade.hh>
+#include <sfta/formula_parser.hh>
 using SFTA::Private::CUDDFacade;
 using SFTA::Private::Convert;
+using SFTA::Private::FormulaParser;
 
 // Boost headers
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE CUDDFacade
 #include <boost/test/unit_test.hpp>
-#include <boost/algorithm/string.hpp>
 #include <boost/random/mersenne_twister.hpp>
 
 // testing headers
@@ -34,12 +37,12 @@ using SFTA::Private::Convert;
  */
 const char* const STANDARD_TEST_CASES[] =
 {
-	" 3 * ~x1 * ~x2 *  x3 *  x4",
-	" 4 * ~x1 *  x2 * ~x3 * ~x4",
-	" 9 *  x1 * ~x2 * ~x3 *  x4",
-	"14 *  x1 *  x2 *  x3 * ~x4",
-	"14 *  x1 *  x2 *  x3 * ~x4",
-	"15 *  x1 *  x2 *  x3 *  x4"
+	"~x1 * ~x2 *  x3 *  x4 =  3",
+	"~x1 *  x2 * ~x3 * ~x4 =  4",
+	" x1 * ~x2 * ~x3 *  x4 =  9",
+	" x1 *  x2 *  x3 * ~x4 = 14",
+	" x1 *  x2 *  x3 * ~x4 = 14",
+	" x1 *  x2 *  x3 *  x4 = 15"
 };
 
 /**
@@ -92,16 +95,16 @@ const char* const SQUARED_TEST_CASES_TABLE =
  */
 const char* const STANDARD_FAIL_CASES[] =
 {
-	" 1 * ~x1 * ~x2 * ~x3 *  x4",
-	" 2 * ~x1 * ~x2 *  x3 * ~x4",
-	" 5 * ~x1 *  x2 * ~x3 *  x4",
-	" 6 * ~x1 *  x2 *  x3 * ~x4",
-	" 7 * ~x1 *  x2 *  x3 *  x4",
-	" 8 *  x1 * ~x2 * ~x3 * ~x4",
-	"10 *  x1 * ~x2 *  x3 * ~x4",
-	"11 *  x1 * ~x2 *  x3 *  x4",
-	"12 *  x1 *  x2 * ~x3 * ~x4",
-	"13 *  x1 *  x2 * ~x3 *  x4"
+	"~x1 * ~x2 * ~x3 *  x4 =  1",
+	"~x1 * ~x2 *  x3 * ~x4 =  2",
+	"~x1 *  x2 * ~x3 *  x4 =  5",
+	"~x1 *  x2 *  x3 * ~x4 =  6",
+	"~x1 *  x2 *  x3 *  x4 =  7",
+	" x1 * ~x2 * ~x3 * ~x4 =  8",
+	" x1 * ~x2 *  x3 * ~x4 = 10",
+	" x1 * ~x2 *  x3 *  x4 = 11",
+	" x1 *  x2 * ~x3 * ~x4 = 12",
+	" x1 *  x2 * ~x3 *  x4 = 13"
 };
 
 
@@ -150,28 +153,6 @@ public:  // Public types
 	 * Dictionary that maps string to unsigned.
 	 */
 	typedef std::map<std::string, unsigned> StringToUnsignedDictType;
-
-	/**
-	 * @brief  Type for variable occurence
-	 *
-	 * Type that holds name of a variable and information whether it occurs in
-	 * positive or negative.
-	 */
-	typedef std::pair<std::string, bool> VariableOccurenceType;
-
-	/**
-	 * @brief  List of variable occurences
-	 *
-	 * List of variable occurences of type VariableOccurenceType.
-	 */
-	typedef std::vector<VariableOccurenceType> VariableListType;
-
-	/**
-	 * @brief  Parser result type
-	 *
-	 * Result type of the parser of formulae.
-	 */
-	typedef std::pair<ValueType, VariableListType> ParserResultType;
 
 	/**
 	 * @brief  List of test cases
@@ -259,7 +240,7 @@ protected:
 	 * @returns  Extended MTBDD 
 	 */
 	CUDDFacade::Node* extendBddByVariable(CUDDFacade& facade,
-		CUDDFacade::Node* bdd, const VariableOccurenceType& var)
+		CUDDFacade::Node* bdd, const FormulaParser::VariableOccurenceType& var)
 	{
 		// Assertions
 		assert(bdd != static_cast<CUDDFacade::Node*>(0));
@@ -310,12 +291,12 @@ protected:
 	 * @see extendBddByVariable
 	 */
 	CUDDFacade::Node* extendBddByVariableList(CUDDFacade& facade,
-		CUDDFacade::Node* bdd, const VariableListType& asgn)
+		CUDDFacade::Node* bdd, const FormulaParser::VariableListType& asgn)
 	{
 		// Assertions
 		assert(bdd != static_cast<CUDDFacade::Node*>(0));
 
-		for (VariableListType::const_iterator it = asgn.begin();
+		for (FormulaParser::VariableListType::const_iterator it = asgn.begin();
 			it != asgn.end(); ++it)
 		{	// for each variable in the assignment
 			bdd = extendBddByVariable(facade, bdd, *it);
@@ -339,7 +320,7 @@ protected:
 	 *           one
 	 */
 	CUDDFacade::Node* setValue(CUDDFacade& facade, ValueType value,
-		const VariableListType& asgn)
+		const FormulaParser::VariableListType& asgn)
 	{
 		// create a node with the value
 		CUDDFacade::Node* node = facade.AddConst(value);
@@ -363,7 +344,7 @@ protected:
 	 * @returns  Value of the leaf of MTBDD at given position
 	 */
 	ValueType getValue(CUDDFacade& facade, CUDDFacade::Node* rootNode,
-		const VariableListType& asgn)
+		const FormulaParser::VariableListType& asgn)
 	{
 		// create a node with the TRUE value
 		CUDDFacade::Node* node = facade.AddConst(BDD_TRUE_VALUE);
@@ -420,85 +401,6 @@ protected:
 		return func.GetValue();
 	}
 
-
-	/**
-	 * @brief  Parser of formulae for test cases
-	 *
-	 * Parser of formulae for test cases. An example of the format of a formula
-	 * follows:
-	 *                   5 * x1 * x2 * ~x3 * x4
-	 *
-	 * "5": value that is saved to the leaf
-	 * "*": times symbol
-	 * "x1", "x2", "x3", "x4": Boolean variables of the MTBDD (can be arbitrary
-	 *                         strings)
-	 * "~": denotes that the Boolean variable that follows is complemented 
-	 *
-	 * @param[in]  input  The input string
-	 * 
-	 * @returns  Parser result
-	 */
-	static ParserResultType parseExpression(std::string input)
-	{
-		boost::trim(input);
-		std::vector<std::string> splitInput;
-		boost::algorithm::split(splitInput, input, boost::is_any_of("*"));
-
-		if (splitInput.empty())
-		{	// in case the splitting failed
-			throw std::runtime_error("boost::algorithm::split() returned an invalid result");
-		}
-
-		VariableListType varList;
-		for (std::vector<std::string>::const_iterator it = splitInput.begin() + 1;
-			it != splitInput.end(); ++it)
-		{
-			std::string str = boost::trim_copy(*it);
-
-			if (str.length() == 0)
-			{
-				throw std::invalid_argument("parseExpression: invalid argument");
-			}
-
-			VariableOccurenceType var("", true);
-
-			if (str[0] == '~')
-			{	// in case the variable is complemented
-				var.second = false;
-				str = str.substr(1);
-			}
-
-			var.first = str;
-
-			varList.push_back(var);
-		}
-
-		return ParserResultType(Convert::FromString<ValueType>(splitInput[0]),
-			varList);
-	}
-
-	/**
-	 * @brief  Transforms parser result to string
-	 *
-	 * Transforms parser result to string.
-	 *
-	 * @param[in]  prsRes  Parser result
-	 *
-	 * @returns  String that represents the parser result
-	 */
-	static std::string parserResultToString(const ParserResultType& prsRes)
-	{
-		std::string result = Convert::ToString(prsRes.first);
-
-		for (VariableListType::const_iterator itVars = prsRes.second.begin();
-			itVars != prsRes.second.end(); ++itVars)
-		{	// print all variables
-			result += " * " + Convert::ToString(((itVars->second)? " " : "~"))
-				+ itVars->first;
-		}
-
-		return result;
-	}
 
 	/**
 	 * @brief  Loads standard tests
@@ -669,7 +571,8 @@ protected:
 		{	// store each test case
 			CUDDFacade::Node* oldNode = node;
 
-			ParserResultType prsRes = parseExpression(*itTests);
+			FormulaParser::ParserResultUnsignedType prsRes =
+				FormulaParser::ParseExpressionUnsigned(*itTests);
 			CUDDFacade::Node* tmpNode = setValue(facade, prsRes.first, prsRes.second);
 
 #if DEBUG
@@ -733,13 +636,15 @@ BOOST_AUTO_TEST_CASE(single_value_storage_test)
 	for (ListOfTestCasesType::const_iterator itTests = testCases.begin();
 		itTests != testCases.end(); ++itTests)
 	{	// store each test case
-		ParserResultType prsRes = parseExpression(*itTests);
+		FormulaParser::ParserResultUnsignedType prsRes =
+			FormulaParser::ParseExpressionUnsigned(*itTests);
 		testRootNodes.push_back(setValue(facade, prsRes.first, prsRes.second));
 	}
 
 	for (unsigned i = 0; i < testCases.size(); ++i)
 	{	// test that the test cases have been stored properly
-		ParserResultType prsRes = parseExpression(testCases[i]);
+		FormulaParser::ParserResultUnsignedType prsRes =
+			FormulaParser::ParseExpressionUnsigned(testCases[i]);
 		BOOST_CHECK_MESSAGE(getValue(facade, testRootNodes[i], prsRes.second)
 			== prsRes.first, testCases[i] + " != "
 			+ Convert::ToString(getValue(facade, testRootNodes[i], prsRes.second)));
@@ -747,9 +652,10 @@ BOOST_AUTO_TEST_CASE(single_value_storage_test)
 		for (ListOfTestCasesType::const_iterator itFailed = failedCases.begin();
 			itFailed != failedCases.end(); ++itFailed)
 		{	// for every test case that should fail
-			ParserResultType prsFailedRes = parseExpression(*itFailed);
-			BOOST_CHECK_MESSAGE(getValue(facade, testRootNodes[i], prsFailedRes.second)
-				== BDD_BACKGROUND_VALUE, testCases[i] + " == "
+			FormulaParser::ParserResultUnsignedType prsFailedRes =
+				FormulaParser::ParseExpressionUnsigned(*itFailed);
+			BOOST_CHECK_MESSAGE(getValue(facade, testRootNodes[i],
+				prsFailedRes.second) == BDD_BACKGROUND_VALUE, testCases[i] + " == "
 				+ Convert::ToString(getValue(
 					facade, testRootNodes[i], prsFailedRes.second)));
 		}
@@ -777,7 +683,8 @@ BOOST_AUTO_TEST_CASE(composed_values_storage_test)
 	for (ListOfTestCasesType::const_iterator itTests = testCases.begin();
 		itTests != testCases.end(); ++itTests)
 	{	// test that the test cases have been stored properly
-		ParserResultType prsRes = parseExpression(*itTests);
+		FormulaParser::ParserResultUnsignedType prsRes =
+			FormulaParser::ParseExpressionUnsigned(*itTests);
 		BOOST_CHECK_MESSAGE(getValue(facade, node, prsRes.second)
 			== prsRes.first, *itTests + " != "
 			+ Convert::ToString(getValue(facade, node, prsRes.second)));
@@ -786,7 +693,8 @@ BOOST_AUTO_TEST_CASE(composed_values_storage_test)
 	for (ListOfTestCasesType::const_iterator itFailed = failedCases.begin();
 		itFailed != failedCases.end(); ++itFailed)
 	{	// for every test case that should fail
-		ParserResultType prsFailedRes = parseExpression(*itFailed);
+		FormulaParser::ParserResultUnsignedType prsFailedRes =
+			FormulaParser::ParseExpressionUnsigned(*itFailed);
 		BOOST_CHECK_MESSAGE(getValue(facade, node, prsFailedRes.second)
 			== BDD_BACKGROUND_VALUE, *itFailed + " == "
 			+ Convert::ToString(getValue(facade, node, prsFailedRes.second)));
@@ -806,16 +714,19 @@ BOOST_AUTO_TEST_CASE(large_diagram_test)
 
 	for (unsigned i = 0; i < LARGE_TEST_FORMULA_CASES; ++i)
 	{	// generate test cases
-		std::string formula = Convert::ToString(static_cast<ValueType>(prnGen()));
+		std::string formula;
 
 		for (unsigned j = 0; j < LARGE_TEST_FORMULA_LENGTH; ++j)
 		{
 			if (prnGen() % 4 != 0)
 			{
-				formula += " * " + Convert::ToString((prnGen() % 2 == 0)? " " : "~")
+				formula += (formula.empty()? "" : " * ") +
+					Convert::ToString((prnGen() % 2 == 0)? " " : "~")
 					+ "x" + Convert::ToString(j);
 			}
 		}
+
+		formula += " = " + Convert::ToString(static_cast<ValueType>(prnGen()));
 
 		testCases.push_back(formula);
 	}
@@ -825,16 +736,19 @@ BOOST_AUTO_TEST_CASE(large_diagram_test)
 
 	for (unsigned i = 0; i < LARGE_TEST_FORMULA_CASES; ++i)
 	{	// generate failed test cases
-		std::string formula = Convert::ToString(static_cast<ValueType>(1));
+		std::string formula;
 
 		for (unsigned j = 0; j < LARGE_TEST_FORMULA_LENGTH; ++j)
 		{
 			if (prnGen() % 31 != 0)
 			{
-				formula += " * " + Convert::ToString((prnGen() % 2 == 0)? " " : "~")
+				formula += (formula.empty()? "" : " * ") +
+					Convert::ToString((prnGen() % 2 == 0)? " " : "~")
 					+ "x" + Convert::ToString(j);
 			}
 		}
+
+		formula += " = " + Convert::ToString(static_cast<ValueType>(1));
 
 		failedCases.push_back(formula);
 	}
@@ -847,7 +761,8 @@ BOOST_AUTO_TEST_CASE(large_diagram_test)
 #if DEBUG
 		BOOST_TEST_MESSAGE("Finding stored " + *itTests);
 #endif
-		ParserResultType prsRes = parseExpression(*itTests);
+		FormulaParser::ParserResultUnsignedType prsRes =
+			FormulaParser::ParseExpressionUnsigned(*itTests);
 		BOOST_CHECK_MESSAGE(getValue(facade, node, prsRes.second)
 			== prsRes.first, *itTests + " != "
 			+ Convert::ToString(getValue(facade, node, prsRes.second)));
@@ -859,7 +774,8 @@ BOOST_AUTO_TEST_CASE(large_diagram_test)
 #if DEBUG
 		BOOST_TEST_MESSAGE("Finding failed " + *itFailed);
 #endif
-		ParserResultType prsFailedRes = parseExpression(*itFailed);
+		FormulaParser::ParserResultUnsignedType prsFailedRes =
+			FormulaParser::ParseExpressionUnsigned(*itFailed);
 		BOOST_CHECK_MESSAGE(getValue(facade, node, prsFailedRes.second)
 			== BDD_BACKGROUND_VALUE, *itFailed + " == "
 			+ Convert::ToString(getValue(facade, node, prsFailedRes.second)));
@@ -871,11 +787,12 @@ BOOST_AUTO_TEST_CASE(large_diagram_test)
 
 BOOST_AUTO_TEST_CASE(no_variables_formula)
 {
-	const char* const TEST_VALUE = "1337";
+	const char* const TEST_VALUE = " = 1337";
 
 	CUDDFacade facade;
 
-	ParserResultType prsRes = parseExpression(TEST_VALUE);
+	FormulaParser::ParserResultUnsignedType prsRes =
+		FormulaParser::ParseExpressionUnsigned(TEST_VALUE);
 	CUDDFacade::Node* node = setValue(facade, prsRes.first, prsRes.second);
 
 	BOOST_CHECK_MESSAGE(getValue(facade, node, prsRes.second)
@@ -910,7 +827,8 @@ BOOST_AUTO_TEST_CASE(multiple_independent_bdds)
 #if DEBUG
 		BOOST_TEST_MESSAGE("Finding stored " + *itTests);
 #endif
-		ParserResultType prsRes = parseExpression(*itTests);
+		FormulaParser::ParserResultUnsignedType prsRes =
+			FormulaParser::ParseExpressionUnsigned(*itTests);
 		BOOST_CHECK_MESSAGE(getValue(facade1, node1, prsRes.second)
 			== prsRes.first, *itTests + " != "
 			+ Convert::ToString(getValue(facade1, node1, prsRes.second)));
@@ -922,7 +840,8 @@ BOOST_AUTO_TEST_CASE(multiple_independent_bdds)
 #if DEBUG
 		BOOST_TEST_MESSAGE("Finding stored " + *itTests);
 #endif
-		ParserResultType prsRes = parseExpression(*itTests);
+		FormulaParser::ParserResultUnsignedType prsRes =
+			FormulaParser::ParseExpressionUnsigned(*itTests);
 		BOOST_CHECK_MESSAGE(getValue(facade2, node2, prsRes.second)
 			== prsRes.first, *itTests + " != "
 			+ Convert::ToString(getValue(facade2, node2, prsRes.second)));
@@ -934,7 +853,8 @@ BOOST_AUTO_TEST_CASE(multiple_independent_bdds)
 #if DEBUG
 		BOOST_TEST_MESSAGE("Finding failed " + *itFailed);
 #endif
-		ParserResultType prsFailedRes = parseExpression(*itFailed);
+		FormulaParser::ParserResultUnsignedType prsFailedRes =
+			FormulaParser::ParseExpressionUnsigned(*itFailed);
 		BOOST_CHECK_MESSAGE(getValue(facade1, node1, prsFailedRes.second)
 			== BDD_BACKGROUND_VALUE, *itFailed + " == "
 			+ Convert::ToString(getValue(facade1, node1, prsFailedRes.second)));
@@ -946,7 +866,8 @@ BOOST_AUTO_TEST_CASE(multiple_independent_bdds)
 #if DEBUG
 		BOOST_TEST_MESSAGE("Finding failed " + *itFailed);
 #endif
-		ParserResultType prsFailedRes = parseExpression(*itFailed);
+		FormulaParser::ParserResultUnsignedType prsFailedRes =
+			FormulaParser::ParseExpressionUnsigned(*itFailed);
 		BOOST_CHECK_MESSAGE(getValue(facade2, node2, prsFailedRes.second)
 			== BDD_BACKGROUND_VALUE, *itFailed + " == "
 			+ Convert::ToString(getValue(facade2, node2, prsFailedRes.second)));
