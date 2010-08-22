@@ -79,6 +79,47 @@ FormulaParser::ParserResultUnsignedType
 }
 
 
+FormulaParser::ParserResultUnsignedVecType
+	FormulaParser::ParseExpressionUnsignedVec(std::string input)
+{
+	boost::trim(input);
+	std::vector<std::string> splitInput;
+	boost::algorithm::split(splitInput, input, boost::is_any_of("="));
+
+	if (splitInput.size() != 2)
+	{	// in case the input looks strange
+		throw std::invalid_argument(__func__ + std::string(": invalid argument"));
+	}
+
+	std::string& secondPart = splitInput[1];
+	boost::trim(secondPart);
+
+	if ((secondPart[0] != '{') || (secondPart[1] != '}'))
+	{	// in case the input is malformated
+		throw std::invalid_argument(__func__ + std::string(": invalid argument"));
+	}
+
+	secondPart = secondPart.substr(1, secondPart.length() - 2);
+	std::vector<std::string> splitSecondPart;
+	boost::algorithm::split(splitSecondPart, secondPart, boost::is_any_of(","));
+
+	if (splitSecondPart.size() < 1)
+	{	// in case the input looks strange
+		throw std::invalid_argument(__func__ + std::string(": invalid argument"));
+	}
+
+	std::vector<unsigned> resultVec;
+	for (std::vector<std::string>::const_iterator itStr
+		= splitSecondPart.begin(); itStr != splitSecondPart.end(); ++itStr)
+	{	// convert all symbols
+		resultVec.push_back(Convert::FromString<unsigned>(*itStr));
+	}
+
+	return ParserResultUnsignedVecType(resultVec,
+		ParseExpressionBoolean(splitInput[0]));
+}
+
+
 std::string FormulaParser::parserResultToString(
 	const ParserResultUnsignedType& prsRes)
 {

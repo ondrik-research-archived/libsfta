@@ -133,7 +133,7 @@ public:   // public methods
 	 * 
 	 * @returns  Parser result
 	 */
-	static ParserResultUnsignedType ParseExpressionUnsigned(std::string input);
+	static ParserResultBooleanType ParseExpressionBoolean(std::string input);
 
 
 	/**
@@ -153,7 +153,30 @@ public:   // public methods
 	 * 
 	 * @returns  Parser result
 	 */
-	static ParserResultBooleanType ParseExpressionBoolean(std::string input);
+	static ParserResultUnsignedType ParseExpressionUnsigned(std::string input);
+
+
+	/**
+	 * @brief  Parser of formulae with unsigneds vector result for test cases
+	 *
+	 * Parser of formulae with unsigneds vector result for test cases. An
+	 * example of the format of a formula follows:
+	 *                         x1 * x2 * ~x3 * x4 = { 1 , 2 }
+	 *
+	 * "x1", "x2", "x3", "x4": Boolean variables of the MTBDD (can be arbitrary
+	 *                         strings)
+	 * "~": denotes that the Boolean variable that follows is complemented 
+	 * "*": times symbol
+	 * "{": start of result set
+	 * "}": end of result set
+	 * "1", "2": elements of the result set
+	 *
+	 * @param[in]  input  The input string
+	 * 
+	 * @returns  Parser result
+	 */
+	static ParserResultUnsignedVecType ParseExpressionUnsignedVec(
+		std::string input);
 
 
 	/**
@@ -167,6 +190,7 @@ public:   // public methods
 	 */
 	static std::string parserResultToString(
 		const ParserResultUnsignedType& prsRes);
+
 
 	/**
 	 * @copybrief  parserResultToString()
