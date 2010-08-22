@@ -10,13 +10,16 @@
  *****************************************************************************/
 
 // SFTA headers
+#include <sfta/compact_variable_assignment.hh>
 #include <sfta/cudd_shared_mtbdd.hh>
+#include <sfta/formula_parser.hh>
+#include <sfta/map_leaf_allocator.hh>
+#include <sfta/map_root_allocator.hh>
+
 using SFTA::AbstractSharedMTBDD;
 using SFTA::CUDDSharedMTBDD;
+using SFTA::Private::FormulaParser;
 
-#include <sfta/map_root_allocator.hh>
-#include <sfta/map_leaf_allocator.hh>
-#include <sfta/compact_variable_assignment.hh>
 
 // Boost headers
 #define BOOST_TEST_DYN_LINK
@@ -28,11 +31,72 @@ using SFTA::CUDDSharedMTBDD;
 
 
 /******************************************************************************
+ *                                  Constants                                 *
+ ******************************************************************************/
+
+
+/**
+ * Formulae for standard test cases to be stored in the MTBDD
+ */
+const char* const STANDARD_TEST_CASES[] =
+{
+	"~x1 * ~x2 *  x3 *  x4 =  3",
+	"~x1 *  x2 * ~x3 * ~x4 =  4",
+	" x1 * ~x2 * ~x3 *  x4 =  9",
+	" x1 *  x2 *  x3 * ~x4 = 14",
+	" x1 *  x2 *  x3 * ~x4 = 14",
+	" x1 *  x2 *  x3 *  x4 = 15"
+};
+
+/**
+ * Number of formulae for standard test cases in the MTBDD
+ */
+const unsigned STANDARD_TEST_CASES_SIZE =
+	sizeof(STANDARD_TEST_CASES) / sizeof(const char* const);
+
+
+/**
+ * Formulae for standard test cases to be found not present in the MTBDD
+ */
+const char* const STANDARD_FAIL_CASES[] =
+{
+	"~x1 * ~x2 * ~x3 *  x4 =  1",
+	"~x1 * ~x2 *  x3 * ~x4 =  2",
+	"~x1 *  x2 * ~x3 *  x4 =  5",
+	"~x1 *  x2 *  x3 * ~x4 =  6",
+	"~x1 *  x2 *  x3 *  x4 =  7",
+	" x1 * ~x2 * ~x3 * ~x4 =  8",
+	" x1 * ~x2 *  x3 * ~x4 = 10",
+	" x1 * ~x2 *  x3 *  x4 = 11",
+	" x1 *  x2 * ~x3 * ~x4 = 12",
+	" x1 *  x2 * ~x3 *  x4 = 13"
+};
+
+
+/**
+ * Number of formulae for standard test cases that are to be not found in the
+ * MTBDD
+ */
+const unsigned STANDARD_FAIL_CASES_SIZE =
+	sizeof(STANDARD_FAIL_CASES) / sizeof(const char* const);
+
+
+/******************************************************************************
  *                                  Fixtures                                  *
  ******************************************************************************/
 
 class CUDDSharedMTBDDCharCharFixture : public LogFixture
 {
+public:   // public types
+
+	/**
+	 * @brief  List of test cases
+	 *
+	 * List of strings with formulae for test cases.
+	 */
+	typedef std::vector<std::string> ListOfTestCasesType;
+
+
 private:
 
 	CUDDSharedMTBDDCharCharFixture(
@@ -55,6 +119,41 @@ public:
 	CUDDSharedMTBDDCharCharFixture()
 	{ }
 
+protected:// protected methods
+
+	/**
+	 * @brief  Loads standard tests
+	 *
+	 * A routine that loads passed structures with standard tests.
+	 *
+	 * @param[out]  testCases    Reference to list of test cases that is to be
+	 *                           filled
+	 * @param[out]  failedCases  Reference to list of failing test cases that is
+	 *                           to be filled
+	 */
+	static void loadStandardTests(ListOfTestCasesType& testCases,
+		ListOfTestCasesType& failedCases)
+	{
+		// formulae that we wish to store in the BDD
+		for (unsigned i = 0; i < STANDARD_TEST_CASES_SIZE; ++i)
+		{	// load test cases
+			testCases.push_back(STANDARD_TEST_CASES[i]);
+		}
+
+		// formulae that we want to check that are not in the BDD
+		for (unsigned i = 0; i < STANDARD_FAIL_CASES_SIZE; ++i)
+		{	// load test cases
+			failedCases.push_back(STANDARD_FAIL_CASES[i]);
+		}
+	}
+
+
+	static MyVariableAssignment varListToAsgn(
+		const FormulaParser::VariableListType& varList)
+	{
+		// TODO
+		return MyVariableAssignment();
+	}
 };
 
 
@@ -92,6 +191,46 @@ BOOST_FIXTURE_TEST_SUITE(suite, CUDDSharedMTBDDCharCharFixture)
 BOOST_AUTO_TEST_CASE(setters_and_getters_test)
 {
 	ASMTBDDCC* bdd = new CuddMTBDDCC();
+
+	char root = bdd->CreateRoot();
+
+	// load test cases
+	ListOfTestCasesType testCases;
+	ListOfTestCasesType failedCases;
+	loadStandardTests(testCases, failedCases);
+
+	for (ListOfTestCasesType::const_iterator itTests = testCases.begin();
+		itTests != testCases.end(); ++itTests)
+	{	// store each test case
+		FormulaParser::ParserResultUnsignedType prsRes =
+			FormulaParser::ParseExpressionUnsigned(*itTests);
+		char leafValue = static_cast<char>(prsRes.first);
+		MyVariableAssignment asgn = varListToAsgn(prsRes.second);
+		bdd->SetValue(root, asgn, leafValue);
+	}
+
+	for (unsigned i = 0; i < testCases.size(); ++i)
+	{	// test that the test cases have been stored properly
+		FormulaParser::ParserResultUnsignedType prsRes =
+			FormulaParser::ParseExpressionUnsigned(testCases[i]);
+		char leafValue = static_cast<char>(prsRes.first);
+		MyVariableAssignment asgn = varListToAsgn(prsRes.second);
+
+//		BOOST_CHECK_MESSAGE(getValue(facade, testRootNodes[i], prsRes.second)
+//			== prsRes.first, testCases[i] + " != "
+//			+ Convert::ToString(getValue(facade, testRootNodes[i], prsRes.second)));
+//
+//		for (ListOfTestCasesType::const_iterator itFailed = failedCases.begin();
+//			itFailed != failedCases.end(); ++itFailed)
+//		{	// for every test case that should fail
+//			FormulaParser::ParserResultUnsignedType prsFailedRes =
+//				FormulaParser::ParseExpressionUnsigned(*itFailed);
+//			BOOST_CHECK_MESSAGE(getValue(facade, testRootNodes[i],
+//				prsFailedRes.second) == BDD_BACKGROUND_VALUE, testCases[i] + " == "
+//				+ Convert::ToString(getValue(
+//					facade, testRootNodes[i], prsFailedRes.second)));
+//		}
+	}
 
 	delete bdd;
 }
