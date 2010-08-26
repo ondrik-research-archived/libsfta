@@ -203,14 +203,6 @@ private:   // Private data types
 
 
 	/**
-	 * @brief  The type for an array of root handles
-	 *
-	 * The type that represents an array of root handles.
-	 */
-	typedef std::vector<typename RA::HandleType> RootHandleArray;
-
-
-	/**
 	 * @brief  Generic Apply functor
 	 *
 	 * Apply functor that can generically carry out an arbitrary operation
