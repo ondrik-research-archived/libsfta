@@ -377,8 +377,11 @@ private:  // Private methods
 	 */
 	inline CUDDFacade::Node* getIthVariableNot(size_t i)
 	{
-		CUDDFacade::Node* cmplNode = cudd_.AddCmpl(cudd_.AddIthVar(i));
+		CUDDFacade::Node* node = getIthVariable(i);
+		CUDDFacade::Node* cmplNode = cudd_.AddCmpl(node);
 		cudd_.Ref(cmplNode);
+		cudd_.RecursiveDeref(node);
+
 		return cmplNode;
 	}
 
@@ -424,7 +427,7 @@ private:  // Private methods
 	 *
 	 * @todo TODO Use function that defines number of variables
 	 */
-	RootType createMTBDDForVariableAssignment(
+	CUDDFacade::Node* createMTBDDForVariableAssignment(
 		const VariableAssignmentType& vars, const LeafType& value)
 	{
 		CUDDFacade::ValueType leaf = LA::createLeaf(value);
@@ -438,15 +441,15 @@ private:  // Private methods
 				vars.GetIthVariableValue(i))) !=
 				static_cast<typename CUDDFacade::Node*>(0))
 			{
-				CUDDFacade::Node* tmp = cudd_.Times(node, var);
-				cudd_.Ref(tmp);
-				cudd_.RecursiveDeref(node);
+				CUDDFacade::Node* oldNode = node;
+				node = cudd_.Times(node, var);
+				cudd_.Ref(node);
+				cudd_.RecursiveDeref(oldNode);
 				cudd_.RecursiveDeref(var);
-				node = tmp;
 			}
 		}
 
-		return RA::allocateRoot(node);
+		return node;
 	}
 
 
@@ -464,7 +467,8 @@ private:  // Private methods
 	 *
 	 * @todo  TODO Use function that defines number of variables
 	 */
-	RootType createMTBDDForVariableProjection(const VariableAssignmentType& vars)
+	CUDDFacade::Node* createMTBDDForVariableProjection(
+		const VariableAssignmentType& vars)
 	{
 		CUDDFacade::Node* node = cudd_.AddConst(1);
 		cudd_.Ref(node);
@@ -476,15 +480,15 @@ private:  // Private methods
 				vars.GetIthVariableValue(i))) !=
 				static_cast<typename CUDDFacade::Node*>(0))
 			{
-				CUDDFacade::Node* tmp = cudd_.Times(node, var);
-				cudd_.Ref(tmp);
-				cudd_.RecursiveDeref(node);
+				CUDDFacade::Node* oldNode = node;
+				node = cudd_.Times(node, var);
+				cudd_.Ref(node);
+				cudd_.RecursiveDeref(oldNode);
 				cudd_.RecursiveDeref(var);
-				node = tmp;
 			}
 		}
 
-		return RA::allocateRoot(node);
+		return node;
 	}
 
 	void eraseCUDDRoot(CUDDFacade::Node* root)
@@ -519,17 +523,18 @@ public:   // Public methods
 	virtual void SetValue(const RootType& root,
 		const VariableAssignmentType& asgn, const LeafType& value)
 	{
-		RootType mtbddAsgn = createMTBDDForVariableAssignment(asgn, value);
+		CUDDFacade::Node* mtbddAsgn = createMTBDDForVariableAssignment(asgn, value);
+		CUDDFacade::Node* rootNode = RA::getHandleOfRoot(root);
+
 		OverwriteByRightApplyFunctor overwriter;
-		CUDDFacade::Node* res = cudd_.Apply(RA::getHandleOfRoot(root),
-			RA::getHandleOfRoot(mtbddAsgn), &overwriter);
+		CUDDFacade::Node* res = cudd_.Apply(rootNode, mtbddAsgn, &overwriter);
+		cudd_.Ref(res);
 
 		// remove the temporary MTBDD
-		cudd_.RecursiveDeref(RA::getHandleOfRoot(mtbddAsgn));
-		RA::eraseRoot(mtbddAsgn);
+		cudd_.RecursiveDeref(mtbddAsgn);
 
 		// get rid of the old MTBDD for the function
-		cudd_.RecursiveDeref(RA::getHandleOfRoot(root));
+		cudd_.RecursiveDeref(rootNode);
 
 		// substitute the new MTBDD for the old one
 		RA::changeHandleOfRoot(root, res);
@@ -539,14 +544,15 @@ public:   // Public methods
 	virtual typename ParentClass::LeafContainer GetValue(const RootType& root,
 		const VariableAssignmentType& asgn)
 	{
-		RootType mtbddAsgn = createMTBDDForVariableProjection(asgn);
+		CUDDFacade::Node* mtbddAsgn = createMTBDDForVariableProjection(asgn);
+
 		ProjectByRightApplyFunctor projector;
 		CUDDFacade::Node* res = cudd_.Apply(RA::getHandleOfRoot(root),
-			RA::getHandleOfRoot(mtbddAsgn), &projector);
+			mtbddAsgn, &projector);
+		cudd_.Ref(res);
 
 		// remove the temporary MTBDD
-		cudd_.RecursiveDeref(RA::getHandleOfRoot(mtbddAsgn));
-		RA::eraseRoot(mtbddAsgn);
+		cudd_.RecursiveDeref(mtbddAsgn);
 
 		/**
 		 * Monadic Apply functor that collects all distinct leaves of given MTBDD
@@ -588,6 +594,7 @@ public:   // Public methods
 
 		CollectLeavesMonadicApplyFunctor collector;
 		CUDDFacade::Node* monRes = cudd_.MonadicApply(res, &collector);
+		cudd_.Ref(monRes);
 
 		// remove temporary MTBDDs
 		cudd_.RecursiveDeref(res);
@@ -597,6 +604,7 @@ public:   // Public methods
 		const typename CollectLeavesMonadicApplyFunctor::LeafHandleSet& leafSet
 			= collector.GetLeaves();
 
+		// TODO @todo output directly output of collector?
 		typename ParentClass::LeafContainer leaves;
 		for (typename
 			CollectLeavesMonadicApplyFunctor::LeafHandleSet::const_iterator it
