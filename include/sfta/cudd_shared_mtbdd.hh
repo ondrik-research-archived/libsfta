@@ -495,6 +495,19 @@ private:  // Private methods
 		return RA::allocateRoot(node);
 	}
 
+	void eraseCUDDRoot(CUDDFacade::Node* root)
+	{
+		// Assertions
+		assert(root != static_cast<CUDDFacade::Node*>(0));
+
+		// carry out the monadic Apply operation
+		CUDDFacade::Node* monRes = cudd_.MonadicApply(root, LA::getLeafReleaser());
+		cudd_.Ref(monRes);
+
+		// remove both MTBDDs
+		cudd_.RecursiveDeref(monRes);
+		cudd_.RecursiveDeref(root);
+	}
 
 public:   // Public methods
 
@@ -663,14 +676,7 @@ public:   // Public methods
 
 	virtual void EraseRoot(RootType root)
 	{
-		// carry out the monadic Apply operation
-		CUDDFacade::Node* monRes = cudd_.MonadicApply(RA::getHandleOfRoot(root),
-			LA::getLeafReleaser());
-
-		// remove temporary MTBDDs
-		cudd_.RecursiveDeref(monRes);
-
-		cudd_.RecursiveDeref(RA::getHandleOfRoot(root));
+		eraseCUDDRoot(RA::getHandleOfRoot(root));
 		RA::eraseRoot(root);
 	}
 
