@@ -222,6 +222,7 @@ public:   // Public methods
 		return (vars_[getIndexOfChar(i)] >> getIndexInsideChar(i)) & DefaultMask;
 	}
 
+
 	inline void SetIthVariableValue(size_t i, char value)
 	{
 		// Assertions
@@ -289,6 +290,7 @@ public:   // Public methods
 		return result;
 	}
 
+
 	static AssignmentList GetAllAssignments()
 	{
 		std::string str;
@@ -346,13 +348,5 @@ public:   // Public methods
 	}
 
 };
-
-
-// Setting the logging category name for Log4cpp
-template
-<
-	size_t V
->
-const char* SFTA::Private::CompactVariableAssignment<V>::LOG_CATEGORY_NAME = "compact_variable_assignment";
 
 #endif
