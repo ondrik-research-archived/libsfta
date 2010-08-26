@@ -159,7 +159,7 @@ public:   // Public methods
 	{
 		for (size_t i = 0; i < Size(); ++i)
 		{	// for each variable
-			SetIthVariableValue(i, ZERO);
+			SetIthVariableValue(i, DONT_CARE);
 		}
 	}
 
