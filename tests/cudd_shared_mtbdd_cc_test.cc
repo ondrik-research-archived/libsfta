@@ -304,16 +304,19 @@ BOOST_AUTO_TEST_CASE(setters_and_getters_test)
 			compareTwoLeafContainers(bdd->GetValue(root, asgn), res),
 			testCases[i] + " != " + leafContainerToString(bdd->GetValue(root, asgn)));
 
-//		for (ListOfTestCasesType::const_iterator itFailed = failedCases.begin();
-//			itFailed != failedCases.end(); ++itFailed)
-//		{	// for every test case that should fail
-//			FormulaParser::ParserResultUnsignedType prsFailedRes =
-//				FormulaParser::ParseExpressionUnsigned(*itFailed);
-//			BOOST_CHECK_MESSAGE(getValue(facade, testRootNodes[i],
-//				prsFailedRes.second) == BDD_BACKGROUND_VALUE, testCases[i] + " == "
-//				+ Convert::ToString(getValue(
-//					facade, testRootNodes[i], prsFailedRes.second)));
-//		}
+		for (ListOfTestCasesType::const_iterator itFailed = failedCases.begin();
+			itFailed != failedCases.end(); ++itFailed)
+		{	// for every test case that should fail
+			FormulaParser::ParserResultUnsignedType prsFailedRes =
+				FormulaParser::ParseExpressionUnsigned(*itFailed);
+			MyVariableAssignment failedAsgn = varListToAsgn(prsFailedRes.second);
+
+			ASMTBDDCC::LeafContainer resFailed;
+
+			BOOST_CHECK_MESSAGE(
+				compareTwoLeafContainers(bdd->GetValue(root, failedAsgn), resFailed),
+				testCases[i] + " == " + leafContainerToString(bdd->GetValue(root, failedAsgn)));
+		}
 	}
 
 	delete bdd;
