@@ -18,6 +18,7 @@
 
 using SFTA::AbstractSharedMTBDD;
 using SFTA::CUDDSharedMTBDD;
+using SFTA::Private::Convert;
 using SFTA::Private::FormulaParser;
 
 
@@ -90,33 +91,57 @@ class CUDDSharedMTBDDCharCharFixture : public LogFixture
 public:   // public types
 
 	/**
+	 * @brief  Root type
+	 *
+	 * The type of MTBDD root
+	 */
+	typedef char RootType;
+
+	/**
+	 * @brief  Leaf type
+	 *
+	 * The type of MTBDD leaf
+	 */
+	typedef char LeafType;
+
+	/**
 	 * @brief  List of test cases
 	 *
 	 * List of strings with formulae for test cases.
 	 */
 	typedef std::vector<std::string> ListOfTestCasesType;
 
+	typedef SFTA::Private::CompactVariableAssignment<4> MyVariableAssignment;
 
-private:
+	typedef AbstractSharedMTBDD<RootType, LeafType, MyVariableAssignment> ASMTBDDCC;
+
+	typedef CUDDSharedMTBDD<RootType, LeafType, MyVariableAssignment,
+			SFTA::Private::MapLeafAllocator, SFTA::Private::MapRootAllocator>
+			CuddMTBDDCC;
+
+	typedef std::map<std::string, unsigned> VariableNameDictionary;
+
+private:  // private data members
+
+
+	/**
+	 * Counter of known variables.
+	 */
+	unsigned varCounter_;
+
+	VariableNameDictionary varDict_;
+
+private:  // private methods
 
 	CUDDSharedMTBDDCharCharFixture(
 		const CUDDSharedMTBDDCharCharFixture& fixture);
 	CUDDSharedMTBDDCharCharFixture& operator=(
 		const CUDDSharedMTBDDCharCharFixture& rhs);
 
-public:
-
-	typedef SFTA::Private::CompactVariableAssignment<4> MyVariableAssignment;
-
-	typedef AbstractSharedMTBDD<char, char, MyVariableAssignment> ASMTBDDCC;
-
-	typedef CUDDSharedMTBDD<char, char, MyVariableAssignment,
-			SFTA::Private::MapLeafAllocator, SFTA::Private::MapRootAllocator>
-			CuddMTBDDCC;
-
-public:
+public:   // public methods
 
 	CUDDSharedMTBDDCharCharFixture()
+		: varCounter_(0), varDict_()
 	{ }
 
 protected:// protected methods
@@ -135,7 +160,7 @@ protected:// protected methods
 		ListOfTestCasesType& failedCases)
 	{
 		// formulae that we wish to store in the BDD
-		for (unsigned i = 0; i < STANDARD_TEST_CASES_SIZE; ++i)
+		for (size_t i = 0; i < STANDARD_TEST_CASES_SIZE; ++i)
 		{	// load test cases
 			testCases.push_back(STANDARD_TEST_CASES[i]);
 		}
@@ -148,11 +173,67 @@ protected:// protected methods
 	}
 
 
-	static MyVariableAssignment varListToAsgn(
+	size_t translateVarNameToIndex(const std::string& varName)
+	{
+		VariableNameDictionary::const_iterator itDict;
+		if ((itDict = varDict_.find(varName)) == varDict_.end())
+		{	// in case the variable was not found in the dictionary
+			itDict = varDict_.insert(std::make_pair(varName, varCounter_++)).first;
+		}
+
+		return itDict->second;
+	}
+
+
+	MyVariableAssignment varListToAsgn(
 		const FormulaParser::VariableListType& varList)
 	{
-		// TODO
-		return MyVariableAssignment();
+		MyVariableAssignment asgn;
+
+		for (FormulaParser::VariableListType::const_iterator itVar =
+			varList.begin(); itVar != varList.end(); ++itVar)
+		{	// for each variable in the list, change the corresponding assignment
+			size_t index = translateVarNameToIndex(itVar->first);
+			asgn.SetIthVariableValue(index, (itVar->second)?
+				MyVariableAssignment::ONE : MyVariableAssignment::ZERO);
+		}
+
+		return asgn;
+	}
+
+	static std::string leafContainerToString(const ASMTBDDCC::LeafContainer& leafCont)
+	{
+		std::string result;
+
+		for (ASMTBDDCC::LeafContainer::const_iterator itLeaf = leafCont.begin();
+			itLeaf != leafCont.end(); ++itLeaf)
+		{	// append all leaves
+			result += ((itLeaf == leafCont.begin())? " " : ", ") +
+				Convert::ToString(static_cast<unsigned>(**itLeaf));
+		}
+
+		return result;
+	}
+
+	inline static bool compareLeafValues(const LeafType* lhs, const LeafType* rhs)
+	{
+		return *lhs == *rhs;
+	}
+
+	static bool compareTwoLeafContainers(const ASMTBDDCC::LeafContainer& lhs,
+		const ASMTBDDCC::LeafContainer& rhs)
+	{
+		const ASMTBDDCC::LeafContainer* left = &lhs;
+		const ASMTBDDCC::LeafContainer* right = &rhs;
+
+		if (left->size() < right->size())
+		{	// in case the left-hand side operand is shorter
+			const ASMTBDDCC::LeafContainer* tmp = left;
+			left = right;
+			right = tmp;
+		}
+
+		return std::equal(left->begin(), left->end(), right->begin(), compareLeafValues);
 	}
 };
 
@@ -192,7 +273,7 @@ BOOST_AUTO_TEST_CASE(setters_and_getters_test)
 {
 	ASMTBDDCC* bdd = new CuddMTBDDCC();
 
-	char root = bdd->CreateRoot();
+	RootType root = bdd->CreateRoot();
 
 	// load test cases
 	ListOfTestCasesType testCases;
@@ -204,7 +285,7 @@ BOOST_AUTO_TEST_CASE(setters_and_getters_test)
 	{	// store each test case
 		FormulaParser::ParserResultUnsignedType prsRes =
 			FormulaParser::ParseExpressionUnsigned(*itTests);
-		char leafValue = static_cast<char>(prsRes.first);
+		LeafType leafValue = static_cast<LeafType>(prsRes.first);
 		MyVariableAssignment asgn = varListToAsgn(prsRes.second);
 		bdd->SetValue(root, asgn, leafValue);
 	}
@@ -213,13 +294,16 @@ BOOST_AUTO_TEST_CASE(setters_and_getters_test)
 	{	// test that the test cases have been stored properly
 		FormulaParser::ParserResultUnsignedType prsRes =
 			FormulaParser::ParseExpressionUnsigned(testCases[i]);
-		char leafValue = static_cast<char>(prsRes.first);
+		LeafType leafValue = static_cast<LeafType>(prsRes.first);
 		MyVariableAssignment asgn = varListToAsgn(prsRes.second);
 
-//		BOOST_CHECK_MESSAGE(getValue(facade, testRootNodes[i], prsRes.second)
-//			== prsRes.first, testCases[i] + " != "
-//			+ Convert::ToString(getValue(facade, testRootNodes[i], prsRes.second)));
-//
+		ASMTBDDCC::LeafContainer res;
+		res.push_back(&leafValue);
+
+		BOOST_CHECK_MESSAGE(
+			compareTwoLeafContainers(bdd->GetValue(root, asgn), res),
+			testCases[i] + " != " + leafContainerToString(bdd->GetValue(root, asgn)));
+
 //		for (ListOfTestCasesType::const_iterator itFailed = failedCases.begin();
 //			itFailed != failedCases.end(); ++itFailed)
 //		{	// for every test case that should fail
