@@ -744,11 +744,11 @@ public:   // Public methods
 
 	virtual ~CUDDSharedMTBDD()
 	{
-		RootHandleArray roots = RA::getAllRootHandles();
-		for (typename RootHandleArray::const_iterator it = roots.begin();
+		RootArray roots = RA::getAllRoots();
+		for (typename RootArray::const_iterator it = roots.begin();
 			it != roots.end(); ++it)
 		{	// traverse all roots
-			cudd_.RecursiveDeref(*it);
+			EraseRoot(*it);
 		}
 	}
 };
