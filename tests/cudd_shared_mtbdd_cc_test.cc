@@ -560,8 +560,63 @@ BOOST_AUTO_TEST_CASE(multiple_independent_bdds)
 }
 
 
-BOOST_AUTO_TEST_CASE(serialization)
+BOOST_AUTO_TEST_CASE(monadic_apply)
 {
+	ASMTBDDCC* bdd = new CuddMTBDDCC();
+
+	// load test cases
+	ListOfTestCasesType testCases;
+	ListOfTestCasesType failedCases;
+	loadStandardTests(testCases, failedCases);
+
+	RootType root = createMTBDDForTestCases(bdd, testCases);
+
+	// apply functor that squares values in leaves
+	class SquareMonadicApplyFunctor
+		: public ASMTBDDCC::AbstractMonadicApplyFunctorType
+	{
+	public:
+
+		virtual LeafType operator()(const LeafType& val)
+		{
+			return val * val;
+		}
+	};
+
+	SquareMonadicApplyFunctor func;
+
+	RootType squaredRoot = bdd->MonadicApply(root, &func);
+
+	for (ListOfTestCasesType::const_iterator itTests = testCases.begin();
+		itTests != testCases.end(); ++itTests)
+	{	// test that the test cases have been stored properly
+#if DEBUG
+		BOOST_TEST_MESSAGE("Finding stored " + *itTests);
+#endif
+		FormulaParser::ParserResultUnsignedType prsRes =
+			FormulaParser::ParseExpressionUnsigned(*itTests);
+		LeafType leafValue = static_cast<LeafType>(prsRes.first);
+		leafValue *= leafValue;
+		MyVariableAssignment asgn = varListToAsgn(prsRes.second);
+
+		ASMTBDDCC::LeafContainer res;
+		res.push_back(&leafValue);
+
+		BOOST_CHECK_MESSAGE(
+			compareTwoLeafContainers(bdd->GetValue(squaredRoot, asgn), res),
+			*itTests + " != " + leafContainerToString(bdd->GetValue(squaredRoot, asgn)));
+	}
+
+
+	delete bdd;
 }
+
+//BOOST_AUTO_TEST_CASE(apply)
+//{
+//}
+//
+//BOOST_AUTO_TEST_CASE(serialization)
+//{
+//}
 
 BOOST_AUTO_TEST_SUITE_END()
