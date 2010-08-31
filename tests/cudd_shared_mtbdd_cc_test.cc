@@ -26,6 +26,7 @@ using SFTA::Private::FormulaParser;
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE CUDDSharedMTBDDCC
 #include <boost/test/unit_test.hpp>
+#include <boost/random/mersenne_twister.hpp>
 
 // testing headers
 #include "log_fixture.hh"
@@ -48,6 +49,7 @@ const char* const STANDARD_TEST_CASES[] =
 	" x1 *  x2 *  x3 * ~x4 = 14",
 	" x1 *  x2 *  x3 *  x4 = 15"
 };
+
 
 /**
  * Number of formulae for standard test cases in the MTBDD
@@ -81,6 +83,21 @@ const char* const STANDARD_FAIL_CASES[] =
 const unsigned STANDARD_FAIL_CASES_SIZE =
 	sizeof(STANDARD_FAIL_CASES) / sizeof(const char* const);
 
+/**
+ * Number of variables of the MTBDD
+ */
+const unsigned NUM_VARIABLES = 64;
+
+/**
+ * The seed of the pseudorandom number generator
+ */
+const unsigned PRNG_SEED = 781436;
+
+/**
+ * Number of cases for large test formula test
+ */
+const unsigned LARGE_TEST_FORMULA_CASES = 200;
+
 
 /******************************************************************************
  *                                  Fixtures                                  *
@@ -88,6 +105,8 @@ const unsigned STANDARD_FAIL_CASES_SIZE =
 
 class CUDDSharedMTBDDCharCharFixture : public LogFixture
 {
+private:  // private constants
+
 public:   // public types
 
 	/**
@@ -95,14 +114,15 @@ public:   // public types
 	 *
 	 * The type of MTBDD root
 	 */
-	typedef char RootType;
+	typedef unsigned char RootType;
 
 	/**
 	 * @brief  Leaf type
 	 *
 	 * The type of MTBDD leaf
 	 */
-	typedef char LeafType;
+	typedef unsigned char LeafType;
+
 
 	/**
 	 * @brief  List of test cases
@@ -111,7 +131,7 @@ public:   // public types
 	 */
 	typedef std::vector<std::string> ListOfTestCasesType;
 
-	typedef SFTA::Private::CompactVariableAssignment<4> MyVariableAssignment;
+	typedef SFTA::Private::CompactVariableAssignment<NUM_VARIABLES> MyVariableAssignment;
 
 	typedef AbstractSharedMTBDD<RootType, LeafType, MyVariableAssignment> ASMTBDDCC;
 
@@ -226,14 +246,30 @@ protected:// protected methods
 		const ASMTBDDCC::LeafContainer* left = &lhs;
 		const ASMTBDDCC::LeafContainer* right = &rhs;
 
-		if (left->size() < right->size())
-		{	// in case the left-hand side operand is shorter
-			const ASMTBDDCC::LeafContainer* tmp = left;
-			left = right;
-			right = tmp;
+		if (left->size() != right->size())
+		{	// in case the sizes differ
+			return false;
 		}
 
 		return std::equal(left->begin(), left->end(), right->begin(), compareLeafValues);
+	}
+
+	RootType createMTBDDForTestCases(ASMTBDDCC* bdd,
+		const ListOfTestCasesType& testCases)
+	{
+		RootType root = bdd->CreateRoot();
+
+		for (ListOfTestCasesType::const_iterator itTests = testCases.begin();
+			itTests != testCases.end(); ++itTests)
+		{
+			FormulaParser::ParserResultUnsignedType prsRes =
+				FormulaParser::ParseExpressionUnsigned(*itTests);
+			LeafType leafValue = static_cast<LeafType>(prsRes.first);
+			MyVariableAssignment asgn = varListToAsgn(prsRes.second);
+			bdd->SetValue(root, asgn, leafValue);
+		}
+
+		return root;
 	}
 };
 
@@ -322,70 +358,100 @@ BOOST_AUTO_TEST_CASE(setters_and_getters_test)
 	delete bdd;
 }
 
-//BOOST_AUTO_TEST_CASE(setters_and_getters_test)
-//{
-//	unsigned root = mtbdd->CreateRoot();
-//
-//	std::vector<unsigned> value_added(0);
-//	MyVariableAssignment asgn("01X1");
-//
-////	for (unsigned i = 1; i <= 255; ++i)
-////	{
-////		value_added.push_back(i);
-////		asgn = i;
-////		mtbdd->SetValue(root, asgn, value_added);
-////	}
-//
-//	value_added.push_back(3);
-//	value_added.push_back(5);
-//	asgn = MyVariableAssignment("0111");
-//	mtbdd->SetValue(root, asgn, value_added);
-//	asgn = MyVariableAssignment("0001");
-//	mtbdd->SetValue(root, asgn, value_added);
-//	ASMTBDD::LeafContainer leaves = mtbdd->GetValue(root, asgn);
-//
-//	BOOST_CHECK((leaves.size() == 1) && (value_added == *(leaves[0])));
-//
-//	value_added[0] = 17;
-//	value_added[1] = 15;
-//	asgn = MyVariableAssignment("XXX1");
-//	mtbdd->SetValue(root, asgn, value_added);
-//	leaves = mtbdd->GetValue(root, asgn);
-//
-//	BOOST_CHECK((leaves.size() == 1) && (value_added == *(leaves[0])));
-//
-//	value_added[0] = 1;
-//	value_added[1] = 2;
-//	asgn = MyVariableAssignment("0101");
-//	mtbdd->SetValue(root, asgn, value_added);
-//	leaves = mtbdd->GetValue(root, asgn);
-//	BOOST_CHECK((leaves.size() == 1) && (value_added == *(leaves[0])));
-//
-//	unsigned root2 = mtbdd->CreateRoot();
-//	value_added[0] = 11;
-//	value_added[1] = 19;
-//	asgn = MyVariableAssignment("1XX0");
-//	mtbdd->SetValue(root2, asgn, value_added);
-//
-//	value_added[0] = 7;
-//	value_added[1] = 9;
-//	asgn = MyVariableAssignment("000X");
-//	mtbdd->SetValue(root2, asgn, value_added);
-//
-//	unsigned root3 = mtbdd->Apply(root, root2, new LeafAdditionFunctor);
-//
-//	value_added.resize(4);
-//	value_added[0] = 17;
-//	value_added[1] = 15;
-//	value_added[2] = 7;
-//	value_added[3] = 9;
-//	leaves = mtbdd->GetValue(root3, asgn);
-//	BOOST_CHECK((leaves.size() == 1) && (value_added == *(leaves[0])));
-//
-//	mtbdd->DumpToDotFile("pokus.dot");
-//
-//	BOOST_TEST_MESSAGE("Serialized MTBDD: " + mtbdd->Serialize());
-//}
+BOOST_AUTO_TEST_CASE(large_diagram_test)
+{
+	ASMTBDDCC* bdd = new CuddMTBDDCC();
+
+	boost::mt19937 prnGen(PRNG_SEED);
+
+	// formulae that we wish to store in the BDD
+	ListOfTestCasesType testCases;
+
+	for (unsigned i = 0; i < LARGE_TEST_FORMULA_CASES; ++i)
+	{	// generate test cases
+		std::string formula;
+
+		for (unsigned j = 0; j < NUM_VARIABLES; ++j)
+		{
+			if (prnGen() % 4 != 0)
+			{
+				formula += (formula.empty()? "" : " * ") +
+					Convert::ToString((prnGen() % 2 == 0)? " " : "~")
+					+ "x" + Convert::ToString(j);
+			}
+		}
+
+		LeafType randomNum;
+		while ((randomNum = prnGen()) == 0) ;   // generate non-zero random number
+
+		formula += " = " + Convert::ToString(static_cast<unsigned>(randomNum));
+
+		testCases.push_back(formula);
+	}
+
+	// formulae that we want to check that are not in the BDD
+	ListOfTestCasesType failedCases;
+
+	for (unsigned i = 0; i < LARGE_TEST_FORMULA_CASES; ++i)
+	{	// generate failed test cases
+		std::string formula;
+
+		for (unsigned j = 0; j < NUM_VARIABLES; ++j)
+		{
+			if (prnGen() % 31 != 0)
+			{
+				formula += (formula.empty()? "" : " * ") +
+					Convert::ToString((prnGen() % 2 == 0)? " " : "~")
+					+ "x" + Convert::ToString(j);
+			}
+		}
+
+		formula += " = " + Convert::ToString(static_cast<unsigned>(1));
+
+		failedCases.push_back(formula);
+	}
+
+	RootType root = createMTBDDForTestCases(bdd, testCases);
+
+	for (ListOfTestCasesType::const_iterator itTests = testCases.begin();
+		itTests != testCases.end(); ++itTests)
+	{	// test that the test cases have been stored properly
+#if DEBUG
+		BOOST_TEST_MESSAGE("Finding stored " + *itTests);
+#endif
+		FormulaParser::ParserResultUnsignedType prsRes =
+			FormulaParser::ParseExpressionUnsigned(*itTests);
+		LeafType leafValue = static_cast<LeafType>(prsRes.first);
+		MyVariableAssignment asgn = varListToAsgn(prsRes.second);
+
+		ASMTBDDCC::LeafContainer res;
+		res.push_back(&leafValue);
+
+		BOOST_CHECK_MESSAGE(
+			compareTwoLeafContainers(bdd->GetValue(root, asgn), res),
+			*itTests + " != " + leafContainerToString(bdd->GetValue(root, asgn)));
+	}
+
+	for (ListOfTestCasesType::const_iterator itFailed = failedCases.begin();
+		itFailed != failedCases.end(); ++itFailed)
+	{	// for every test case that should fail
+#if DEBUG
+		BOOST_TEST_MESSAGE("Finding failed " + *itFailed);
+#endif
+		FormulaParser::ParserResultUnsignedType prsFailedRes =
+			FormulaParser::ParseExpressionUnsigned(*itFailed);
+		MyVariableAssignment asgn = varListToAsgn(prsFailedRes.second);
+
+		ASMTBDDCC::LeafContainer res;
+
+		BOOST_CHECK_MESSAGE(
+			compareTwoLeafContainers(bdd->GetValue(root, asgn), res),
+			*itFailed + " == " + leafContainerToString(bdd->GetValue(root, asgn)));
+	}
+
+	delete bdd;
+}
+
 
 BOOST_AUTO_TEST_CASE(serialization)
 {
