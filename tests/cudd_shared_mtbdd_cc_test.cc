@@ -309,22 +309,12 @@ BOOST_AUTO_TEST_CASE(setters_and_getters_test)
 {
 	ASMTBDDCC* bdd = new CuddMTBDDCC();
 
-	RootType root = bdd->CreateRoot();
-
 	// load test cases
 	ListOfTestCasesType testCases;
 	ListOfTestCasesType failedCases;
 	loadStandardTests(testCases, failedCases);
 
-	for (ListOfTestCasesType::const_iterator itTests = testCases.begin();
-		itTests != testCases.end(); ++itTests)
-	{	// store each test case
-		FormulaParser::ParserResultUnsignedType prsRes =
-			FormulaParser::ParseExpressionUnsigned(*itTests);
-		LeafType leafValue = static_cast<LeafType>(prsRes.first);
-		MyVariableAssignment asgn = varListToAsgn(prsRes.second);
-		bdd->SetValue(root, asgn, leafValue);
-	}
+	RootType root = createMTBDDForTestCases(bdd, testCases);
 
 	for (unsigned i = 0; i < testCases.size(); ++i)
 	{	// test that the test cases have been stored properly
