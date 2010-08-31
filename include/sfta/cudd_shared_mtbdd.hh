@@ -639,6 +639,8 @@ public:   // Public methods
 		CUDDFacade::Node* res = cudd_.Apply(RA::getHandleOfRoot(lhs),
 			RA::getHandleOfRoot(rhs), &applier);
 
+		cudd_.Ref(res);
+
 		return RA::allocateRoot(res);
 	}
 
@@ -660,6 +662,8 @@ public:   // Public methods
 		// carry out the monadic Apply operation
 		CUDDFacade::Node* res = cudd_.MonadicApply(RA::getHandleOfRoot(root),
 			&applier);
+
+		cudd_.Ref(res);
 
 		return RA::allocateRoot(res);
 	}
