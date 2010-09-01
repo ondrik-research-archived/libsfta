@@ -192,6 +192,7 @@ public:
 	}
 
 
+
 	/**
 	 * @brief  Converts a string to an object 
 	 *
@@ -218,5 +219,33 @@ public:
 	}
 
 };
+
+
+namespace SFTA
+{
+	namespace Private
+	{
+		/**
+		 * @brief  Converts an object to string (unsigned char specialization)
+		 *
+		 * Static method for conversion of unsigned char into a string
+		 *
+		 * @param[in]  n  The unsigned char for the conversion
+		 *
+		 * @returns  The string representation of the unsigned char
+		 */
+		template <>
+		std::string SFTA::Private::Convert::ToString<unsigned char>(const unsigned char& n)
+		{
+			// the output stream for the string
+			std::ostringstream oss;
+			// insert the object into the stream
+			oss << static_cast<unsigned>(n);
+			// return the string
+			return oss.str();
+		}
+	}
+}
+
 
 #endif
