@@ -235,17 +235,8 @@ namespace SFTA
 		 * @returns  The string representation of the unsigned char
 		 */
 		template <>
-		std::string SFTA::Private::Convert::ToString<unsigned char>(const unsigned char& n)
-		{
-			// the output stream for the string
-			std::ostringstream oss;
-			// insert the object into the stream
-			oss << static_cast<unsigned>(n);
-			// return the string
-			return oss.str();
-		}
+		std::string Convert::ToString<unsigned char>(const unsigned char& n);
 	}
 }
-
 
 #endif
