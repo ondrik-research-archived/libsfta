@@ -475,6 +475,19 @@ public:  // Public methods
 
 
 	/**
+	 * @brief  Serialize the MTBDDs in a string with XML
+	 *
+	 * Serializes all given MTBDDs into a std::string with XML.
+	 *
+	 * @param[in]  nodeDictionary  Dictionary assigning node names their
+	 *                             respective nodes
+	 *
+	 * @returns  String with XML representing given MTBDDs
+	 */
+	std::string SerializeToXML(const StringNodeMapType& nodeDictionary) const;
+
+
+	/**
 	 * @brief  Loads MTBDDs from a string in an internal format
 	 *
 	 * Loads MTBDDs from a string with their representation in an internal

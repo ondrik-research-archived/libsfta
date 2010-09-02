@@ -577,6 +577,17 @@ std::string CUDDFacade::StoreToString(
 	return ff.GetContent();
 }
 
+std::string CUDDFacade::SerializeToXML(
+	const StringNodeMapType& nodeDictionary) const
+{
+	std::string result;
+
+	result += "<cuddfacade>";
+	result += StoreToString(nodeDictionary);
+	result += "</cuddfacade>";
+
+	return result;
+}
 
 std::pair<CUDDFacade*, CUDDFacade::StringNodeMapType>
 	CUDDFacade::LoadFromString(const std::string& str,
