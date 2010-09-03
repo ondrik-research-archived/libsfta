@@ -664,8 +664,22 @@ BOOST_AUTO_TEST_CASE(apply)
 }
 
 
-//BOOST_AUTO_TEST_CASE(serialization)
-//{
-//}
+BOOST_AUTO_TEST_CASE(serialization)
+{
+	ASMTBDDCC* bdd = new CuddMTBDDCC();
+
+	// load test cases
+	ListOfTestCasesType testCases;
+	ListOfTestCasesType failedCases;
+	loadStandardTests(testCases, failedCases);
+
+	RootType root = createMTBDDForTestCases(bdd, testCases);
+
+	std::string str = bdd->Serialize();
+
+	BOOST_TEST_MESSAGE("BDD:\n" + str);
+
+	delete bdd;
+}
 
 BOOST_AUTO_TEST_SUITE_END()
