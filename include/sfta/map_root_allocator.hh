@@ -244,6 +244,33 @@ protected:// protected methods
 
 
 	/**
+	 * @brief  Serializes roots into XML
+	 *
+	 * This method erases a root from the container of roots.
+	 *
+	 * @param[in]  root  The root to be erased
+	 */
+	std::string serialize() const
+	{
+		std::string result;
+
+		std::vector<RootType> roots = getAllRoots();
+		result += "<maprootallocator>\n";
+		for (typename std::vector<RootType>::const_iterator itRoots = roots.begin();
+			itRoots != roots.end(); ++itRoots)
+		{
+			result += "<root>";
+			result += Convert::ToString(*itRoots);
+			result += "</root>\n";
+		}
+
+		result += "</maprootallocator>";
+
+		return result;
+	}
+
+
+	/**
 	 * @brief  Destructor
 	 *
 	 * The destructor.
