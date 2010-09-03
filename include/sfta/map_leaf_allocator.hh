@@ -291,6 +291,38 @@ protected:// Protected methods
 		delete releaser_;
 	}
 
+
+	/**
+	 * @brief  Serialization method
+	 *
+	 * This method serializes the object into std::string
+	 */
+	std::string serialize() const
+	{
+		std::string result;
+
+		result += "<mapleafallocator>\n";
+
+		std::vector<HandleType> handles = getAllHandles();
+		for (typename std::vector<HandleType>::const_iterator itHandle =
+			handles.begin(); itHandle != handles.end(); ++itHandle)
+		{
+			result += "<pairing>";
+			result += "<left>";
+			result += Convert::ToString(*itHandle);
+			result += "</left>";
+			result += "<right>";
+			result += Convert::ToString(getLeafOfHandle(*itHandle));
+			result += "</right>";
+			result += "</pairing>";
+			result += "\n";
+		}
+
+		result += "</mapleafallocator>";
+
+		return result;
+	};
+
 };
 
 
