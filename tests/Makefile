@@ -115,4 +115,6 @@ test: all
 	done
 
 clean:
+	cd ../src ; make clean
+	cd ../cudd_facade ; make distclean
 	rm -f $(DEL_FILES)
