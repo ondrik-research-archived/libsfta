@@ -693,8 +693,6 @@ public:   // Public methods
 
 	virtual std::string Serialize() const
 	{
-		assert(false);   // TODO @todo
-
 		// the array of roots
 		RootArray roots = RA::getAllRoots();
 
@@ -706,7 +704,16 @@ public:   // Public methods
 			rootDict[Convert::ToString(roots[i])] = RA::getHandleOfRoot(roots[i]);
 		}
 
-		return cudd_.StoreToString(rootDict);
+		std::string result;
+		result += "<cuddsharedmtbdd>\n";
+		result += RA::serialize();
+		result += "\n";
+		result += LA::serialize();
+		result += "\n";
+		result += cudd_.SerializeToXML(rootDict);
+		result += "\n</cuddsharedmtbdd>";
+
+		return result;
 	}
 
 
