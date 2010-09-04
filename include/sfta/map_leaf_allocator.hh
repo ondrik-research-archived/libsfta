@@ -281,16 +281,6 @@ protected:// Protected methods
 		return releaser_;
 	}
 
-	/**
-	 * @brief  Destructor
-	 *
-	 * The destructor.
-	 */
-	~MapLeafAllocator()
-	{
-		delete releaser_;
-	}
-
 
 	/**
 	 * @brief  Serialization method
@@ -323,6 +313,16 @@ protected:// Protected methods
 		return result;
 	};
 
+
+	/**
+	 * @brief  Destructor
+	 *
+	 * The destructor.
+	 */
+	~MapLeafAllocator()
+	{
+		delete releaser_;
+	}
 };
 
 
