@@ -14,6 +14,7 @@
 #include <sfta/cudd_shared_mtbdd.hh>
 #include <sfta/formula_parser.hh>
 #include <sfta/map_leaf_allocator.hh>
+#include <sfta/dual_map_leaf_allocator.hh>
 #include <sfta/map_root_allocator.hh>
 
 using SFTA::AbstractSharedMTBDD;
@@ -136,7 +137,7 @@ public:   // public types
 	typedef AbstractSharedMTBDD<RootType, LeafType, MyVariableAssignment> ASMTBDDCC;
 
 	typedef CUDDSharedMTBDD<RootType, LeafType, MyVariableAssignment,
-			SFTA::Private::MapLeafAllocator, SFTA::Private::MapRootAllocator>
+			SFTA::Private::DualMapLeafAllocator, SFTA::Private::MapRootAllocator>
 			CuddMTBDDCC;
 
 	typedef std::map<std::string, unsigned> VariableNameDictionary;
@@ -658,7 +659,6 @@ BOOST_AUTO_TEST_CASE(apply)
 			compareTwoLeafContainers(bdd->GetValue(timesRoot, asgn), res),
 			*itTests + " != " + leafContainerToString(bdd->GetValue(timesRoot, asgn)));
 	}
-
 
 	delete bdd;
 }
