@@ -43,12 +43,12 @@ using SFTA::Private::FormulaParser;
  */
 const char* const STANDARD_TEST_CASES[] =
 {
-	"~x1 * ~x2 *  x3 *  x4 =  3",
-	"~x1 *  x2 * ~x3 * ~x4 =  4",
-	" x1 * ~x2 * ~x3 *  x4 =  9",
-	" x1 *  x2 *  x3 * ~x4 = 14",
-	" x1 *  x2 *  x3 * ~x4 = 14",
-	" x1 *  x2 *  x3 *  x4 = 15"
+	"~x0 * ~x1 *  x2 *  x3 =  3",
+	"~x0 *  x1 * ~x2 * ~x3 =  4",
+	" x0 * ~x1 * ~x2 *  x3 =  9",
+	" x0 *  x1 *  x2 * ~x3 = 14",
+	" x0 *  x1 *  x2 * ~x3 = 14",
+	" x0 *  x1 *  x2 *  x3 = 15"
 };
 
 
@@ -64,16 +64,16 @@ const unsigned STANDARD_TEST_CASES_SIZE =
  */
 const char* const STANDARD_FAIL_CASES[] =
 {
-	"~x1 * ~x2 * ~x3 *  x4 =  1",
-	"~x1 * ~x2 *  x3 * ~x4 =  2",
-	"~x1 *  x2 * ~x3 *  x4 =  5",
-	"~x1 *  x2 *  x3 * ~x4 =  6",
-	"~x1 *  x2 *  x3 *  x4 =  7",
-	" x1 * ~x2 * ~x3 * ~x4 =  8",
-	" x1 * ~x2 *  x3 * ~x4 = 10",
-	" x1 * ~x2 *  x3 *  x4 = 11",
-	" x1 *  x2 * ~x3 * ~x4 = 12",
-	" x1 *  x2 * ~x3 *  x4 = 13"
+	"~x0 * ~x1 * ~x2 *  x3 =  1",
+	"~x0 * ~x1 *  x2 * ~x3 =  2",
+	"~x0 *  x1 * ~x2 *  x3 =  5",
+	"~x0 *  x1 *  x2 * ~x3 =  6",
+	"~x0 *  x1 *  x2 *  x3 =  7",
+	" x0 * ~x1 * ~x2 * ~x3 =  8",
+	" x0 * ~x1 *  x2 * ~x3 = 10",
+	" x0 * ~x1 *  x2 *  x3 = 11",
+	" x0 *  x1 * ~x2 * ~x3 = 12",
+	" x0 *  x1 * ~x2 *  x3 = 13"
 };
 
 
