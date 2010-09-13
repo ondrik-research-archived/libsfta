@@ -160,6 +160,13 @@ public:  // Public data types
 	};
 
 
+	/**
+	 * Variable type
+	 *
+	 * Type of variable.
+	 */
+	typedef unsigned VariableType;
+
 public:  // Public methods
 
 	/**
