@@ -415,7 +415,8 @@ public:  // Public methods
 	 *
 	 * Changes the index of all nodes that represent the Boolean variable with
 	 * given index in an MTBDD rooted at given node. Note that the MTBDD needs
-	 * to be correctly formed, the behaviour is undefined otherwise.
+	 * to be correctly formed, the behaviour is undefined otherwise. Variable
+	 * with the same index cannot occur in the MTBDD!
 	 *
 	 * @param[in]  root      The root of the MTBDD
 	 * @param[in]  oldIndex  The old index of the variable

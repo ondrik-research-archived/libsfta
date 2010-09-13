@@ -413,36 +413,33 @@ CUDDFacade::Node* CUDDFacade::ChangeVariableIndex(Node* root,
 	}
 
 	unsigned currentIndex = GetNodeIndex(root);
+	unsigned nodeIndex;
+	Node* thenChild = static_cast<Node*>(0);
+	Node* elseChild = static_cast<Node*>(0);
+
 	if (currentIndex == oldIndex)
 	{	// in case we hit a node with the desired variable index
-		Node* thenChild = GetThenChild(root);
-		Node* elseChild = GetElseChild(root);
+		thenChild = GetThenChild(root);
+		elseChild = GetElseChild(root);
 
-		do
-		{
-			toCUDD(manager_)->reordered = 0;
-			root = fromCUDD(cuddUniqueInter(toCUDD(manager_), newIndex,
-				toCUDD(thenChild), toCUDD(elseChild)));
-		} while (toCUDD(manager_)->reordered == 1);
-
-		return root;
+		nodeIndex = newIndex;
 	}
 	else
 	{
-		Node* thenChild = ChangeVariableIndex(GetThenChild(root),
-			oldIndex, newIndex);
-		Node* elseChild = ChangeVariableIndex(GetElseChild(root),
-			oldIndex, newIndex);
+		thenChild = ChangeVariableIndex(GetThenChild(root), oldIndex, newIndex);
+		elseChild = ChangeVariableIndex(GetElseChild(root), oldIndex, newIndex);
 
-		do
-		{
-			toCUDD(manager_)->reordered = 0;
-			root = fromCUDD(cuddUniqueInter(toCUDD(manager_), currentIndex,
-				toCUDD(thenChild), toCUDD(elseChild)));
-		} while (toCUDD(manager_)->reordered == 1);
-
-		return root;
+		nodeIndex = currentIndex;
 	}
+
+	do
+	{	// perform conzistenciation of the MTBDD
+		toCUDD(manager_)->reordered = 0;
+		root = fromCUDD(cuddUniqueInter(toCUDD(manager_), nodeIndex,
+			toCUDD(thenChild), toCUDD(elseChild)));
+	} while (toCUDD(manager_)->reordered == 1);
+
+	return root;
 }
 
 
