@@ -163,6 +163,14 @@ public:   // Public methods
 		}
 	}
 
+	CompactVariableAssignment(size_t n)
+		: vars_()
+	{
+		for (size_t i = 0; i < Size(); ++i)
+		{	// for each variable
+			SetIthVariableValue(i, (n & (1 << i) != 0)? ONE : ZERO);
+		}
+	}
 
 	/**
 	 * @brief  Constructor from std::string
