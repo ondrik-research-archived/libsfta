@@ -646,10 +646,15 @@ BOOST_AUTO_TEST_CASE(apply)
 }
 
 
-BOOST_AUTO_TEST_CASE(serialization)
+BOOST_AUTO_TEST_CASE(variable_renaming)
 {
 	ASMTBDDCC* bdd = new CuddMTBDDCC();
 	bdd->SetBottomValue(0);
+
+	for (unsigned i = 0; i < NUM_VARIABLES; ++i)
+	{	// fill the table of variables
+		translateVarNameToIndex("x" + Convert::ToString(i));
+	}
 
 	// load test cases
 	ListOfTestCasesType testCases;
@@ -658,11 +663,109 @@ BOOST_AUTO_TEST_CASE(serialization)
 
 	RootType root = createMTBDDForTestCases(bdd, testCases);
 
-	std::string str = bdd->Serialize();
+	class MovingUpVariableRenamingFunctor
+		: public ASMTBDDCC::AbstractVariableRenamingFunctorType
+	{
+	public:
 
-	BOOST_TEST_MESSAGE("BDD:\n" + str);
+		ASMTBDDCC::VariableType RenameVariableTo(const ASMTBDDCC::VariableType& var)
+		{
+			if (var < NUM_VARIABLES/2)
+			{
+				return var + NUM_VARIABLES/2;
+			}
+			else
+			{
+				return var;
+			}
+		}
+	};
+
+	MovingUpVariableRenamingFunctor funcMovingUp;
+	RootType renamedRoot = bdd->RenameVariables(root, &funcMovingUp);
+
+	class MovingDownVariableRenamingFunctor
+		: public ASMTBDDCC::AbstractVariableRenamingFunctorType
+	{
+	public:
+
+		ASMTBDDCC::VariableType RenameVariableTo(const ASMTBDDCC::VariableType& var)
+		{
+			if ((var >= NUM_VARIABLES/2) && (var < NUM_VARIABLES))
+			{
+				return 2 * (var - NUM_VARIABLES/2) + 1;
+			}
+			else
+			{
+				return var;
+			}
+		}
+	};
+
+	MovingDownVariableRenamingFunctor funcMovingDown;
+	renamedRoot = bdd->RenameVariables(renamedRoot, &funcMovingDown);
+
+
+	ListOfTestCasesType renamedTestCases;
+	for (ListOfTestCasesType::const_iterator itTests = testCases.begin();
+		itTests != testCases.end(); ++itTests)
+	{	// for each test case create new with properly renamed variables
+		std::string renamedCase = *itTests;
+
+		for (unsigned i = 0; i < NUM_VARIABLES/2; ++i)
+		{	// double the name of each variable, 
+			boost::algorithm::replace_all(renamedCase, "x" + Convert::ToString(i) + " ",
+				"x" + Convert::ToString(i+NUM_VARIABLES/2) + " ");
+		}
+
+		for (unsigned i = NUM_VARIABLES/2; i < NUM_VARIABLES; ++i)
+		{	// for each variable
+			boost::algorithm::replace_all(renamedCase, "x" + Convert::ToString(i) + " ",
+				"x" + Convert::ToString(2*(i-static_cast<int>(NUM_VARIABLES)/2)+1) + " ");
+		}
+
+		renamedTestCases.push_back(renamedCase);
+	}
+
+	for (ListOfTestCasesType::const_iterator itTests = renamedTestCases.begin();
+		itTests != renamedTestCases.end(); ++itTests)
+	{	// test that the test cases have been stored properly
+#if DEBUG
+		BOOST_TEST_MESSAGE("Finding stored " + *itTests);
+#endif
+		FormulaParser::ParserResultUnsignedType prsRes =
+			FormulaParser::ParseExpressionUnsigned(*itTests);
+		LeafType leafValue = static_cast<LeafType>(prsRes.first);
+		MyVariableAssignment asgn = varListToAsgn(prsRes.second);
+
+		ASMTBDDCC::LeafContainer res;
+		res.push_back(&leafValue);
+
+		BOOST_CHECK_MESSAGE(
+			compareTwoLeafContainers(bdd->GetValue(renamedRoot, asgn), res), *itTests
+			+ " != " + leafContainerToString(bdd->GetValue(renamedRoot, asgn)));
+	}
+
 
 	delete bdd;
 }
+
+//BOOST_AUTO_TEST_CASE(serialization)
+//{
+//	ASMTBDDCC* bdd = new CuddMTBDDCC();
+//
+//	// load test cases
+//	ListOfTestCasesType testCases;
+//	ListOfTestCasesType failedCases;
+//	loadStandardTests(testCases, failedCases);
+//
+//	RootType root = createMTBDDForTestCases(bdd, testCases);
+//
+//	std::string str = bdd->Serialize();
+//
+//	BOOST_TEST_MESSAGE("BDD:\n" + str);
+//
+//	delete bdd;
+//}
 
 BOOST_AUTO_TEST_SUITE_END()
