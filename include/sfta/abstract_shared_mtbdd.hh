@@ -167,6 +167,26 @@ public:  // Public data types
 	 */
 	typedef unsigned VariableType;
 
+
+	class AbstractVariableRenamingFunctorType
+	{
+	public:
+
+		/**
+		 * @brief  Method that performs variable renaming
+		 *
+		 * Thie method is passed a variable and returns a variable to which it
+		 * should be renamed. In case given variable is not to be renamed, the
+		 * same name is returned.
+		 *
+		 * @param[in]  var  Input variable name
+		 *
+		 * @returns  Output variable name
+		 */
+		virtual VariableType RenameVariableTo(const VariableType& var) = 0;
+	};
+
+
 public:  // Public methods
 
 	/**
@@ -293,6 +313,27 @@ public:  // Public methods
 	 *                       extension)
 	 */
 	virtual void DumpToDotFile(const std::string& filename) const = 0;
+
+
+	/**
+	 * @brief  Renames variables of an MTBDD
+	 *
+	 * This method carries out renaming of variables of the MTBDD with given
+	 * root node. The function that assigns new variable name needs to be an
+	 * injection, otherwise the output is undefined. Also, a new name of
+	 * a variable cannot be a name of an existing variable, otherwise the output
+	 * is again undefined.
+	 *
+	 * @param[in]  root  Root of the MTBDD
+	 * @param[in]  func  Functor that defines the mapping of old variables'
+	 *                   names to new ones. If the variable is not supposed to
+	 *                   be touched, the new name needs to be the same as the
+	 *                   old name.
+	 *
+	 * @returns  An MTBDD with renamed variables
+	 */
+	virtual RootType RenameVariables(RootType root,
+		AbstractVariableRenamingFunctorType* func) = 0;
 
 
 	/**
