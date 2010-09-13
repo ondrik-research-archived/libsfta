@@ -733,8 +733,6 @@ public:   // Public methods
 
 	virtual void DumpToDotFile(const std::string& filename) const
 	{
-		assert(false);   // TODO @todo
-
 		// the array of roots
 		RootArray roots = RA::getAllRoots();
 		// the array of root nodes
