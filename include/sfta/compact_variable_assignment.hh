@@ -225,7 +225,7 @@ public:   // Public methods
 	inline char GetIthVariableValue(size_t i) const
 	{
 		// Assertions
-		assert(i <= VariablesCount);
+		assert(i < VariablesCount);
 
 		return (vars_[getIndexOfChar(i)] >> getIndexInsideChar(i)) & DefaultMask;
 	}
@@ -234,7 +234,7 @@ public:   // Public methods
 	inline void SetIthVariableValue(size_t i, char value)
 	{
 		// Assertions
-		assert(i <= VariablesCount);
+		assert(i < VariablesCount);
 
 		switch (value)
 		{
