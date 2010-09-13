@@ -765,6 +765,30 @@ public:   // Public methods
 	}
 
 
+	virtual RootType RenameVariables(RootType root,
+		AbstractVariableRenamingFunctorType* func)
+	{
+		// Assertions
+		assert(func != static_cast<AbstractVariableRenamingFunctorType*>(0));
+
+		CUDDFacade::Node* newRoot = RA::getHandleOfRoot(root);
+
+		for (VariableType i = 0; i < VariableAssignmentType::VariablesCount; ++i)
+		{	// rename all variables according to given renaming functor
+			VariableType newName;
+			if ((newName = func->RenameVariableTo(i)) != i)
+			{	// in case the new name is different from the old one
+				CUDDFacade::Node* tmp = newRoot;
+				newRoot = cudd_.ChangeVariableIndex(newRoot, i, newName);
+				cudd_.Ref(newRoot);
+				cudd_.RecursiveDeref(tmp);
+			}
+		}
+
+		return RA::allocateRoot(newRoot);
+	}
+
+
 	virtual ~CUDDSharedMTBDD()
 	{
 		RootArray roots = RA::getAllRoots();
