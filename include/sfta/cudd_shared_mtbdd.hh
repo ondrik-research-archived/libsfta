@@ -134,6 +134,23 @@ private:   // Private data types
 	ParentClass;
 
 
+	/**
+	 * @brief  Type of variable renaming functor
+	 *
+	 * The data type for class of variable renaming functor.
+	 */
+	typedef typename ParentClass::AbstractVariableRenamingFunctorType
+		AbstractVariableRenamingFunctorType;
+
+
+	/**
+	 * @brief  Type of variable name
+	 *
+	 * The data type for variable name.
+	 */
+	typedef typename ParentClass::VariableType VariableType;
+
+
 public:    // Public data types
 
 
