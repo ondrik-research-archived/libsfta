@@ -285,6 +285,7 @@ BOOST_FIXTURE_TEST_SUITE(suite, CUDDSharedMTBDDCharCharFixture)
 BOOST_AUTO_TEST_CASE(setters_and_getters_test)
 {
 	ASMTBDDCC* bdd = new CuddMTBDDCC();
+	bdd->SetBottomValue(0);
 
 	// load test cases
 	ListOfTestCasesType testCases;
@@ -328,6 +329,7 @@ BOOST_AUTO_TEST_CASE(setters_and_getters_test)
 BOOST_AUTO_TEST_CASE(large_diagram_test)
 {
 	ASMTBDDCC* bdd = new CuddMTBDDCC();
+	bdd->SetBottomValue(0);
 
 	boost::mt19937 prnGen(PRNG_SEED);
 
@@ -425,6 +427,7 @@ BOOST_AUTO_TEST_CASE(no_variables_formula)
 	const char* const TEST_VALUE = " = 42";
 
 	ASMTBDDCC* bdd = new CuddMTBDDCC();
+	bdd->SetBottomValue(0);
 	RootType root = bdd->CreateRoot();
 
 	FormulaParser::ParserResultUnsignedType prsRes =
@@ -447,6 +450,7 @@ BOOST_AUTO_TEST_CASE(no_variables_formula)
 BOOST_AUTO_TEST_CASE(multiple_independent_bdds)
 {
 	ASMTBDDCC* bdd = new CuddMTBDDCC();
+	bdd->SetBottomValue(0);
 
 	// load test cases for the first BDD
 	ListOfTestCasesType testCases1;
@@ -540,6 +544,7 @@ BOOST_AUTO_TEST_CASE(multiple_independent_bdds)
 BOOST_AUTO_TEST_CASE(monadic_apply)
 {
 	ASMTBDDCC* bdd = new CuddMTBDDCC();
+	bdd->SetBottomValue(0);
 
 	// load test cases
 	ListOfTestCasesType testCases;
@@ -592,6 +597,7 @@ BOOST_AUTO_TEST_CASE(monadic_apply)
 BOOST_AUTO_TEST_CASE(apply)
 {
 	ASMTBDDCC* bdd = new CuddMTBDDCC();
+	bdd->SetBottomValue(0);
 
 	// load test cases
 	ListOfTestCasesType testCases;
@@ -643,6 +649,7 @@ BOOST_AUTO_TEST_CASE(apply)
 BOOST_AUTO_TEST_CASE(serialization)
 {
 	ASMTBDDCC* bdd = new CuddMTBDDCC();
+	bdd->SetBottomValue(0);
 
 	// load test cases
 	ListOfTestCasesType testCases;
