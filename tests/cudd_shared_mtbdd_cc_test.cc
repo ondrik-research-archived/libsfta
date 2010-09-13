@@ -279,30 +279,6 @@ protected:// protected methods
  *                              Start of testing                              *
  ******************************************************************************/
 
-//class LeafAdditionFunctor
-//	: public CUDDSharedMTBDDFixture::ASMTBDD::AbstractApplyFunctorType
-//{
-//	public:
-//
-//	virtual std::vector<unsigned> operator()(const std::vector<unsigned>& lhs, const std::vector<unsigned>& rhs)
-//	{
-//		std::vector<unsigned> res(lhs.size() + rhs.size());
-//
-//		size_t i = 0;
-//		for (i = 0; i < lhs.size(); ++i)
-//		{
-//			res[i] = lhs[i];
-//		}
-//
-//		for (size_t j = 0; j < rhs.size(); ++j)
-//		{
-//			res[i+j] = rhs[j];
-//		}
-//
-//		return res;
-//	}
-//};
-
 
 BOOST_FIXTURE_TEST_SUITE(suite, CUDDSharedMTBDDCharCharFixture)
 
