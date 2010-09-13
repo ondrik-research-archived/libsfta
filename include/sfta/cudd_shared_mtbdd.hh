@@ -531,10 +531,7 @@ public:   // Public methods
 	 * The constructor of CUDDSharedMTBDD.
 	 */
 	CUDDSharedMTBDD() : cudd_()
-	{
-		// set the bottom
-		LA::setBottom(LeafType());
-	}
+	{ }
 
 
 	virtual void SetValue(const RootType& root,
