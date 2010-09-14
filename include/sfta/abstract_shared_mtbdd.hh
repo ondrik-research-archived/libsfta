@@ -196,6 +196,34 @@ public:  // Public data types
 	};
 
 
+	class AbstractVariablePredicateFunctorType
+	{
+	public:
+
+		/**
+		 * @brief  Method that evaluates the predicate
+		 *
+		 * Thie method is passed a variable and it returns a Boolean value
+		 * determinining whether the implemented predicate evaluates for the
+		 * variable to either true or false.
+		 *
+		 * @param[in]  var  Input variable name
+		 *
+		 * @returns  Boolean value for the predicate
+		 */
+		virtual bool operator()(const VariableType& var) = 0;
+
+
+		/**
+		 * @brief  Destructor
+		 *
+		 * The destructor
+		 */
+		virtual ~AbstractVariablePredicateFunctorType()
+		{ }
+	};
+
+
 public:  // Public methods
 
 	/**
@@ -343,6 +371,26 @@ public:  // Public methods
 	 */
 	virtual RootType RenameVariables(RootType root,
 		AbstractVariableRenamingFunctorType* func) = 0;
+
+
+	/**
+	 * @brief  Trim variables of an MTBDD
+	 *
+	 * This method trims variables of the MTBDD that satisfy predicate
+	 * repesented by passed predicate functor. When a variable node is removed,
+	 * an operation given by another functor is performed on its child nodes.
+	 *
+	 * @param[in]  root    Root of the MTBDD
+	 * @param[in]  pred    Predicate functor that for each variable defines
+	 *                     whether it should or should not be trimmed
+	 * @param[in]  merger  Apply functor that defines the operation that is to
+	 *                     be done for child nodes of a removed variable node.
+	 *
+	 * @returns  An MTBDD with trimmed variables
+	 */
+	virtual RootType TrimVariables(RootType root,
+		AbstractVariablePredicateFunctorType* pred,
+		AbstractApplyFunctorType* merger) = 0;
 
 
 	/**
