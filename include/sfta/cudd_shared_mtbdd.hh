@@ -816,6 +816,54 @@ public:   // Public methods
 		return RA::allocateRoot(newRoot);
 	}
 
+	virtual RootType TrimVariables(RootType root,
+		AbstractVariablePredicateFunctorType* pred,
+		AbstractApplyFunctorType* merger)
+	{
+		// Assertions
+		assert(pred != static_cast<AbstractVariablePredicateFunctorType*>(0));
+		assert(merger != static_cast<AbstractApplyFunctorType*>(0));
+
+		CUDDFacade::Node* oldRoot = RA::getHandleOfRoot(root);
+		cudd_.Ref(oldRoot);
+
+		class WrappingNodePredicateFunctor
+			: public CUDDFacade::AbstractNodePredicateFunctor
+		{
+		private:
+
+			AbstractVariablePredicateFunctorType* predFunc_;
+
+		private:
+
+			WrappingNodePredicateFunctor(const WrappingNodePredicateFunctor&);
+			WrappingNodePredicateFunctor& operator=(
+				const WrappingNodePredicateFunctor&);
+
+		public:
+
+			WrappingNodePredicateFunctor(
+				AbstractVariablePredicateFunctorType* predFunc)
+				: predFunc_(predFunc)
+			{ }
+
+
+			virtual bool operator()(unsigned index)
+			{
+				return (*predFunc_)(index);
+			}
+		};
+
+		WrappingNodePredicateFunctor predFunc(pred);
+		GenericApplyFunctor mergeFunc(this, merger);
+
+		CUDDFacade::Node* newRoot = cudd_.RemoveVariables(oldRoot,
+			&predFunc, &mergeFunc);
+		cudd_.RecursiveDeref(oldRoot);
+
+		return RA::allocateRoot(newRoot);
+	}
+
 
 	virtual ~CUDDSharedMTBDD()
 	{
