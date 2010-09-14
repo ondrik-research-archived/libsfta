@@ -400,6 +400,15 @@ unsigned CUDDFacade::GetNodeIndex(Node* node) const
 }
 
 
+unsigned CUDDFacade::GetNodeReferenceCount(Node* node) const
+{
+	// Assertions
+	assert(manager_ != static_cast<Manager*>(0));
+
+	return toCUDD(node)->ref;
+}
+
+
 CUDDFacade::Node* CUDDFacade::ChangeVariableIndex(Node* root,
 	unsigned oldIndex, unsigned newIndex) const
 {

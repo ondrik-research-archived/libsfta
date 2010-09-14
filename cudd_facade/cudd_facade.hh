@@ -411,6 +411,18 @@ public:  // Public methods
 
 
 	/**
+	 * @brief  Gets the reference count of the node
+	 *
+	 * Returns the number of references of the node.
+	 *
+	 * @param[in]  node  The input node
+	 *
+	 * @returns  The reference counter of the node
+	 */
+	unsigned GetNodeReferenceCount(Node* node) const;
+
+
+	/**
 	 * @brief  Changes the index of a variable
 	 *
 	 * Changes the index of all nodes that represent the Boolean variable with
