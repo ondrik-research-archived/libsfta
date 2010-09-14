@@ -463,6 +463,7 @@ CUDDFacade::Node* CUDDFacade::RemoveVariables(Node* root,
 
 	if (IsNodeConstant(root))
 	{	// in case the node is constant
+		Ref(root);
 		return root;
 	}
 
@@ -473,8 +474,9 @@ CUDDFacade::Node* CUDDFacade::RemoveVariables(Node* root,
 	if ((*predicate)(index))
 	{	// in case the node is to be removed
 		root = Apply(elseChild, thenChild, merger);
-
-		return root;
+		Ref(root);
+		RecursiveDeref(elseChild);
+		RecursiveDeref(thenChild);
 	}
 	else
 	{	// in case the node is to stay
@@ -483,10 +485,13 @@ CUDDFacade::Node* CUDDFacade::RemoveVariables(Node* root,
 			toCUDD(manager_)->reordered = 0;
 			root = fromCUDD(cuddUniqueInter(toCUDD(manager_), index,
 				toCUDD(thenChild), toCUDD(elseChild)));
+			Ref(root);
+			RecursiveDeref(elseChild);
+			RecursiveDeref(thenChild);
 		} while (toCUDD(manager_)->reordered == 1);
-
-		return root;
 	}
+
+	return root;
 }
 
 

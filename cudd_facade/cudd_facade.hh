@@ -446,7 +446,8 @@ public:  // Public methods
 	 * Removes nodes corresponding to Boolean variables from given MTBDD. The
 	 * variables to be removed are defined by predicate functor. When a variable
 	 * node is removed, its children are handled by a merger functor and a new
-	 * node is returned.
+	 * node is returned. Note that the output MTBDD is already referenced so
+	 * @c Ref() should not be called for it.
 	 * 
 	 * @param[in]  root       The root of the MTBDD from which variables are
 	 *                        to be removed
