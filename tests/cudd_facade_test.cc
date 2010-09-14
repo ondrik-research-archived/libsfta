@@ -953,6 +953,7 @@ BOOST_AUTO_TEST_CASE(variable_index_change)
 	facade.RecursiveDeref(node);
 }
 
+
 BOOST_AUTO_TEST_CASE(variable_trimming)
 {
 	CUDDFacade facade;
@@ -964,14 +965,14 @@ BOOST_AUTO_TEST_CASE(variable_trimming)
 
 	CUDDFacade::Node* node = CreateMTBDDForTestCases(facade, testCases);
 
-	class FirstVariablePredicateFunctor
+	class OddVariablePredicateFunctor
 		: public CUDDFacade::AbstractNodePredicateFunctor
 	{
 	public:
 
 		virtual bool operator()(unsigned index)
 		{
-			return (index == 1);
+			return index % 2 == 1;
 		}
 	};
 
@@ -985,38 +986,12 @@ BOOST_AUTO_TEST_CASE(variable_trimming)
 		}
 	};
 
-	FirstVariablePredicateFunctor predicateFirst;
+	OddVariablePredicateFunctor predicateOdd;
 	AdditionApplyFunctor merge;
 
-	// remove the first variable
+	// remove desired variable
 	CUDDFacade::Node* tmpNode = facade.RemoveVariables(node,
-		&predicateFirst, &merge);
-	facade.Ref(tmpNode);
-	facade.RecursiveDeref(node);
-	node = tmpNode;
-
-	BOOST_CHECK_MESSAGE(ValueTableToString(GetValueTable(facade, node))
-		== TRIMMED_ONE_VAR_STANDARD_TEST_CASES_TABLE,
-		"Stored table " + ValueTableToString(GetValueTable(facade, node))
-		+ " is not equal to expected table "
-		+ Convert::ToString(TRIMMED_ONE_VAR_STANDARD_TEST_CASES_TABLE));
-
-	class ThirdVariablePredicateFunctor
-		: public CUDDFacade::AbstractNodePredicateFunctor
-	{
-	public:
-
-		virtual bool operator()(unsigned index)
-		{
-			return (index == 3);
-		}
-	};
-
-	ThirdVariablePredicateFunctor predicateThird;
-
-	// remove the second variable
-	tmpNode = facade.RemoveVariables(node, &predicateThird, &merge);
-	facade.Ref(tmpNode);
+		&predicateOdd, &merge);
 	facade.RecursiveDeref(node);
 	node = tmpNode;
 
@@ -1024,7 +999,7 @@ BOOST_AUTO_TEST_CASE(variable_trimming)
 		== TRIMMED_TWO_VAR_STANDARD_TEST_CASES_TABLE,
 		"Stored table " + ValueTableToString(GetValueTable(facade, node))
 		+ " is not equal to expected table "
-		+ Convert::ToString(TRIMMED_TWO_VAR_STANDARD_TEST_CASES_TABLE));
+		+ std::string(TRIMMED_TWO_VAR_STANDARD_TEST_CASES_TABLE));
 
 	facade.RecursiveDeref(node);
 }
