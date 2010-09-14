@@ -799,6 +799,7 @@ public:   // Public methods
 		assert(func != static_cast<AbstractVariableRenamingFunctorType*>(0));
 
 		CUDDFacade::Node* newRoot = RA::getHandleOfRoot(root);
+		cudd_.Ref(newRoot);
 
 		for (VariableType i = 0; i < VariableAssignmentType::VariablesCount; ++i)
 		{	// rename all variables according to given renaming functor
