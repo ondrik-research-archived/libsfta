@@ -776,7 +776,7 @@ public:   // Public methods
 		for (VariableType i = 0; i < VariableAssignmentType::VariablesCount; ++i)
 		{	// rename all variables according to given renaming functor
 			VariableType newName;
-			if ((newName = func->RenameVariableTo(i)) != i)
+			if ((newName = (*func)(i)) != i)
 			{	// in case the new name is different from the old one
 				CUDDFacade::Node* tmp = newRoot;
 				newRoot = cudd_.ChangeVariableIndex(newRoot, i, newName);

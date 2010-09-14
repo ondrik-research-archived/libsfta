@@ -183,7 +183,7 @@ public:  // Public data types
 		 *
 		 * @returns  Output variable name
 		 */
-		virtual VariableType RenameVariableTo(const VariableType& var) = 0;
+		virtual VariableType operator()(const VariableType& var) = 0;
 	};
 
 
