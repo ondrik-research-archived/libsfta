@@ -668,7 +668,7 @@ BOOST_AUTO_TEST_CASE(variable_renaming)
 	{
 	public:
 
-		ASMTBDDCC::VariableType RenameVariableTo(const ASMTBDDCC::VariableType& var)
+		virtual ASMTBDDCC::VariableType operator()(const ASMTBDDCC::VariableType& var)
 		{
 			if (var < NUM_VARIABLES/2)
 			{
@@ -689,7 +689,7 @@ BOOST_AUTO_TEST_CASE(variable_renaming)
 	{
 	public:
 
-		ASMTBDDCC::VariableType RenameVariableTo(const ASMTBDDCC::VariableType& var)
+		virtual ASMTBDDCC::VariableType operator()(const ASMTBDDCC::VariableType& var)
 		{
 			if ((var >= NUM_VARIABLES/2) && (var < NUM_VARIABLES))
 			{
