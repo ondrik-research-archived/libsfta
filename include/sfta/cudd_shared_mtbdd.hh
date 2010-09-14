@@ -135,6 +135,14 @@ private:   // Private data types
 
 
 	/**
+	 * @brief  Type of variable name
+	 *
+	 * The data type for variable name.
+	 */
+	typedef typename ParentClass::VariableType VariableType;
+
+
+	/**
 	 * @brief  Type of variable renaming functor
 	 *
 	 * The data type for class of variable renaming functor.
@@ -144,11 +152,30 @@ private:   // Private data types
 
 
 	/**
-	 * @brief  Type of variable name
+	 * @brief  Type of variable predicate functor
 	 *
-	 * The data type for variable name.
+	 * The data type for class of variable predicate functor.
 	 */
-	typedef typename ParentClass::VariableType VariableType;
+	typedef typename ParentClass::AbstractVariablePredicateFunctorType
+		AbstractVariablePredicateFunctorType;
+
+
+	/**
+	 * @brief  Type of Apply functor
+	 *
+	 * The data type for class of Apply functor.
+	 */
+	typedef typename ParentClass::AbstractApplyFunctorType
+		AbstractApplyFunctorType;
+
+
+	/**
+	 * @brief  Type of monadic Apply functor
+	 *
+	 * The data type for class of monadic Apply functor.
+	 */
+	typedef typename ParentClass::AbstractMonadicApplyFunctorType
+		AbstractMonadicApplyFunctorType;
 
 
 public:    // Public data types
@@ -555,7 +582,7 @@ public:   // Public methods
 	}
 
 
-	virtual typename ParentClass::LeafContainer GetValue(const RootType& root,
+	virtual LeafContainer GetValue(const RootType& root,
 		const VariableAssignmentType& asgn)
 	{
 		CUDDFacade::Node* mtbddAsgn = createMTBDDForVariableProjection(asgn);
@@ -641,7 +668,7 @@ public:   // Public methods
 	 * @copydetails  SFTA::AbstractSharedMTBDD::Apply()
 	 */
 	virtual RootType Apply(const RootType& lhs, const RootType& rhs,
-		typename ParentClass::AbstractApplyFunctorType* func)
+		AbstractApplyFunctorType* func)
 	{
 		// Assertions
 		assert(func
@@ -665,7 +692,7 @@ public:   // Public methods
 	 * @copydetails  SFTA::AbstractSharedMTBDD::MonadicApply()
 	 */
 	virtual RootType MonadicApply(const RootType& root,
-		typename ParentClass::AbstractMonadicApplyFunctorType* func)
+		AbstractMonadicApplyFunctorType* func)
 	{
 		// Assertions
 		assert(func
