@@ -750,6 +750,52 @@ BOOST_AUTO_TEST_CASE(variable_renaming)
 	delete bdd;
 }
 
+BOOST_AUTO_TEST_CASE(variable_trimming)
+{
+	ASMTBDDCC* bdd = new CuddMTBDDCC();
+	bdd->SetBottomValue(0);
+
+	for (unsigned i = 0; i < NUM_VARIABLES; ++i)
+	{	// fill the table of variables
+		translateVarNameToIndex("x" + Convert::ToString(i));
+	}
+
+	// load test cases
+	ListOfTestCasesType testCases;
+	ListOfTestCasesType failedCases;
+	loadStandardTests(testCases, failedCases);
+
+	RootType root = createMTBDDForTestCases(bdd, testCases);
+
+	class OddVariablePredicateFunctorType
+		: public ASMTBDDCC::AbstractVariablePredicateFunctorType
+	{
+	public:
+
+		virtual bool operator()(const ASMTBDDCC::VariableType& var)
+		{
+			return var % 2 == 1;
+		}
+	};
+
+	OddVariablePredicateFunctorType oddPred;
+
+	class AdditionApplyFunctorType: public ASMTBDDCC::AbstractApplyFunctorType
+	{
+	public:
+		virtual LeafType operator()(const LeafType& lhs, const LeafType& rhs)
+		{
+			return lhs + rhs;
+		}
+	};
+
+	AdditionApplyFunctorType addApply;
+
+	RootType newRoot = bdd->TrimVariables(root, &oddPred, &addApply);
+
+	delete bdd;
+}
+
 //BOOST_AUTO_TEST_CASE(serialization)
 //{
 //	ASMTBDDCC* bdd = new CuddMTBDDCC();
