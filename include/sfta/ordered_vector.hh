@@ -87,7 +87,12 @@ public:   // Public methods
 	explicit OrderedVector(const VectorType& vec)
 		: vec_(vec)
 	{
+		// sort
 		std::sort(vec_.begin(), vec_.end());
+
+		// remove duplicates
+		typename VectorType::iterator it = std::unique(vec_.begin(), vec_.end());
+		vec_.resize(it - vec_.begin());
 	}
 
 
