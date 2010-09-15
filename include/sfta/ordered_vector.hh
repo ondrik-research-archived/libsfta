@@ -24,15 +24,24 @@ namespace SFTA
 {
 	template
 	<
-		typename T
+		class Key
 	>
 	class OrderedVector;
 }
 
 
+/**
+ * @brief  Implementation of a set using ordered vector
+ *
+ * This class implements the interface of a set (the same interface as
+ * std::set) using ordered vector as the underlying data structure.
+ *
+ * @tparam  Key  Key type: type of the elements contained in the container.
+ *               Each elements in a set is also its key.
+ */
 template
 <
-	typename T
+	class Key
 >
 class SFTA::OrderedVector
 {
@@ -40,7 +49,7 @@ private:  // Private data types
 
 	typedef SFTA::Private::Convert Convert;
 
-	typedef std::vector<T> VectorType;
+	typedef std::vector<Key> VectorType;
 
 public:   // Public data types
 
@@ -80,7 +89,7 @@ public:   // Public methods
 	{ }
 
 
-	inline void push_back(const T& x)
+	inline void push_back(const Key& x)
 	{
 		if (std::find(vec_.begin(), vec_.end(), x) == vec_.end())
 		{	// in case the element is not in the vector so far
