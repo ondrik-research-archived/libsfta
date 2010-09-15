@@ -71,9 +71,12 @@ RANLIB          = ranlib
 #                                 Rules                                       #
 ###############################################################################
 
-.PHONY: all clean distclean
+.PHONY: all clean distclean cudd
 
-$(LIB): $(OBJ_FILES)
+cudd:
+	cd $(CUDD_PATH) ; make
+
+$(LIB): $(OBJ_FILES) cudd
 	TMP_DIR=`mktemp -d` ; \
 	cp $(OBJ_FILES) $${TMP_DIR} ; \
 	cp $(ST_LIBS) $${TMP_DIR} ; \
