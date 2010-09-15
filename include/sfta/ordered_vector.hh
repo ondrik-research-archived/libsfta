@@ -86,7 +86,9 @@ public:   // Public methods
 
 	explicit OrderedVector(const VectorType& vec)
 		: vec_(vec)
-	{ }
+	{
+		std::sort(vec_.begin(), vec_.end());
+	}
 
 
 	inline void push_back(const Key& x)
