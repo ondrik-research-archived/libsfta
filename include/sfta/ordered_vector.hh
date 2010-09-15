@@ -221,10 +221,6 @@ public:   // Public methods
 		return vec_.end();
 	}
 
-	inline const_reference operator[](size_t n) const
-	{
-		return vec_[n];
-	}
 
 	/**
 	 * @brief  Overloaded << operator
