@@ -66,7 +66,8 @@ private:  // Private methods
 
 	bool vectorIsSorted() const
 	{
-		for (const_iterator itVec = vec_.begin() + 1; itVec < vec_.end(); ++itVec)
+		for (typename VectorType::const_iterator itVec = vec_.begin() + 1;
+			itVec < vec_.end(); ++itVec)
 		{	// check that the vector is sorted
 			if (*(itVec - 1) >= *itVec)
 			{	// in case there is an unordered pair (or there is one element twice)
@@ -259,7 +260,6 @@ public:   // Public methods
 		return vec_.end();
 	}
 
-
 	/**
 	 * @brief  Overloaded << operator
 	 *
@@ -306,7 +306,6 @@ public:   // Public methods
 		return std::lexicographical_compare(vec_.begin(), vec_.end(),
 			rhs.vec_.begin(), rhs.vec_.end());
 	}
-
 };
 
 #endif
