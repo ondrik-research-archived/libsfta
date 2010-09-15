@@ -84,6 +84,25 @@ const char* const STANDARD_FAIL_CASES[] =
 const unsigned STANDARD_FAIL_CASES_SIZE =
 	sizeof(STANDARD_FAIL_CASES) / sizeof(const char* const);
 
+
+/**
+ * Formulae for standard test cases with trimmed variables
+ */
+const char* const TRIMMED_STANDARD_TEST_CASES[] =
+{
+	"~x1 *  x3 = 12",
+	" x1 * ~x3 = 18",
+	" x1 *  x3 = 15"
+};
+
+
+/**
+ * Number of formulae for standard test cases with trimmed variables.
+ */
+const unsigned TRIMMED_STANDARD_TEST_CASES_SIZE =
+	sizeof(TRIMMED_STANDARD_TEST_CASES) / sizeof(const char* const);
+
+
 /**
  * Number of variables of the MTBDD
  */
@@ -774,7 +793,7 @@ BOOST_AUTO_TEST_CASE(variable_trimming)
 
 		virtual bool operator()(const ASMTBDDCC::VariableType& var)
 		{
-			return var % 2 == 1;
+			return var % 2 == 0;
 		}
 	};
 
@@ -791,8 +810,33 @@ BOOST_AUTO_TEST_CASE(variable_trimming)
 
 	AdditionApplyFunctorType addApply;
 
-	RootType newRoot = bdd->TrimVariables(root, &oddPred, &addApply);
+	RootType trimmedRoot = bdd->TrimVariables(root, &oddPred, &addApply);
 
+	ListOfTestCasesType trimmedTestCases;
+	// formulae that we wish to check
+	for (size_t i = 0; i < TRIMMED_STANDARD_TEST_CASES_SIZE; ++i)
+	{	// load test cases
+		trimmedTestCases.push_back(TRIMMED_STANDARD_TEST_CASES[i]);
+	}
+
+	for (ListOfTestCasesType::const_iterator itTests = trimmedTestCases.begin();
+		itTests != trimmedTestCases.end(); ++itTests)
+	{	// test that the test cases have been stored properly
+#if DEBUG
+		BOOST_TEST_MESSAGE("Finding stored " + *itTests);
+#endif
+		FormulaParser::ParserResultUnsignedType prsRes =
+			FormulaParser::ParseExpressionUnsigned(*itTests);
+		LeafType leafValue = static_cast<LeafType>(prsRes.first);
+		MyVariableAssignment asgn = varListToAsgn(prsRes.second);
+
+		ASMTBDDCC::LeafContainer res;
+		res.push_back(&leafValue);
+
+		BOOST_CHECK_MESSAGE(
+			compareTwoLeafContainers(bdd->GetValue(trimmedRoot, asgn), res), *itTests
+			+ " != " + leafContainerToString(bdd->GetValue(trimmedRoot, asgn)));
+	}
 	delete bdd;
 }
 
