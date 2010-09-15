@@ -236,7 +236,15 @@ public:   // Public methods
 	 */
 	friend std::ostream& operator<<(std::ostream& os, const OrderedVector& vec)
 	{
-		return (os << Convert::ToString(vec.vec_));
+		std::string result = "{";
+
+		for (typename VectorType::const_iterator it = vec.begin();
+			it != vec.end(); ++it)
+		{
+			result += ((it != vec.begin())? ", " : " ") + Convert::ToString(*it);
+		}
+
+		return os << (result + "}");
 	}
 
 	bool operator==(const OrderedVector& rhs) const
