@@ -53,8 +53,23 @@ private:  // Private data members
 	VectorType vec_;
 
 
-public:   // Public methods
+private:  // Private methods
 
+	bool vectorIsSorted() const
+	{
+		for (const_iterator itVec = vec_.begin(); itVec != vec_.end() - 1; ++itVec)
+		{	// check that the vector is sorted
+			if (*itVec >= *(itVec + 1))
+			{	// in case there is an unordered pair (or there is one element twice)
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+
+public:   // Public methods
 
 	OrderedVector()
 		: vec_()
