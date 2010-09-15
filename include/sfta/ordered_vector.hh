@@ -82,7 +82,11 @@ public:   // Public methods
 
 	OrderedVector()
 		: vec_()
-	{ }
+	{
+		// Assertions
+		assert(vectorIsSorted());
+	}
+
 
 	explicit OrderedVector(const VectorType& vec)
 		: vec_(vec)
@@ -93,6 +97,9 @@ public:   // Public methods
 		// remove duplicates
 		typename VectorType::iterator it = std::unique(vec_.begin(), vec_.end());
 		vec_.resize(it - vec_.begin());
+
+		// Assertions
+		assert(vectorIsSorted());
 	}
 
 
@@ -143,16 +150,28 @@ public:   // Public methods
 
 	inline void clear()
 	{
+		// Assertions
+		assert(vectorIsSorted());
+
 		vec_.clear();
 	}
 
+
 	inline size_t size() const
 	{
+		// Assertions
+		assert(vectorIsSorted());
+
 		return vec_.size();
 	}
 
+
 	OrderedVector Union(const OrderedVector& rhs) const
 	{
+		// Assertions
+		assert(vectorIsSorted());
+		assert(rhs.vectorIsSorted());
+
 		VectorType newVector;
 
 		typename VectorType::const_iterator lhsIt = vec_.begin();
@@ -191,33 +210,52 @@ public:   // Public methods
 			}
 		}
 
-		return OrderedVector(newVector);
-	}
+		OrderedVector result(newVector);
 
+		// Assertions
+		assert(result.vectorIsSorted());
+
+		return result;
+	}
 
 
 	inline iterator begin()
 	{
+		// Assertions
+		assert(vectorIsSorted());
+
 		return vec_.begin();
 	}
 
 	inline bool empty() const
 	{
+		// Assertions
+		assert(vectorIsSorted());
+
 		return vec_.empty();
 	}
 
 	inline const_iterator begin() const
 	{
+		// Assertions
+		assert(vectorIsSorted());
+
 		return vec_.begin();
 	}
 
 	inline iterator end()
 	{
+		// Assertions
+		assert(vectorIsSorted());
+
 		return vec_.end();
 	}
 
 	inline const_iterator end() const
 	{
+		// Assertions
+		assert(vectorIsSorted());
+
 		return vec_.end();
 	}
 
@@ -236,6 +274,9 @@ public:   // Public methods
 	 */
 	friend std::ostream& operator<<(std::ostream& os, const OrderedVector& vec)
 	{
+		// Assertions
+		assert(vec.vectorIsSorted());
+
 		std::string result = "{";
 
 		for (typename VectorType::const_iterator it = vec.begin();
@@ -249,11 +290,19 @@ public:   // Public methods
 
 	bool operator==(const OrderedVector& rhs) const
 	{
+		// Assertions
+		assert(vectorIsSorted());
+		assert(rhs.vectorIsSorted());
+
 		return (vec_ == rhs.vec_);
 	}
 
 	bool operator<(const OrderedVector& rhs) const
 	{
+		// Assertions
+		assert(vectorIsSorted());
+		assert(rhs.vectorIsSorted());
+
 		return std::lexicographical_compare(vec_.begin(), vec_.end(),
 			rhs.vec_.begin(), rhs.vec_.end());
 	}
