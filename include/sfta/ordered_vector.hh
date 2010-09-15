@@ -197,6 +197,12 @@ public:   // Public methods
 		return (vec_ == rhs.vec_);
 	}
 
+	bool operator<(const OrderedVector& rhs) const
+	{
+		return std::lexicographical_compare(vec_.begin(), vec_.end(),
+			rhs.vec_.begin(), rhs.vec_.end());
+	}
+
 };
 
 #endif
