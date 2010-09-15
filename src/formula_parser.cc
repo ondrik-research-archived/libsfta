@@ -88,15 +88,17 @@ FormulaParser::ParserResultUnsignedVecType
 
 	if (splitInput.size() != 2)
 	{	// in case the input looks strange
-		throw std::invalid_argument(__func__ + std::string(": invalid argument"));
+		throw std::invalid_argument(__func__ + std::string(": invalid argument "
+			"(not in the \"<formula> = <values>\" format)"));
 	}
 
 	std::string& secondPart = splitInput[1];
 	boost::trim(secondPart);
 
-	if ((secondPart[0] != '{') || (secondPart[1] != '}'))
+	if ((secondPart[0] != '{') || (secondPart[secondPart.size() - 1] != '}'))
 	{	// in case the input is malformated
-		throw std::invalid_argument(__func__ + std::string(": invalid argument"));
+		throw std::invalid_argument(__func__ + std::string(": invalid argument "
+			"(values are not in the \"{ <list> }\" format)"));
 	}
 
 	secondPart = secondPart.substr(1, secondPart.length() - 2);
@@ -105,7 +107,8 @@ FormulaParser::ParserResultUnsignedVecType
 
 	if (splitSecondPart.size() < 1)
 	{	// in case the input looks strange
-		throw std::invalid_argument(__func__ + std::string(": invalid argument"));
+		throw std::invalid_argument(__func__ + std::string(": invalid argument "
+			"(list of values is not in the \"<value>, ... , <value>\" format)"));
 	}
 
 	std::vector<unsigned> resultVec;
