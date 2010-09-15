@@ -195,12 +195,6 @@ public:   // Public methods
 	}
 
 
-	template <class InputIterator>
-	inline void insert(iterator position, InputIterator first, InputIterator last)
-	{
-		vec_.insert(position, first, last);
-		std::sort(vec_.begin(), vec_.end());
-	}
 
 
 	inline void Erase(size_t position)
