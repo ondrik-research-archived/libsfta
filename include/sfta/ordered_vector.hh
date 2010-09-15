@@ -96,13 +96,48 @@ public:   // Public methods
 	}
 
 
-	inline void push_back(const Key& x)
+	inline void insert(const Key& x)
 	{
-		if (std::find(vec_.begin(), vec_.end(), x) == vec_.end())
-		{	// in case the element is not in the vector so far
-			vec_.push_back(x);
-			std::sort(vec_.begin(), vec_.end());
+		// Assertions
+		assert(vectorIsSorted());
+
+		// perform binary search (cannot use std::binary_search because it is
+		// ineffective due to not returning the iterator to the position of the
+		// desirable insertion in case the searched element is not present in the
+		// range)
+		typename VectorType::iterator first = vec_.begin();
+		typename VectorType::iterator last = vec_.end();
+
+		while (first < last)
+		{	// while the pointers do not overlap
+			typename VectorType::iterator middle = first + (last - first) / 2;
+			if (*middle == x)
+			{	// in case we found x
+				return;
+			}
+			else if (*middle < x)
+			{	// in case middle is less than x
+				first = middle + 1;
+			}
+			else
+			{	// in case middle is greater than x
+				last = middle;
+			}
 		}
+
+		vec_.push_back(0);
+
+		for (typename VectorType::iterator itVec = vec_.end() - 1;
+			itVec != first; --itVec)
+		{	// shift successive elements in the vector
+			*itVec = *(itVec - 1);
+		}
+
+		// insert the new element
+		*first = x;
+
+		// Assertions
+		assert(vectorIsSorted());
 	}
 
 
