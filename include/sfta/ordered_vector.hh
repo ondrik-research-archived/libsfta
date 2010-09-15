@@ -196,15 +196,6 @@ public:   // Public methods
 
 
 
-
-	inline void Erase(size_t position)
-	{
-		// Assertions
-		assert(position < vec_.size());
-
-		vec_.erase(vec_.begin() + position);
-	}
-
 	inline iterator begin()
 	{
 		return vec_.begin();
