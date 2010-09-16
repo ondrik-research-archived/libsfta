@@ -52,10 +52,18 @@ LIBS           += -lloki
 # Local object files
 OBJ             = log_fixture.o
 
+# CUDD Facade library
+CUDD_FACADE_PATH = ../cudd_facade
+CUDD_FACADE_LIB  = $(CUDD_FACADE_PATH)/libcudd_facade.a
+
+# SFTA library
+SFTA_PATH       = ../src
+SFTA_LIB        = $(SFTA_PATH)/libsfta.a
+
 # Static libraries
 ST_LIBS         =
-ST_LIBS        += ../cudd_facade/libcudd_facade.a
-ST_LIBS        += ../src/libsfta.a
+ST_LIBS        += $(CUDD_FACADE_LIB)
+ST_LIBS        += $(SFTA_LIB)
 ST_LIBS        += $(TESTS_LIB)
 
 SRC_FILES       = $(wildcard *_test.cc)
@@ -82,17 +90,15 @@ RANLIB          = ranlib
 #                                 Rules                                       #
 ###############################################################################
 
-.PHONY: all cudd_facade sfta clean test libs
+.PHONY: all clean test
 
-all: libs $(EXE_FILES)
+all: $(EXE_FILES)
 
-libs: cudd_facade sfta
+$(CUDD_FACADE_LIB):
+	cd $(CUDD_FACADE_PATH) ; make
 
-cudd_facade:
-	cd ../cudd_facade ; make
-
-sfta:
-	cd ../src ; make
+$(SFTA_LIB):
+	cd $(SFTA_PATH) ; make
 
 $(TESTS_LIB): $(OBJ)
 	$(AR) $(AR_CREATE_FLAGS) $@ $^
