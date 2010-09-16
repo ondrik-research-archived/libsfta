@@ -73,6 +73,8 @@ RANLIB          = ranlib
 
 .PHONY: all clean distclean cudd
 
+all: $(LIB)
+
 cudd:
 	cd $(CUDD_PATH) ; make
 
@@ -95,8 +97,6 @@ $(LIB): $(OBJ_FILES) cudd
 
 %.o: %.cc $(HDR_FILES)
 	$(CC) $(CFLAGS) $(INC) -o $@ $<
-
-all: $(LIB)
 
 clean:
 	rm -f $(DEL_FILES)
