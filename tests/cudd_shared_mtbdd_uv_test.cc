@@ -643,11 +643,10 @@ BOOST_AUTO_TEST_CASE(monadic_apply)
 }
 
 
-#if 0
 BOOST_AUTO_TEST_CASE(apply)
 {
 	ASMTBDDCC* bdd = new CuddMTBDDCC();
-	bdd->SetBottomValue(0);
+	bdd->SetBottomValue(LeafType());
 
 	// load test cases
 	ListOfTestCasesType testCases;
@@ -664,7 +663,14 @@ BOOST_AUTO_TEST_CASE(apply)
 
 		virtual LeafType operator()(const LeafType& lhs, const LeafType& rhs)
 		{
-			return lhs * rhs;
+			LeafType result;
+			for (LeafType::const_iterator itLhs = lhs.begin(), itRhs = rhs.begin();
+				(itLhs != lhs.end()) && (itRhs != rhs.end()) ; ++itLhs, ++itRhs)
+			{
+				result.insert((*itLhs) * (*itRhs));
+			}
+
+			return result;
 		}
 	};
 
@@ -681,8 +687,15 @@ BOOST_AUTO_TEST_CASE(apply)
 		FormulaParser::ParserResultUnsignedVecType prsRes =
 			FormulaParser::ParseExpressionUnsignedVec(*itTests);
 		LeafType leafValue = static_cast<LeafType>(prsRes.first);
-		leafValue *= leafValue;
 		MyVariableAssignment asgn = varListToAsgn(prsRes.second);
+
+		LeafType squaredSet;
+		for (LeafType::const_iterator itLeaf = leafValue.begin();
+			itLeaf != leafValue.end(); ++itLeaf)
+		{	// square each element of the vector
+			squaredSet.insert((*itLeaf) * (*itLeaf));
+		}
+		leafValue = squaredSet;
 
 		ASMTBDDCC::LeafContainer res;
 		res.push_back(&leafValue);
@@ -696,6 +709,7 @@ BOOST_AUTO_TEST_CASE(apply)
 }
 
 
+#if 0
 BOOST_AUTO_TEST_CASE(variable_renaming)
 {
 	ASMTBDDCC* bdd = new CuddMTBDDCC();
