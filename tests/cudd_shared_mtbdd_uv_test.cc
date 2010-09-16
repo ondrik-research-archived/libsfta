@@ -44,12 +44,12 @@ using SFTA::Private::FormulaParser;
  */
 const char* const STANDARD_TEST_CASES[] =
 {
-	"~x0 * ~x1 *  x2 *  x3 = { 3}",
-	"~x0 *  x1 * ~x2 * ~x3 = { 4}",
-	" x0 * ~x1 * ~x2 *  x3 = { 9}",
+	"~x0 * ~x1 *  x2 *  x3 = { 3, 1, 9}",
+	"~x0 *  x1 * ~x2 * ~x3 = { 4, 7, 8}",
+	" x0 * ~x1 * ~x2 *  x3 = { 9, 2, 128, 4}",
 	" x0 *  x1 *  x2 * ~x3 = {14}",
 	" x0 *  x1 *  x2 * ~x3 = {14}",
-	" x0 *  x1 *  x2 *  x3 = {15}"
+	" x0 *  x1 *  x2 *  x3 = {15, 78, 54}"
 };
 
 
@@ -354,11 +354,10 @@ BOOST_AUTO_TEST_CASE(setters_and_getters_test)
 	delete bdd;
 }
 
-#if 0
 BOOST_AUTO_TEST_CASE(large_diagram_test)
 {
 	ASMTBDDCC* bdd = new CuddMTBDDCC();
-	bdd->SetBottomValue(0);
+	bdd->SetBottomValue(LeafType());
 
 	boost::mt19937 prnGen(PRNG_SEED);
 
@@ -379,10 +378,17 @@ BOOST_AUTO_TEST_CASE(large_diagram_test)
 			}
 		}
 
-		LeafType randomNum;
-		while ((randomNum = prnGen()) == 0) ;   // generate non-zero random number
+		formula += " = {";
 
-		formula += " = " + Convert::ToString(static_cast<unsigned>(randomNum));
+		bool first = true;
+		while ((prnGen() % 8 != 0) || first)
+		{	// generate a set of variables
+			formula += (first? " " : ", ") + Convert::ToString(static_cast<Containee>(prnGen()));
+
+			first = false;
+		}
+
+		formula += "}";
 
 		testCases.push_back(formula);
 	}
@@ -404,7 +410,7 @@ BOOST_AUTO_TEST_CASE(large_diagram_test)
 			}
 		}
 
-		formula += " = " + Convert::ToString(static_cast<unsigned>(1));
+		formula += " = {1}";
 
 		failedCases.push_back(formula);
 	}
@@ -451,6 +457,7 @@ BOOST_AUTO_TEST_CASE(large_diagram_test)
 }
 
 
+#if 0
 BOOST_AUTO_TEST_CASE(no_variables_formula)
 {
 	const char* const TEST_VALUE = " = 42";
