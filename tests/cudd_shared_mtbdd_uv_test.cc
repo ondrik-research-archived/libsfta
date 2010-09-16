@@ -91,9 +91,9 @@ const unsigned STANDARD_FAIL_CASES_SIZE =
  */
 const char* const TRIMMED_STANDARD_TEST_CASES[] =
 {
-	"~x1 *  x3 = 12",
-	" x1 * ~x3 = 18",
-	" x1 *  x3 = 15"
+	"~x1 *  x3 = {3, 1, 9, 2, 128, 4}",
+	" x1 * ~x3 = {4, 7, 8, 14}",
+	" x1 *  x3 = {15, 78, 54}"
 };
 
 
@@ -814,11 +814,10 @@ BOOST_AUTO_TEST_CASE(variable_renaming)
 }
 
 
-#if 0
 BOOST_AUTO_TEST_CASE(variable_trimming)
 {
 	ASMTBDDCC* bdd = new CuddMTBDDCC();
-	bdd->SetBottomValue(0);
+	bdd->SetBottomValue(LeafType());
 
 	for (unsigned i = 0; i < NUM_VARIABLES; ++i)
 	{	// fill the table of variables
@@ -850,7 +849,7 @@ BOOST_AUTO_TEST_CASE(variable_trimming)
 	public:
 		virtual LeafType operator()(const LeafType& lhs, const LeafType& rhs)
 		{
-			return lhs + rhs;
+			return lhs.Union(rhs);
 		}
 	};
 
@@ -886,6 +885,7 @@ BOOST_AUTO_TEST_CASE(variable_trimming)
 	delete bdd;
 }
 
+#if 0
 BOOST_AUTO_TEST_CASE(serialization)
 {
 	ASMTBDDCC* bdd = new CuddMTBDDCC();
