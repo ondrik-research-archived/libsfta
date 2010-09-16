@@ -124,6 +124,12 @@ const unsigned LARGE_TEST_FORMULA_CASES = 200;
  *                                  Fixtures                                  *
  ******************************************************************************/
 
+/**
+ * @brief  CUDDSharedMTBDD unsigned to vector test fixture
+ *
+ * Fixture for test of CUDDSharedMTBDD with unsigned integers as roots and
+ * ordered vectors of unsigned integers as leaves.
+ */
 class CUDDSharedMTBDDUnsignedVectorFixture : public LogFixture
 {
 private:  // private constants
@@ -160,6 +166,11 @@ public:   // public types
 	 */
 	typedef std::vector<std::string> ListOfTestCasesType;
 
+	/**
+	 * @brief  Variable assignment
+	 *
+	 * Type for variable assignment used in the test.
+	 */
 	typedef SFTA::Private::CompactVariableAssignment<NUM_VARIABLES> MyVariableAssignment;
 
 	/**
@@ -169,10 +180,20 @@ public:   // public types
 	 */
 	typedef AbstractSharedMTBDD<RootType, LeafType, MyVariableAssignment> ASMTBDDUV;
 
+	/**
+	 * @brief  CUDD MTBDD type
+	 *
+	 * Type for MTBDD that uses CUDD with fully bound template paramaters.
+	 */
 	typedef CUDDSharedMTBDD<RootType, LeafType, MyVariableAssignment,
 			SFTA::Private::DualMapLeafAllocator, SFTA::Private::MapRootAllocator>
 			CuddMTBDDUV;
 
+	/**
+	 * @brief  Dictionary of variables
+	 *
+	 * Type for dictionary of variables mapping variable name to index.
+	 */
 	typedef std::map<std::string, unsigned> VariableNameDictionary;
 
 private:  // private data members
@@ -183,17 +204,44 @@ private:  // private data members
 	 */
 	unsigned varCounter_;
 
+
+	/**
+	 * Dictionary mapping variables' names to variable indices.
+	 */
 	VariableNameDictionary varDict_;
 
 private:  // private methods
 
+	/**
+	 * @brief  Copy constructor
+	 *
+	 * Copy constructor.
+	 *
+	 * @param[in]  fixture  Input fixture
+	 */
 	CUDDSharedMTBDDUnsignedVectorFixture(
 		const CUDDSharedMTBDDUnsignedVectorFixture& fixture);
+
+
+	/**
+	 * @brief  Assignment operator
+	 *
+	 * Assignment operator.
+	 *
+	 * @param[in]  rhs  Assigned value
+	 *
+	 * @returns  The new value
+	 */
 	CUDDSharedMTBDDUnsignedVectorFixture& operator=(
 		const CUDDSharedMTBDDUnsignedVectorFixture& rhs);
 
 public:   // public methods
 
+	/**
+	 * @brief  Default constructor
+	 *
+	 * Default constructor.
+	 */
 	CUDDSharedMTBDDUnsignedVectorFixture()
 		: varCounter_(0), varDict_()
 	{ }
@@ -227,6 +275,18 @@ protected:// protected methods
 	}
 
 
+	/**
+	 * @brief  Translates variable name to variable index
+	 *
+	 * This method translates variable name to corresponding variable index
+	 * using variable dictionary. In case the variable name is not in the
+	 * dictionary, it is assigned new free index and the pair is inserted in the
+	 * dictionary.
+	 *
+	 * @param[in]  varName  Variable name
+	 *
+	 * @returns  Variable index
+	 */
 	size_t translateVarNameToIndex(const std::string& varName)
 	{
 		VariableNameDictionary::const_iterator itDict;
@@ -239,6 +299,16 @@ protected:// protected methods
 	}
 
 
+	/**
+	 * @brief  Translates list of variables to variable assignment
+	 *
+	 * This method takes a list of variables and their values (either normal or
+	 * complemented) and transforms it into the variable assignment structure.
+	 *
+	 * @param[in]  varList  List of variables and their values
+	 *
+	 * @returns  Variable assignment data structure
+	 */
 	MyVariableAssignment varListToAsgn(
 		const FormulaParser::VariableListType& varList)
 	{
@@ -255,6 +325,17 @@ protected:// protected methods
 		return asgn;
 	}
 
+
+	/**
+	 * @brief  Converts container with leaf values to string
+	 *
+	 * This static method returns string representation of a container of leaf
+	 * values.
+	 *
+	 * @param[in]  leafCont  Container with leaves
+	 *
+	 * @returns  String representation of the container
+	 */
 	static std::string leafContainerToString(const ASMTBDDUV::LeafContainer& leafCont)
 	{
 		std::string result;
@@ -269,11 +350,34 @@ protected:// protected methods
 		return result;
 	}
 
+
+	/**
+	 * @brief  Equality comparer of leaves
+	 *
+	 * This static method compares two leaves and determines if they are equal.
+	 *
+	 * @param[in]  lhs  Left-hand side leaf
+	 * @param[in]  rhs  Right-hand side leaf
+	 *
+	 * @returns  Boolean value determining whether the leaves are equal
+	 */
 	inline static bool compareLeafValues(const LeafType* lhs, const LeafType* rhs)
 	{
 		return *lhs == *rhs;
 	}
 
+
+	/**
+	 * @brief  Equality comparer of leaf containers
+	 *
+	 * This static method compares two containers with leaf values and
+	 * determines if they are equal.
+	 *
+	 * @param[in]  lhs  Left-hand side container
+	 * @param[in]  rhs  Right-hand side container
+	 *
+	 * @returns  Boolean value determining whether the leaf containers are equal
+	 */
 	static bool compareTwoLeafContainers(const ASMTBDDUV::LeafContainer& lhs,
 		const ASMTBDDUV::LeafContainer& rhs)
 	{
@@ -288,6 +392,18 @@ protected:// protected methods
 		return std::equal(left->begin(), left->end(), right->begin(), compareLeafValues);
 	}
 
+
+	/**
+	 * @brief  Creates MTBDDs for test cases
+	 *
+	 * This method creates in given MTBDD new root with leaves according to the
+	 * set of test cases.
+	 *
+	 * @param[in]  bdd        An MTBDD
+	 * @param[in]  testCases  Set of test cases to be inserted in the MTBDD
+	 *
+	 * @returns  New root with leaves according to the test cases
+	 */
 	RootType createMTBDDForTestCases(ASMTBDDUV* bdd,
 		const ListOfTestCasesType& testCases)
 	{

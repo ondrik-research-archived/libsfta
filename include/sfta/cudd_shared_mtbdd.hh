@@ -256,16 +256,49 @@ private:   // Private data types
 	{
 	private:
 
+		/**
+		 * The MTBDD in which is the operation carried out.
+		 */
 		CUDDSharedMTBDD* mtbdd_;
+
+		/**
+		 * The higher level operation functor.
+		 */
 		typename ParentClass::AbstractApplyFunctorType* func_;
 
 	private:
 
-		GenericApplyFunctor(const GenericApplyFunctor&);
-		GenericApplyFunctor& operator=(const GenericApplyFunctor&);
+		/**
+		 * @brief  Copy constructor
+		 *
+		 * Copy constructor.
+		 *
+		 * @param[in]  func  Copied functor
+		 */
+		GenericApplyFunctor(const GenericApplyFunctor& func);
+
+
+		/**
+		 * @brief  Assignment operator
+		 *
+		 * Assignment operator.
+		 *
+		 * @param[in]  func  Assigned value
+		 *
+		 * @returns  New value
+		 */
+		GenericApplyFunctor& operator=(const GenericApplyFunctor& func);
 
 	public:
 
+		/**
+		 * @brief  Constructor
+		 *
+		 * Constructor of the functor.
+		 *
+		 * @param[in]  mtbdd  The MTBDD in which the operation is carried out
+		 * @param[in]  func   The functor performing the higher level operation
+		 */
 		GenericApplyFunctor(CUDDSharedMTBDD* mtbdd,
 			typename ParentClass::AbstractApplyFunctorType* func)
 			: mtbdd_(mtbdd), func_(func)
@@ -276,6 +309,18 @@ private:   // Private data types
 				!= static_cast<typename ParentClass::AbstractApplyFunctorType*>(0));
 		}
 
+
+		/**
+		 * @brief  The operation
+		 *
+		 * The operation of the functor. It calls the higher level operation and
+		 * correctly handles new leaves.
+		 *
+		 * @param[in]  lhs  Left-hand side leaf
+		 * @param[in]  rhs  Right-hand side leaf
+		 *
+		 * @returns  Result leaf
+		 */
 		virtual CUDDFacade::ValueType operator()(const CUDDFacade::ValueType& lhs,
 			const CUDDFacade::ValueType& rhs)
 		{
@@ -301,16 +346,49 @@ private:   // Private data types
 	{
 	private:
 
+		/**
+		 * The MTBDD in which is the operation carried out.
+		 */
 		CUDDSharedMTBDD* mtbdd_;
+
+		/**
+		 * The higher level operation functor.
+		 */
 		typename ParentClass::AbstractMonadicApplyFunctorType* func_;
 
 	private:
 
-		GenericMonadicApplyFunctor(const GenericMonadicApplyFunctor&);
-		GenericMonadicApplyFunctor& operator=(const GenericMonadicApplyFunctor&);
+		/**
+		 * @brief  Copy constructor
+		 *
+		 * Copy constructor.
+		 *
+		 * @param[in]  func  Copied functor
+		 */
+		GenericMonadicApplyFunctor(const GenericMonadicApplyFunctor& func);
+
+
+		/**
+		 * @brief  Assignment operator
+		 *
+		 * Assignment operator.
+		 *
+		 * @param[in]  func  Assigned value
+		 *
+		 * @returns  New value
+		 */
+		GenericMonadicApplyFunctor& operator=(const GenericMonadicApplyFunctor& func);
 
 	public:
 
+		/**
+		 * @brief  Constructor
+		 *
+		 * Constructor of the functor.
+		 *
+		 * @param[in]  mtbdd  The MTBDD in which the operation is carried out
+		 * @param[in]  func   The functor performing the higher level operation
+		 */
 		GenericMonadicApplyFunctor(CUDDSharedMTBDD* mtbdd,
 			typename ParentClass::AbstractMonadicApplyFunctorType* func)
 			: mtbdd_(mtbdd), func_(func)
@@ -321,6 +399,17 @@ private:   // Private data types
 				!= static_cast<typename ParentClass::AbstractMonadicApplyFunctorType*>(0));
 		}
 
+
+		/**
+		 * @brief  The operation
+		 *
+		 * The operation of the functor. It calls the higher level operation and
+		 * correctly handles new leaves.
+		 *
+		 * @param[in]  val  The value
+		 *
+		 * @returns  Result leaf
+		 */
 		virtual CUDDFacade::ValueType operator()(const CUDDFacade::ValueType& val)
 		{
 			// perform the operation
@@ -342,6 +431,16 @@ private:   // Private data types
 	{
 	public:
 
+		/**
+		 * @brief  The operation
+		 *
+		 * The method that performs the projection operation.
+		 *
+		 * @param[in]  lhs  Left-hand side leaf
+		 * @param[in]  rhs  Right-hand side leaf
+		 *
+		 * @returns  Result leaf
+		 */
 		virtual CUDDFacade::ValueType operator()(const CUDDFacade::ValueType& lhs,
 			const CUDDFacade::ValueType& rhs)
 		{
@@ -360,6 +459,16 @@ private:   // Private data types
 	{
 	public:
 
+		/**
+		 * @brief  The operation
+		 *
+		 * The method that performs the overwriting operation.
+		 *
+		 * @param[in]  lhs  Left-hand side leaf
+		 * @param[in]  rhs  Right-hand side leaf
+		 *
+		 * @returns  Result leaf
+		 */
 		virtual CUDDFacade::ValueType operator()(const CUDDFacade::ValueType& lhs,
 			const CUDDFacade::ValueType& rhs)
 		{
@@ -535,6 +644,14 @@ private:  // Private methods
 		return node;
 	}
 
+	/**
+	 * @brief  Correctly removes CUDD root
+	 *
+	 * This method correctly removes a CUDD root (including calling release
+	 * functor for all leaves).
+	 *
+	 * @param[in]  root  CUDD root
+	 */
 	void eraseCUDDRoot(CUDDFacade::Node* root)
 	{
 		// Assertions
