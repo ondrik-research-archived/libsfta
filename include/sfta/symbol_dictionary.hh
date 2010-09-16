@@ -68,7 +68,7 @@ public:   // Public methods
 
 	SymbolDictionary()
 		: i2a_(),
-			nextSymbol_()
+			nextSymbol_(0)
 	{ }
 
 
