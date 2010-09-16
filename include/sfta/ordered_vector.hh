@@ -133,13 +133,8 @@ public:   // Public methods
 			}
 		}
 
-		vec_.push_back(0);
-
-		for (typename VectorType::iterator itVec = vec_.end() - 1;
-			itVec != first; --itVec)
-		{	// shift successive elements in the vector
-			*itVec = *(itVec - 1);
-		}
+		vec_.resize(vec_.size() + 1);
+		std::copy_backward(vec_.begin() + first, vec_.end() - 1, vec_.end());
 
 		// insert the new element
 		vec_[first] = x;
