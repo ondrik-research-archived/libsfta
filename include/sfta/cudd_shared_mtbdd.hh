@@ -504,8 +504,6 @@ private:  // Private methods
 	 * @param[in]  i  The index of the variable
 	 *
 	 * @returns  The variable
-	 *
-	 * @todo TODO Use function that defines number of variables
 	 */
 	inline CUDDFacade::Node* getIthVariable(size_t i)
 	{
@@ -525,8 +523,6 @@ private:  // Private methods
 	 * @param[in]  i  The index of the variable
 	 *
 	 * @returns  Complement of the variable
-	 *
-	 * @todo TODO Use function that defines number of variables
 	 */
 	inline CUDDFacade::Node* getIthVariableNot(size_t i)
 	{
@@ -577,8 +573,6 @@ private:  // Private methods
 	 * @param[in]  value  Value for given variable assignment
 	 *
 	 * @returns  The root of the created MTBDD
-	 *
-	 * @todo TODO Use function that defines number of variables
 	 */
 	CUDDFacade::Node* createMTBDDForVariableAssignment(
 		const VariableAssignmentType& vars, const LeafType& value)
@@ -617,8 +611,6 @@ private:  // Private methods
 	 * @param[in]  vars   Variable assignment
 	 *
 	 * @returns  Root of projection MTBDD
-	 *
-	 * @todo  TODO Use function that defines number of variables
 	 */
 	CUDDFacade::Node* createMTBDDForVariableProjection(
 		const VariableAssignmentType& vars)
