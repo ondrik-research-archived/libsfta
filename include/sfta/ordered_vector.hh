@@ -220,14 +220,6 @@ public:   // Public methods
 	}
 
 
-	inline iterator begin()
-	{
-		// Assertions
-		assert(vectorIsSorted());
-
-		return vec_.begin();
-	}
-
 	inline bool empty() const
 	{
 		// Assertions
@@ -242,14 +234,6 @@ public:   // Public methods
 		assert(vectorIsSorted());
 
 		return vec_.begin();
-	}
-
-	inline iterator end()
-	{
-		// Assertions
-		assert(vectorIsSorted());
-
-		return vec_.end();
 	}
 
 	inline const_iterator end() const
