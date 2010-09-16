@@ -102,6 +102,14 @@ FormulaParser::ParserResultUnsignedVecType
 	}
 
 	secondPart = secondPart.substr(1, secondPart.length() - 2);
+	boost::trim(secondPart);
+
+	if (secondPart.empty())
+	{	// in case the set is empty
+		return ParserResultUnsignedVecType(std::vector<unsigned>(),
+			ParseExpressionBoolean(splitInput[0]));
+	}
+
 	std::vector<std::string> splitSecondPart;
 	boost::algorithm::split(splitSecondPart, secondPart, boost::is_any_of(","));
 
@@ -110,6 +118,7 @@ FormulaParser::ParserResultUnsignedVecType
 		throw std::invalid_argument(__func__ + std::string(": invalid argument "
 			"(list of values is not in the \"<value>, ... , <value>\" format)"));
 	}
+
 
 	std::vector<unsigned> resultVec;
 	for (std::vector<std::string>::const_iterator itStr
