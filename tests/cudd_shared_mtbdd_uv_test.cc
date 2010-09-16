@@ -709,11 +709,10 @@ BOOST_AUTO_TEST_CASE(apply)
 }
 
 
-#if 0
 BOOST_AUTO_TEST_CASE(variable_renaming)
 {
 	ASMTBDDCC* bdd = new CuddMTBDDCC();
-	bdd->SetBottomValue(0);
+	bdd->SetBottomValue(LeafType());
 
 	for (unsigned i = 0; i < NUM_VARIABLES; ++i)
 	{	// fill the table of variables
@@ -814,6 +813,8 @@ BOOST_AUTO_TEST_CASE(variable_renaming)
 	delete bdd;
 }
 
+
+#if 0
 BOOST_AUTO_TEST_CASE(variable_trimming)
 {
 	ASMTBDDCC* bdd = new CuddMTBDDCC();
