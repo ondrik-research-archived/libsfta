@@ -162,11 +162,16 @@ public:   // public types
 
 	typedef SFTA::Private::CompactVariableAssignment<NUM_VARIABLES> MyVariableAssignment;
 
-	typedef AbstractSharedMTBDD<RootType, LeafType, MyVariableAssignment> ASMTBDDCC;
+	/**
+	 * @brief  Abstract MTBDD type
+	 *
+	 * Type for abstract MTBDD with fully bound template parameters.
+	 */
+	typedef AbstractSharedMTBDD<RootType, LeafType, MyVariableAssignment> ASMTBDDUV;
 
 	typedef CUDDSharedMTBDD<RootType, LeafType, MyVariableAssignment,
 			SFTA::Private::DualMapLeafAllocator, SFTA::Private::MapRootAllocator>
-			CuddMTBDDCC;
+			CuddMTBDDUV;
 
 	typedef std::map<std::string, unsigned> VariableNameDictionary;
 
@@ -250,11 +255,11 @@ protected:// protected methods
 		return asgn;
 	}
 
-	static std::string leafContainerToString(const ASMTBDDCC::LeafContainer& leafCont)
+	static std::string leafContainerToString(const ASMTBDDUV::LeafContainer& leafCont)
 	{
 		std::string result;
 
-		for (ASMTBDDCC::LeafContainer::const_iterator itLeaf = leafCont.begin();
+		for (ASMTBDDUV::LeafContainer::const_iterator itLeaf = leafCont.begin();
 			itLeaf != leafCont.end(); ++itLeaf)
 		{	// append all leaves
 			result += ((itLeaf == leafCont.begin())? " " : ", ") +
@@ -269,11 +274,11 @@ protected:// protected methods
 		return *lhs == *rhs;
 	}
 
-	static bool compareTwoLeafContainers(const ASMTBDDCC::LeafContainer& lhs,
-		const ASMTBDDCC::LeafContainer& rhs)
+	static bool compareTwoLeafContainers(const ASMTBDDUV::LeafContainer& lhs,
+		const ASMTBDDUV::LeafContainer& rhs)
 	{
-		const ASMTBDDCC::LeafContainer* left = &lhs;
-		const ASMTBDDCC::LeafContainer* right = &rhs;
+		const ASMTBDDUV::LeafContainer* left = &lhs;
+		const ASMTBDDUV::LeafContainer* right = &rhs;
 
 		if (left->size() != right->size())
 		{	// in case the sizes differ
@@ -283,7 +288,7 @@ protected:// protected methods
 		return std::equal(left->begin(), left->end(), right->begin(), compareLeafValues);
 	}
 
-	RootType createMTBDDForTestCases(ASMTBDDCC* bdd,
+	RootType createMTBDDForTestCases(ASMTBDDUV* bdd,
 		const ListOfTestCasesType& testCases)
 	{
 		RootType root = bdd->CreateRoot();
@@ -312,7 +317,7 @@ BOOST_FIXTURE_TEST_SUITE(suite, CUDDSharedMTBDDUnsignedVectorFixture)
 
 BOOST_AUTO_TEST_CASE(setters_and_getters_test)
 {
-	ASMTBDDCC* bdd = new CuddMTBDDCC();
+	ASMTBDDUV* bdd = new CuddMTBDDUV();
 	bdd->SetBottomValue(LeafType());
 
 	// load test cases
@@ -329,7 +334,7 @@ BOOST_AUTO_TEST_CASE(setters_and_getters_test)
 		LeafType leafValue = static_cast<LeafType>(prsRes.first);
 		MyVariableAssignment asgn = varListToAsgn(prsRes.second);
 
-		ASMTBDDCC::LeafContainer res;
+		ASMTBDDUV::LeafContainer res;
 		res.push_back(&leafValue);
 
 		BOOST_CHECK_MESSAGE(
@@ -343,7 +348,7 @@ BOOST_AUTO_TEST_CASE(setters_and_getters_test)
 				FormulaParser::ParseExpressionUnsignedVec(*itFailed);
 			MyVariableAssignment failedAsgn = varListToAsgn(prsFailedRes.second);
 
-			ASMTBDDCC::LeafContainer resFailed;
+			ASMTBDDUV::LeafContainer resFailed;
 
 			BOOST_CHECK_MESSAGE(
 				compareTwoLeafContainers(bdd->GetValue(root, failedAsgn), resFailed),
@@ -356,7 +361,7 @@ BOOST_AUTO_TEST_CASE(setters_and_getters_test)
 
 BOOST_AUTO_TEST_CASE(large_diagram_test)
 {
-	ASMTBDDCC* bdd = new CuddMTBDDCC();
+	ASMTBDDUV* bdd = new CuddMTBDDUV();
 	bdd->SetBottomValue(LeafType());
 
 	boost::mt19937 prnGen(PRNG_SEED);
@@ -428,7 +433,7 @@ BOOST_AUTO_TEST_CASE(large_diagram_test)
 		LeafType leafValue = static_cast<LeafType>(prsRes.first);
 		MyVariableAssignment asgn = varListToAsgn(prsRes.second);
 
-		ASMTBDDCC::LeafContainer res;
+		ASMTBDDUV::LeafContainer res;
 		res.push_back(&leafValue);
 
 		BOOST_CHECK_MESSAGE(
@@ -446,7 +451,7 @@ BOOST_AUTO_TEST_CASE(large_diagram_test)
 			FormulaParser::ParseExpressionUnsignedVec(*itFailed);
 		MyVariableAssignment asgn = varListToAsgn(prsFailedRes.second);
 
-		ASMTBDDCC::LeafContainer res;
+		ASMTBDDUV::LeafContainer res;
 
 		BOOST_CHECK_MESSAGE(
 			compareTwoLeafContainers(bdd->GetValue(root, asgn), res),
@@ -461,7 +466,7 @@ BOOST_AUTO_TEST_CASE(no_variables_formula)
 {
 	const char* const TEST_VALUE = " = {42}";
 
-	ASMTBDDCC* bdd = new CuddMTBDDCC();
+	ASMTBDDUV* bdd = new CuddMTBDDUV();
 	bdd->SetBottomValue(LeafType());
 	RootType root = bdd->CreateRoot();
 
@@ -471,7 +476,7 @@ BOOST_AUTO_TEST_CASE(no_variables_formula)
 	MyVariableAssignment asgn = varListToAsgn(prsRes.second);
 	bdd->SetValue(root, asgn, leafValue);
 
-	ASMTBDDCC::LeafContainer res;
+	ASMTBDDUV::LeafContainer res;
 	res.push_back(&leafValue);
 
 	BOOST_CHECK_MESSAGE(compareTwoLeafContainers(bdd->GetValue(root, asgn), res),
@@ -484,7 +489,7 @@ BOOST_AUTO_TEST_CASE(no_variables_formula)
 
 BOOST_AUTO_TEST_CASE(multiple_independent_bdds)
 {
-	ASMTBDDCC* bdd = new CuddMTBDDCC();
+	ASMTBDDUV* bdd = new CuddMTBDDUV();
 	bdd->SetBottomValue(LeafType());
 
 	// load test cases for the first BDD
@@ -511,7 +516,7 @@ BOOST_AUTO_TEST_CASE(multiple_independent_bdds)
 		LeafType leafValue = static_cast<LeafType>(prsRes.first);
 		MyVariableAssignment asgn = varListToAsgn(prsRes.second);
 
-		ASMTBDDCC::LeafContainer res;
+		ASMTBDDUV::LeafContainer res;
 		res.push_back(&leafValue);
 
 		BOOST_CHECK_MESSAGE(
@@ -530,7 +535,7 @@ BOOST_AUTO_TEST_CASE(multiple_independent_bdds)
 		LeafType leafValue = static_cast<LeafType>(prsRes.first);
 		MyVariableAssignment asgn = varListToAsgn(prsRes.second);
 
-		ASMTBDDCC::LeafContainer res;
+		ASMTBDDUV::LeafContainer res;
 		res.push_back(&leafValue);
 
 		BOOST_CHECK_MESSAGE(
@@ -548,7 +553,7 @@ BOOST_AUTO_TEST_CASE(multiple_independent_bdds)
 			FormulaParser::ParseExpressionUnsignedVec(*itFailed);
 		MyVariableAssignment asgn = varListToAsgn(prsFailedRes.second);
 
-		ASMTBDDCC::LeafContainer res;
+		ASMTBDDUV::LeafContainer res;
 
 		BOOST_CHECK_MESSAGE(
 			compareTwoLeafContainers(bdd->GetValue(root1, asgn), res),
@@ -565,7 +570,7 @@ BOOST_AUTO_TEST_CASE(multiple_independent_bdds)
 			FormulaParser::ParseExpressionUnsignedVec(*itFailed);
 		MyVariableAssignment asgn = varListToAsgn(prsFailedRes.second);
 
-		ASMTBDDCC::LeafContainer res;
+		ASMTBDDUV::LeafContainer res;
 
 		BOOST_CHECK_MESSAGE(
 			compareTwoLeafContainers(bdd->GetValue(root2, asgn), res),
@@ -578,7 +583,7 @@ BOOST_AUTO_TEST_CASE(multiple_independent_bdds)
 
 BOOST_AUTO_TEST_CASE(monadic_apply)
 {
-	ASMTBDDCC* bdd = new CuddMTBDDCC();
+	ASMTBDDUV* bdd = new CuddMTBDDUV();
 	bdd->SetBottomValue(LeafType());
 
 	// load test cases
@@ -590,7 +595,7 @@ BOOST_AUTO_TEST_CASE(monadic_apply)
 
 	// apply functor that squares values in leaves
 	class SquareMonadicApplyFunctor
-		: public ASMTBDDCC::AbstractMonadicApplyFunctorType
+		: public ASMTBDDUV::AbstractMonadicApplyFunctorType
 	{
 	public:
 
@@ -630,7 +635,7 @@ BOOST_AUTO_TEST_CASE(monadic_apply)
 		}
 		leafValue = squaredSet;
 
-		ASMTBDDCC::LeafContainer res;
+		ASMTBDDUV::LeafContainer res;
 		res.push_back(&leafValue);
 
 		BOOST_CHECK_MESSAGE(
@@ -645,7 +650,7 @@ BOOST_AUTO_TEST_CASE(monadic_apply)
 
 BOOST_AUTO_TEST_CASE(apply)
 {
-	ASMTBDDCC* bdd = new CuddMTBDDCC();
+	ASMTBDDUV* bdd = new CuddMTBDDUV();
 	bdd->SetBottomValue(LeafType());
 
 	// load test cases
@@ -657,7 +662,7 @@ BOOST_AUTO_TEST_CASE(apply)
 
 	// apply functor that squares values in leaves
 	class TimesApplyFunctor
-		: public ASMTBDDCC::AbstractApplyFunctorType
+		: public ASMTBDDUV::AbstractApplyFunctorType
 	{
 	public:
 
@@ -697,7 +702,7 @@ BOOST_AUTO_TEST_CASE(apply)
 		}
 		leafValue = squaredSet;
 
-		ASMTBDDCC::LeafContainer res;
+		ASMTBDDUV::LeafContainer res;
 		res.push_back(&leafValue);
 
 		BOOST_CHECK_MESSAGE(
@@ -711,7 +716,7 @@ BOOST_AUTO_TEST_CASE(apply)
 
 BOOST_AUTO_TEST_CASE(variable_renaming)
 {
-	ASMTBDDCC* bdd = new CuddMTBDDCC();
+	ASMTBDDUV* bdd = new CuddMTBDDUV();
 	bdd->SetBottomValue(LeafType());
 
 	for (unsigned i = 0; i < NUM_VARIABLES; ++i)
@@ -727,11 +732,11 @@ BOOST_AUTO_TEST_CASE(variable_renaming)
 	RootType root = createMTBDDForTestCases(bdd, testCases);
 
 	class MovingUpVariableRenamingFunctor
-		: public ASMTBDDCC::AbstractVariableRenamingFunctorType
+		: public ASMTBDDUV::AbstractVariableRenamingFunctorType
 	{
 	public:
 
-		virtual ASMTBDDCC::VariableType operator()(const ASMTBDDCC::VariableType& var)
+		virtual ASMTBDDUV::VariableType operator()(const ASMTBDDUV::VariableType& var)
 		{
 			if (var < NUM_VARIABLES/2)
 			{
@@ -748,11 +753,11 @@ BOOST_AUTO_TEST_CASE(variable_renaming)
 	RootType renamedRoot = bdd->RenameVariables(root, &funcMovingUp);
 
 	class MovingDownVariableRenamingFunctor
-		: public ASMTBDDCC::AbstractVariableRenamingFunctorType
+		: public ASMTBDDUV::AbstractVariableRenamingFunctorType
 	{
 	public:
 
-		virtual ASMTBDDCC::VariableType operator()(const ASMTBDDCC::VariableType& var)
+		virtual ASMTBDDUV::VariableType operator()(const ASMTBDDUV::VariableType& var)
 		{
 			if ((var >= NUM_VARIABLES/2) && (var < NUM_VARIABLES))
 			{
@@ -801,7 +806,7 @@ BOOST_AUTO_TEST_CASE(variable_renaming)
 		LeafType leafValue = static_cast<LeafType>(prsRes.first);
 		MyVariableAssignment asgn = varListToAsgn(prsRes.second);
 
-		ASMTBDDCC::LeafContainer res;
+		ASMTBDDUV::LeafContainer res;
 		res.push_back(&leafValue);
 
 		BOOST_CHECK_MESSAGE(
@@ -816,7 +821,7 @@ BOOST_AUTO_TEST_CASE(variable_renaming)
 
 BOOST_AUTO_TEST_CASE(variable_trimming)
 {
-	ASMTBDDCC* bdd = new CuddMTBDDCC();
+	ASMTBDDUV* bdd = new CuddMTBDDUV();
 	bdd->SetBottomValue(LeafType());
 
 	for (unsigned i = 0; i < NUM_VARIABLES; ++i)
@@ -832,11 +837,11 @@ BOOST_AUTO_TEST_CASE(variable_trimming)
 	RootType root = createMTBDDForTestCases(bdd, testCases);
 
 	class OddVariablePredicateFunctorType
-		: public ASMTBDDCC::AbstractVariablePredicateFunctorType
+		: public ASMTBDDUV::AbstractVariablePredicateFunctorType
 	{
 	public:
 
-		virtual bool operator()(const ASMTBDDCC::VariableType& var)
+		virtual bool operator()(const ASMTBDDUV::VariableType& var)
 		{
 			return var % 2 == 0;
 		}
@@ -844,7 +849,7 @@ BOOST_AUTO_TEST_CASE(variable_trimming)
 
 	OddVariablePredicateFunctorType oddPred;
 
-	class AdditionApplyFunctorType: public ASMTBDDCC::AbstractApplyFunctorType
+	class AdditionApplyFunctorType: public ASMTBDDUV::AbstractApplyFunctorType
 	{
 	public:
 		virtual LeafType operator()(const LeafType& lhs, const LeafType& rhs)
@@ -875,7 +880,7 @@ BOOST_AUTO_TEST_CASE(variable_trimming)
 		LeafType leafValue = static_cast<LeafType>(prsRes.first);
 		MyVariableAssignment asgn = varListToAsgn(prsRes.second);
 
-		ASMTBDDCC::LeafContainer res;
+		ASMTBDDUV::LeafContainer res;
 		res.push_back(&leafValue);
 
 		BOOST_CHECK_MESSAGE(
@@ -888,7 +893,7 @@ BOOST_AUTO_TEST_CASE(variable_trimming)
 #if 0
 BOOST_AUTO_TEST_CASE(serialization)
 {
-	ASMTBDDCC* bdd = new CuddMTBDDCC();
+	ASMTBDDUV* bdd = new CuddMTBDDUV();
 
 	// load test cases
 	ListOfTestCasesType testCases;
