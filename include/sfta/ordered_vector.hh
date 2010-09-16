@@ -113,17 +113,17 @@ public:   // Public methods
 		// ineffective due to not returning the iterator to the position of the
 		// desirable insertion in case the searched element is not present in the
 		// range)
-		typename VectorType::iterator first = vec_.begin();
-		typename VectorType::iterator last = vec_.end();
+		size_t first = 0;
+		size_t last = vec_.size();
 
 		while (first < last)
 		{	// while the pointers do not overlap
-			typename VectorType::iterator middle = first + (last - first) / 2;
-			if (*middle == x)
+			size_t middle = first + (last - first) / 2;
+			if (vec_[middle] == x)
 			{	// in case we found x
 				return;
 			}
-			else if (*middle < x)
+			else if (vec_[middle] < x)
 			{	// in case middle is less than x
 				first = middle + 1;
 			}
@@ -142,7 +142,7 @@ public:   // Public methods
 		}
 
 		// insert the new element
-		*first = x;
+		vec_[first] = x;
 
 		// Assertions
 		assert(vectorIsSorted());
