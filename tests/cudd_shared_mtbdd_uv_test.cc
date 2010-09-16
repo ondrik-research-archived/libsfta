@@ -65,16 +65,16 @@ const unsigned STANDARD_TEST_CASES_SIZE =
  */
 const char* const STANDARD_FAIL_CASES[] =
 {
-	"~x0 * ~x1 * ~x2 *  x3 = {}",
-	"~x0 * ~x1 *  x2 * ~x3 = {}",
-	"~x0 *  x1 * ~x2 *  x3 = {}",
-	"~x0 *  x1 *  x2 * ~x3 = {}",
-	"~x0 *  x1 *  x2 *  x3 = {}",
-	" x0 * ~x1 * ~x2 * ~x3 = {}",
-	" x0 * ~x1 *  x2 * ~x3 = {}",
-	" x0 * ~x1 *  x2 *  x3 = {}",
-	" x0 *  x1 * ~x2 * ~x3 = {}",
-	" x0 *  x1 * ~x2 *  x3 = {}"
+	"~x0 * ~x1 * ~x2 *  x3 = {1}",
+	"~x0 * ~x1 *  x2 * ~x3 = {2}",
+	"~x0 *  x1 * ~x2 *  x3 = {5}",
+	"~x0 *  x1 *  x2 * ~x3 = {6}",
+	"~x0 *  x1 *  x2 *  x3 = {7}",
+	" x0 * ~x1 * ~x2 * ~x3 = {8}",
+	" x0 * ~x1 *  x2 * ~x3 = {10}",
+	" x0 * ~x1 *  x2 *  x3 = {11}",
+	" x0 *  x1 * ~x2 * ~x3 = {12}",
+	" x0 *  x1 * ~x2 *  x3 = {13}"
 };
 
 
@@ -482,11 +482,10 @@ BOOST_AUTO_TEST_CASE(no_variables_formula)
 }
 
 
-#if 0
 BOOST_AUTO_TEST_CASE(multiple_independent_bdds)
 {
 	ASMTBDDCC* bdd = new CuddMTBDDCC();
-	bdd->SetBottomValue(0);
+	bdd->SetBottomValue(LeafType());
 
 	// load test cases for the first BDD
 	ListOfTestCasesType testCases1;
@@ -577,6 +576,7 @@ BOOST_AUTO_TEST_CASE(multiple_independent_bdds)
 }
 
 
+#if 0
 BOOST_AUTO_TEST_CASE(monadic_apply)
 {
 	ASMTBDDCC* bdd = new CuddMTBDDCC();
