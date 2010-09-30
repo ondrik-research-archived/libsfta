@@ -15,9 +15,29 @@
 #include <sfta/abstract_automaton.hh>
 #include <sfta/abstract_automaton_operation.hh>
 
-// insert the class into proper namespace
-namespace SFTA { class AbstractAutomatonFactory; }
 
+// insert the class into proper namespace
+namespace SFTA
+{
+	template
+	<
+		class AbstractAutomaton
+	>
+	class AbstractAutomatonFactory;
+}
+
+
+/**
+ * @brief  Abstract factory for automata
+ *
+ * Abstract factory for various automata.
+ *
+ * @tparam  AbstractAutomaton  The abstract product of the factory.
+ */
+template
+<
+	class AbstractAutomaton
+>
 class SFTA::AbstractAutomatonFactory
 {
 private:  // Private data types
@@ -28,7 +48,7 @@ private:  // Private data types
 	 *
 	 * Data type of an abstract automaton.
 	 */
-	typedef SFTA::AbstractAutomaton AbstractAutomaton;
+	typedef AbstractAutomaton AbstractAutomatonType;
 
 
 	/**
@@ -36,7 +56,8 @@ private:  // Private data types
 	 *
 	 * Data type for an abstract automaton operation.
 	 */
-	typedef SFTA::AbstractAutomatonOperation AbstractAutomatonOperation;
+	typedef SFTA::AbstractAutomatonOperation<AbstractAutomatonType>
+		AbstractAutomatonOperationType;
 
 
 public:
@@ -49,7 +70,7 @@ public:
 	 *
 	 * @returns  An automaton
 	 */
-	virtual AbstractAutomaton* CreateAutomaton() const = 0;
+	virtual AbstractAutomatonType* CreateAutomaton() const = 0;
 
 
 	/**
@@ -59,7 +80,7 @@ public:
 	 *
 	 * @returns  An automaton operation
 	 */
-	virtual AbstractAutomatonOperation* CreateAutomatonOperation() const = 0;
+	virtual AbstractAutomatonOperationType* CreateAutomatonOperation() const = 0;
 
 
 	/**

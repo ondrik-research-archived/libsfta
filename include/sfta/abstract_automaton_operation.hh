@@ -17,7 +17,14 @@
 
 
 // insert the class into proper namespace
-namespace SFTA { class AbstractAutomatonOperation; }
+namespace SFTA
+{
+	template
+	<
+		class AbstractAutomaton
+	>
+	class AbstractAutomatonOperation;
+}
 
 
 /**
@@ -27,10 +34,29 @@ namespace SFTA { class AbstractAutomatonOperation; }
  *
  * This class represents an abstract interface to operations that are used by
  * all automata, such as language union, intersection and so on.
+ *
+ * @tparam  AbstractAutomaton  The data type of the automaton upon which the
+ *                             operations work.
  */
+template
+<
+	class AbstractAutomaton
+>
 class SFTA::AbstractAutomatonOperation
 {
+public:   // Public data types
+
+
+	/**
+	 * @brief  Abstract automaton type
+	 *
+	 * The type of the abstract automaton.
+	 */
+	typedef AbstractAutomaton AbstractAutomatonType;
+
+
 public:   // Public methods
+
 
 	/**
 	 * @brief  Union of two automata
@@ -43,8 +69,8 @@ public:   // Public methods
 	 *
 	 * @returns  Union automaton 
 	 */
-	virtual SFTA::AbstractAutomaton* Union(const SFTA::AbstractAutomaton* a1,
-		const SFTA::AbstractAutomaton* a2) const = 0;
+	virtual AbstractAutomatonType* Union(const AbstractAutomatonType* a1,
+		const AbstractAutomatonType* a2) const = 0;
 
 
 	/**

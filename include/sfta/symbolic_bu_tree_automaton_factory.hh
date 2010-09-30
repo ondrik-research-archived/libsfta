@@ -16,21 +16,47 @@
 #include <sfta/symbolic_bu_tree_automaton.hh>
 #include <sfta/symbolic_bu_tree_automaton_operation.hh>
 
-namespace SFTA { class SymbolicBUTreeAutomatonFactory; }
+namespace SFTA
+{
+	template
+	<
+		class SymbolicBUTreeAutomaton
+	>
+	class SymbolicBUTreeAutomatonFactory;
+}
 
+
+template
+<
+	class SymbolicBUTreeAutomaton
+>
 class SFTA::SymbolicBUTreeAutomatonFactory
 	: public SFTA::AbstractBUTreeAutomatonFactory
+		<
+			typename SymbolicBUTreeAutomaton::ParentClass
+		>
 {
 public:
 
-	virtual SymbolicBUTreeAutomaton* CreateAutomaton() const
+	typedef SymbolicBUTreeAutomaton SymbolicBUTreeAutomatonType;
+
+	typedef SymbolicBUTreeAutomatonOperation
+		<
+			SymbolicBUTreeAutomatonType
+		>
+		SymbolicBUTreeAutomatonOperationType;
+
+
+public:
+
+	virtual SymbolicBUTreeAutomatonType* CreateAutomaton() const
 	{
-		return new SymbolicBUTreeAutomaton();
+		return new SymbolicBUTreeAutomatonType();
 	}
 
-	virtual SymbolicBUTreeAutomatonOperation* CreateAutomatonOperation() const
+	virtual SymbolicBUTreeAutomatonOperationType* CreateAutomatonOperation() const
 	{
-		return new SymbolicBUTreeAutomatonOperation();
+		return new SymbolicBUTreeAutomatonOperationType();
 	}
 };
 

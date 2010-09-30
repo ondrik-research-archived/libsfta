@@ -13,15 +13,21 @@
 
 // SFTA headers
 #include <sfta/abstract_bu_tree_automaton.hh>
+#include <sfta/abstract_shared_mtbdd.hh>
 
 // insert the class into proper namespace
-namespace SFTA { class SymbolicBUTreeAutomaton; }
-
-// forward declaration
 namespace SFTA
 {
-	//class AbstractBUTreeAutomatonOperation
-	class SymbolicBUTreeAutomatonOperation;//: public AbstractBUTreeAutomatonOperation;
+	template
+	<
+		class MTBDDTransitionFunction,
+		typename State,
+		typename Symbol,
+		template <typename> class LeftHandSide,
+		template <typename> class InputRightHandSide,
+		template <typename> class OutputRightHandSide
+	>
+	class SymbolicBUTreeAutomaton;
 }
 
 
@@ -32,14 +38,47 @@ namespace SFTA
  *
  * Bottom-up tree automaton with symbolically represented transition function.
  */
+template
+<
+	class MTBDDTransitionFunction,
+	typename State,
+	typename Symbol,
+	template <typename> class LeftHandSide,
+	template <typename> class InputRightHandSide,
+	template <typename> class OutputRightHandSide = InputRightHandSide
+>
 class SFTA::SymbolicBUTreeAutomaton
 	: public SFTA::AbstractBUTreeAutomaton
+		<
+			State,
+			Symbol,
+			LeftHandSide,
+			InputRightHandSide,
+			OutputRightHandSide
+		>
 {
+
+public:   // Public data types
+
+	typedef State StateType;
+	typedef Symbol SymbolType;
+
+	typedef SFTA::AbstractBUTreeAutomaton
+		<
+			StateType,
+			SymbolType,
+			LeftHandSide,
+			InputRightHandSide,
+			OutputRightHandSide
+		> ParentClass;
+
 private:  // Private data types
 
-	typedef SFTA::SymbolicBUTreeAutomatonOperation SymbolicBUTreeAutomatonOperation;
+	//mapovani Symbol -> MTBDDTransitionFunction::Symbol
+	//mapovani State -> MTBDDTransitionFunction::State
 
 private:  // Private data members
+
 
 public:   // Public methods
 };

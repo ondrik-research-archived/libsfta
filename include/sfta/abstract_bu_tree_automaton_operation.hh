@@ -15,15 +15,37 @@
 #include <sfta/abstract_automaton_operation.hh>
 
 // insert the class into proper namespace
-namespace SFTA { class AbstractBUTreeAutomatonOperation; }
+namespace SFTA
+{
+	template
+	<
+		class AbstractBUTreeAutomaton
+	>
+	class AbstractBUTreeAutomatonOperation;
+}
 
+
+template
+<
+	class AbstractBUTreeAutomaton
+>
 class SFTA::AbstractBUTreeAutomatonOperation
 	: public SFTA::AbstractAutomatonOperation
+		<
+			typename AbstractBUTreeAutomaton::ParentClass
+		>
 {
-public:
+public:   // Public data types
 
-	virtual SFTA::AbstractBUTreeAutomaton* Union(const SFTA::AbstractAutomaton* a1,
-		const SFTA::AbstractAutomaton* a2) const = 0;
+	typedef AbstractBUTreeAutomaton AbstractBUTreeAutomatonType;
+
+	typedef typename AbstractBUTreeAutomatonType::HierarchyRoot AbstractAutomatonType;
+
+
+public:   // Public methods
+
+	virtual AbstractBUTreeAutomatonType* Union(const AbstractAutomatonType* a1,
+		const AbstractAutomatonType* a2) const = 0;
 
 };
 

@@ -17,14 +17,46 @@
 #include <sfta/abstract_bu_tree_automaton_operation.hh>
 
 // insert the class into proper namespace
-namespace SFTA { class AbstractBUTreeAutomatonFactory; }
+namespace SFTA
+{
+	template
+	<
+		class AbstractBUTreeAutomaton
+	>
+	class AbstractBUTreeAutomatonFactory;
+}
 
+/**
+ * @brief  Abstract factory for bottom-up tree automata
+ *
+ * Abstract factory for bottom-up tree automata.
+ *
+ * @tparam  AbstractAutomaton  The abstract product of the factory.
+ */
+template
+<
+	class AbstractBUTreeAutomaton
+>
 class SFTA::AbstractBUTreeAutomatonFactory
 	: public SFTA::AbstractAutomatonFactory
+		<
+			typename AbstractBUTreeAutomaton::ParentClass
+		>
 {
-public:
+public:   // Public data types
 
-	virtual AbstractBUTreeAutomaton* CreateAutomaton() const = 0;
+	typedef AbstractBUTreeAutomaton AbstractBUTreeAutomatonType;
+
+	typedef SFTA::AbstractBUTreeAutomatonOperation
+		<
+			AbstractBUTreeAutomatonType
+		>
+		AbstractBUTreeAutomatonOperation;
+
+
+public:   // Public methods
+
+	virtual AbstractBUTreeAutomatonType* CreateAutomaton() const = 0;
 	virtual AbstractBUTreeAutomatonOperation* CreateAutomatonOperation() const = 0;
 };
 

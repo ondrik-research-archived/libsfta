@@ -12,10 +12,15 @@
 #define _ABSTRACT_AUTOMATON_HH_
 
 // insert class into proper namespace
-namespace SFTA { class AbstractAutomaton; }
-
-// forward declarations
-namespace SFTA { class AbstractAutomatonOperation; }
+namespace SFTA
+{
+	template
+	<
+		typename State,
+		typename Symbol
+	>
+	class AbstractAutomaton;
+}
 
 /**
  * @brief   Abstract class for automaton operations
@@ -24,9 +29,41 @@ namespace SFTA { class AbstractAutomatonOperation; }
  *
  * This is an abstract class defining shared interface for various kinds of
  * automata.
+ *
+ * @tparam  State   Data type denoting automaton state.
+ * @tparam  Symbol  Data type for automaton symbol.
  */
+template
+<
+	typename State,
+	typename Symbol
+>
 class SFTA::AbstractAutomaton
 {
+public:   // Public data types
+
+	/**
+	 * @brief  State
+	 *
+	 * Data type for state.
+	 */
+	typedef State StateType;
+
+
+	/**
+	 * @brief  Symbol
+	 *
+	 * Data type for symbol.
+	 */
+	typedef Symbol SymbolType;
+
+
+	typedef typename SFTA::AbstractAutomaton
+		<
+			StateType,
+			SymbolType
+		> HierarchyRoot;
+
 public:   // Public methods
 
 
