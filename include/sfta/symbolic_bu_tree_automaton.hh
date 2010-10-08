@@ -13,17 +13,15 @@
 
 // SFTA headers
 #include <sfta/abstract_bu_tree_automaton.hh>
-#include <sfta/abstract_shared_mtbdd.hh>
 
 // insert the class into proper namespace
 namespace SFTA
 {
 	template
 	<
-		class MTBDDTransitionFunction,
+		class MTBDDTransitionTableWrapper,
 		typename State,
 		typename Symbol,
-		template <typename> class LeftHandSide,
 		template <typename> class InputRightHandSide,
 		template <typename> class OutputRightHandSide
 	>
@@ -40,10 +38,9 @@ namespace SFTA
  */
 template
 <
-	class MTBDDTransitionFunction,
+	class MTBDDTransitionTableWrapper,
 	typename State,
 	typename Symbol,
-	template <typename> class LeftHandSide,
 	template <typename> class InputRightHandSide,
 	template <typename> class OutputRightHandSide = InputRightHandSide
 >
@@ -52,7 +49,6 @@ class SFTA::SymbolicBUTreeAutomaton
 		<
 			State,
 			Symbol,
-			LeftHandSide,
 			InputRightHandSide,
 			OutputRightHandSide
 		>
@@ -67,10 +63,26 @@ public:   // Public data types
 		<
 			StateType,
 			SymbolType,
-			LeftHandSide,
 			InputRightHandSide,
 			OutputRightHandSide
 		> ParentClass;
+
+
+	typedef SymbolicBUTreeAutomaton
+		<
+			MTBDDTransitionTableWrapper,
+			State,
+			Symbol,
+			InputRightHandSide,
+			OutputRightHandSide
+		> Type;
+
+	typedef MTBDDTransitionTableWrapper MTBDDTransitionTableWrapperType;
+
+	typedef typename MTBDDTransitionTableWrapperType::AbstractSharedMTBDDType::
+		RootType RootType;
+
+	typedef typename ParentClass::LeftHandSideType LeftHandSideType;
 
 
 	class Operation
@@ -87,6 +99,10 @@ private:  // Private data members
 
 	MTBDDTransitionTableWrapper* ttWrapper_;
 
+private:  // Private methods
+
+	SymbolicBUTreeAutomaton& operator=(const SymbolicBUTreeAutomaton& aut);
+
 protected:// Protected methods
 
 
@@ -100,6 +116,14 @@ protected:// Protected methods
 
 
 	virtual Operation* CreateOperation() const = 0;
+
+	RootType getRoot(const LeftHandSideType& lhs) const
+	{
+		// TODO: @todo return something sound
+		assert(&lhs != 0);
+		return 0;
+	}
+
 
 public:   // Public methods
 
