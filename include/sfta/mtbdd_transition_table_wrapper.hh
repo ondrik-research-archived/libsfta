@@ -61,6 +61,13 @@ public:   // Public methods
 		return mtbdd_;
 	}
 
+	virtual ~MTBDDTransitionTableWrapper()
+	{
+		// Assertions
+		assert(mtbdd_ != static_cast<AbstractSharedMTBDDType*>(0));
+
+		delete mtbdd_;
+	}
 };
 
 #endif
