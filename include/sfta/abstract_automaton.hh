@@ -62,10 +62,73 @@ public:   // Public data types
 		<
 			StateType,
 			SymbolType
-		> HierarchyRoot;
+		> Type;
+
+
+	typedef Type HierarchyRoot;
+
+	/**
+	 * @brief   Abstract class for automata operations
+	 *
+	 * This class represents an abstract interface to operations that are used by
+	 * all automata, such as language union, intersection and so on.
+	 */
+	class Operation
+	{
+	public:   // Public methods
+
+
+		/**
+		 * @brief  Union of two automata
+		 *
+		 * This method returns an automaton that accepts a language that is the
+		 * union of languages of the input automata.
+		 *
+		 * @param[in]  a1  First input automaton
+		 * @param[in]  a2  Second input automaton
+		 *
+		 * @returns  Union automaton
+		 */
+		virtual Type* Union(const Type* a1, const Type* a2) const = 0;
+
+
+		/**
+		 * @brief  Destructor
+		 *
+		 * Virtual destructor.
+		 */
+		virtual ~Operation()
+		{ }
+	};
+
+
+protected:// Protected methods
+
+	/**
+	 * @brief  Creats the operation object
+	 *
+	 * This method creates proper operation.
+	 *
+	 * @returns  Proper operation
+	 */
+	virtual Operation* CreateOperation() const = 0;
+
 
 public:   // Public methods
 
+
+	/**
+	 * @brief  Gets operation
+	 *
+	 * This methods gets proper operation object of the automaton. This is
+	 * a factory method.
+	 *
+	 * @returns  Operation object for given automaton
+	 */
+	Operation* GetOperation() const
+	{
+		return CreateOperation();
+	}
 
 	/**
 	 * @brief  Destructor

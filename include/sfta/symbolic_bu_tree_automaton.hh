@@ -72,6 +72,12 @@ public:   // Public data types
 			OutputRightHandSide
 		> ParentClass;
 
+
+	class Operation
+		: public ParentClass::Operation
+	{
+	};
+
 private:  // Private data types
 
 	//mapovani Symbol -> MTBDDTransitionFunction::Symbol
@@ -79,6 +85,7 @@ private:  // Private data types
 
 private:  // Private data members
 
+	virtual Operation* CreateOperation() const = 0;
 
 public:   // Public methods
 };

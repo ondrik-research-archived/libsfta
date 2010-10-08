@@ -65,6 +65,10 @@ public:   // Public data types
 
 	typedef typename ParentClass::HierarchyRoot HierarchyRoot;
 
+	class Operation
+		: public ParentClass::Operation
+	{
+	};
 
 private:  // Private data types
 
@@ -91,6 +95,10 @@ protected:// Protected data members
 
 	//AbstractBUTreeAutomatonTransitionFunction* transFunc_;
 
+
+protected:// Protected methods
+
+	virtual Operation* CreateOperation() const = 0;
 
 
 };
