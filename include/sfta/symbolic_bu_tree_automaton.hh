@@ -85,9 +85,51 @@ private:  // Private data types
 
 private:  // Private data members
 
+	MTBDDTransitionTableWrapper* ttWrapper_;
+
+protected:// Protected methods
+
+
+	virtual MTBDDTransitionTableWrapper* getTTWrapper() const
+	{
+		// Assertions
+		assert(ttWrapper_ != static_cast<MTBDDTransitionTableWrapper*>(0));
+
+		return ttWrapper_;
+	}
+
+
 	virtual Operation* CreateOperation() const = 0;
 
 public:   // Public methods
+
+	/**
+	 * @brief  Default constructor
+	 *
+	 * Default constructor.
+	 */
+	SymbolicBUTreeAutomaton()
+		: ttWrapper_(0)
+	{
+		// Assertions
+		assert(ttWrapper_ != static_cast<MTBDDTransitionTableWrapper*>(0));
+	}
+
+	/**
+	 * @brief  Copy constructor
+	 *
+	 * Copy constructor of the class.
+	 *
+	 * @param[in]  aut  The automaton to be copied
+	 */
+	SymbolicBUTreeAutomaton(const SymbolicBUTreeAutomaton& aut)
+		: ttWrapper_(aut.getTTWrapper())
+	{
+		// TODO @todo
+		assert(false);
+		assert(&aut != 0);
+	}
+
 };
 
 #endif

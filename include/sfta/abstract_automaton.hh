@@ -11,6 +11,10 @@
 #ifndef _ABSTRACT_AUTOMATON_HH_
 #define _ABSTRACT_AUTOMATON_HH_
 
+// Standard library headers
+#include <cassert>
+
+
 // insert class into proper namespace
 namespace SFTA
 {
@@ -21,6 +25,7 @@ namespace SFTA
 	>
 	class AbstractAutomaton;
 }
+
 
 /**
  * @brief   Abstract class for automaton operations
@@ -115,6 +120,21 @@ protected:// Protected methods
 
 
 public:   // Public methods
+
+
+	AbstractAutomaton()
+	{
+		// TODO @todo
+		assert(false);
+	}
+
+
+	AbstractAutomaton(const AbstractAutomaton& aut)
+	{
+		// TODO @todo
+		assert(false);
+	}
+
 
 
 	/**
