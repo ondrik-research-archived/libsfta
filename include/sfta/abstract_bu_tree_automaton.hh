@@ -14,6 +14,7 @@
 // SFTA headers
 #include <sfta/abstract_automaton.hh>
 #include <sfta/abstract_bu_tree_automaton_transition_function.hh>
+#include <sfta/vector.hh>
 
 // insert the class into proper namespace
 namespace SFTA
@@ -22,7 +23,6 @@ namespace SFTA
 	<
 		typename State,
 		typename Symbol,
-		template <typename> class LeftHandSide,
 		template <typename> class InputRightHandSide,
 		template <typename> class OutputRightHandSide
 	>
@@ -41,7 +41,6 @@ template
 <
 	typename State,
 	typename Symbol,
-	template <typename> class LeftHandSide,
 	template <typename> class InputRightHandSide,
 	template <typename> class OutputRightHandSide = InputRightHandSide
 >
@@ -60,8 +59,18 @@ public:   // Public data types
 			Symbol
 		> ParentClass;
 
+	typedef AbstractBUTreeAutomaton
+		<
+			State,
+			Symbol,
+			InputRightHandSide,
+			OutputRightHandSide
+		> Type;
+
 	typedef typename ParentClass::StateType StateType;
 	typedef typename ParentClass::SymbolType SymbolType;
+
+	typedef typename SFTA::Vector<StateType> LeftHandSideType;
 
 	typedef typename ParentClass::HierarchyRoot HierarchyRoot;
 
@@ -84,7 +93,6 @@ private:  // Private data types
 			unsigned,
 			// TODO change
 			unsigned,
-			LeftHandSide,
 			InputRightHandSide,
 			OutputRightHandSide
 		>
