@@ -150,6 +150,15 @@ public:   // Public methods
 		return CreateOperation();
 	}
 
+
+	void InsertStates(const AbstractAutomaton& aut)
+	{
+		// TODO
+		assert(&aut);
+		assert(false);
+	}
+
+
 	/**
 	 * @brief  Destructor
 	 *
