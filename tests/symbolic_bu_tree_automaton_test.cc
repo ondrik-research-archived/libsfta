@@ -9,7 +9,6 @@
  *****************************************************************************/
 
 // SFTA headers
-#include <sfta/abstract_automaton_operation.hh>
 #include <sfta/compact_variable_assignment.hh>
 #include <sfta/cudd_shared_mtbdd.hh>
 #include <sfta/dual_map_leaf_allocator.hh>
