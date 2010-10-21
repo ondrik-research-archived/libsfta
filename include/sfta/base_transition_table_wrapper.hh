@@ -39,6 +39,10 @@ private:  // private data members
 
 public:   // public methods
 
+	BaseTransitionTableWrapper()
+		: nextState_()
+	{ }
+
 	StateType CreateState()
 	{
 		return nextState_++;
