@@ -140,16 +140,13 @@ public:   // Public methods
 
 
 	AbstractAutomaton()
-	{
-		// TODO @todo
-		assert(false);
-	}
+	{ }
 
 
 	AbstractAutomaton(const AbstractAutomaton& aut)
 	{
-		// TODO @todo
-		assert(false);
+		// Assertions
+		assert(&aut != static_cast<AbstractAutomaton*>(0));
 	}
 
 
@@ -168,12 +165,10 @@ public:   // Public methods
 	}
 
 
-	void InsertStates(const AbstractAutomaton& aut)
-	{
-		// TODO
-		assert(&aut);
-		assert(false);
-	}
+	virtual void CopyStates(const AbstractAutomaton& aut) = 0;
+
+
+	virtual std::string ToString() const = 0;
 
 
 	/**
