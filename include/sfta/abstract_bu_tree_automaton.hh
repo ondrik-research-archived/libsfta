@@ -23,8 +23,8 @@ namespace SFTA
 	<
 		typename State,
 		typename Symbol,
-		template <typename> class InputRightHandSide,
-		template <typename> class OutputRightHandSide
+		class InputRightHandSide,
+		class OutputRightHandSide
 	>
 	class AbstractBUTreeAutomaton;
 }
@@ -41,8 +41,8 @@ template
 <
 	typename State,
 	typename Symbol,
-	template <typename> class InputRightHandSide,
-	template <typename> class OutputRightHandSide = InputRightHandSide
+	class InputRightHandSide,
+	class OutputRightHandSide = InputRightHandSide
 >
 class SFTA::AbstractBUTreeAutomaton
 	: public SFTA::AbstractAutomaton
@@ -71,6 +71,9 @@ public:   // Public data types
 	typedef typename ParentClass::SymbolType SymbolType;
 
 	typedef typename SFTA::Vector<StateType> LeftHandSideType;
+
+	typedef InputRightHandSide InputRightHandSideType;
+	typedef OutputRightHandSide OutputRightHandSideType;
 
 	typedef typename ParentClass::HierarchyRoot HierarchyRoot;
 
