@@ -82,26 +82,6 @@ public:   // Public data types
 	{
 	};
 
-private:  // Private data types
-
-
-	/**
-	 * @brief  The transition function
-	 *
-	 * The data type for the transition function.
-	 */
-	typedef SFTA::AbstractBUTreeAutomatonTransitionFunction
-		<
-			// TODO change
-			unsigned,
-			// TODO change
-			unsigned,
-			InputRightHandSide,
-			OutputRightHandSide
-		>
-		AbstractBUTreeAutomatonTransitionFunction;
-
-
 protected:// Protected data members
 
 	//AbstractBUTreeAutomatonTransitionFunction* transFunc_;
@@ -109,9 +89,16 @@ protected:// Protected data members
 
 protected:// Protected methods
 
-	virtual Operation* CreateOperation() const = 0;
+	virtual Operation* createOperation() const = 0;
 
+public:   // Public methods
 
+	AbstractBUTreeAutomaton()
+	{ }
+
+	AbstractBUTreeAutomaton(const AbstractBUTreeAutomaton& aut)
+		: ParentClass(aut)
+	{ }
 };
 
 #endif
