@@ -119,13 +119,13 @@ public:   // Public data types
 protected:// Protected methods
 
 	/**
-	 * @brief  Creats the operation object
+	 * @brief  Creates the operation object
 	 *
 	 * This method creates proper operation.
 	 *
 	 * @returns  Proper operation
 	 */
-	virtual Operation* CreateOperation() const = 0;
+	virtual Operation* createOperation() const = 0;
 
 	/**
 	 * @brief  Returns a transition table wrapper
@@ -164,7 +164,7 @@ public:   // Public methods
 	 */
 	Operation* GetOperation() const
 	{
-		return CreateOperation();
+		return createOperation();
 	}
 
 
