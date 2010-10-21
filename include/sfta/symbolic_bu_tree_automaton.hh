@@ -22,8 +22,8 @@ namespace SFTA
 		class MTBDDTransitionTableWrapper,
 		typename State,
 		typename Symbol,
-		template <typename> class InputRightHandSide,
-		template <typename> class OutputRightHandSide
+		class InputRightHandSide,
+		class OutputRightHandSide
 	>
 	class SymbolicBUTreeAutomaton;
 }
@@ -41,8 +41,8 @@ template
 	class MTBDDTransitionTableWrapper,
 	typename State,
 	typename Symbol,
-	template <typename> class InputRightHandSide,
-	template <typename> class OutputRightHandSide = InputRightHandSide
+	class InputRightHandSide,
+	class OutputRightHandSide = InputRightHandSide
 >
 class SFTA::SymbolicBUTreeAutomaton
 	: public SFTA::AbstractBUTreeAutomaton
