@@ -54,7 +54,7 @@ public:   // Private data types
 		<
 			AA::StateType,
 			AA::SymbolType,
-			SFTA::Set
+			SFTA::Set<AA::StateType>
 		> ABUTA;
 
 	typedef SFTA::AbstractSharedMTBDD
@@ -76,7 +76,7 @@ public:   // Private data types
 	typedef SFTA::MTBDDTransitionTableWrapper
 		<
 			AA::StateType,
-			AbstractMTBDDType
+			MTBDDType
 		> TTW;
 
 	typedef SFTA::SymbolicBUTreeAutomaton
@@ -84,7 +84,7 @@ public:   // Private data types
 			TTW,
 			ABUTA::StateType,
 			ABUTA::SymbolType,
-			SFTA::Set
+			ABUTA::InputRightHandSideType
 		> SBUTA;
 
 	typedef SFTA::NDSymbolicBUTreeAutomaton
@@ -92,12 +92,8 @@ public:   // Private data types
 			TTW,
 			SBUTA::StateType,
 			SBUTA::SymbolType,
-			SFTA::Set
+			SFTA::OrderedVector
 		> NDSBUTA;
-
-	//typedef SFTA::AbstractAutomatonFactory<AA> AAF;
-
-	//typedef SFTA::SymbolicBUTreeAutomatonFactory<SBUTA> SBUTAF;
 
 	typedef AA::Operation AAO;
 
@@ -114,22 +110,15 @@ BOOST_FIXTURE_TEST_SUITE(suite, SymbolicBUTreeAutomatonFixture)
 
 BOOST_AUTO_TEST_CASE(adding_transitions)
 {
-//	AAF* autFactory = new SBUTAF();
-//
-//	AA* ta = autFactory->CreateAutomaton();
-//
-//	AAO* oper = autFactory->CreateAutomatonOperation();
-
 	AA* ta = new NDSBUTA();
-
 	AAO* oper = ta->GetOperation();
-
 	AA* unionTa = oper->Union(ta, ta);
+
+	BOOST_TEST_MESSAGE("Union automaton:\n" + unionTa->ToString());
 
 	delete unionTa;
 	delete oper;
 	delete ta;
-	//delete autFactory;
 }
 
 BOOST_AUTO_TEST_SUITE_END()
