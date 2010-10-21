@@ -21,7 +21,7 @@ namespace SFTA
 	template
 	<
 		typename State,
-		class AbstractSharedMTBDD
+		class SharedMTBDD
 	>
 	class MTBDDTransitionTableWrapper;
 }
@@ -30,7 +30,7 @@ namespace SFTA
 template
 <
 	typename State,
-	class AbstractSharedMTBDD
+	class SharedMTBDD
 >
 class SFTA::MTBDDTransitionTableWrapper
 	: public SFTA::BaseTransitionTableWrapper
@@ -40,23 +40,45 @@ class SFTA::MTBDDTransitionTableWrapper
 {
 public:   // Public data types
 
+	typedef MTBDDTransitionTableWrapper
+		<
+			State,
+			SharedMTBDD
+		> Type;
+
+	typedef typename SFTA::BaseTransitionTableWrapper
+		<
+			State
+		> ParentClass;
+
 	typedef State StateType;
 
-	typedef AbstractSharedMTBDD AbstractSharedMTBDDType;
+	typedef SharedMTBDD SharedMTBDDType;
 
-	// TODO @todo: static check of some types
-	//LOKI_STATIC_CHECK();
 
 private:  // Private data members
 
-	AbstractSharedMTBDDType* mtbdd_;
+	SharedMTBDDType* mtbdd_;
+
+private:  // Private methods
+
+	MTBDDTransitionTableWrapper(const MTBDDTransitionTableWrapper& wrap);
+	MTBDDTransitionTableWrapper& operator=(const MTBDDTransitionTableWrapper& wrap);
+
 
 public:   // Public methods
 
-	inline AbstractSharedMTBDDType* GetMTBDD() const
+	MTBDDTransitionTableWrapper()
+		: mtbdd_(new SharedMTBDDType())
 	{
 		// Assertions
-		assert(mtbdd_ != static_cast<AbstractSharedMTBDDType*>(0));
+		assert(mtbdd_ != static_cast<SharedMTBDDType*>(0));
+	}
+
+	inline SharedMTBDDType* GetMTBDD() const
+	{
+		// Assertions
+		assert(mtbdd_ != static_cast<SharedMTBDDType*>(0));
 
 		return mtbdd_;
 	}
@@ -64,7 +86,7 @@ public:   // Public methods
 	virtual ~MTBDDTransitionTableWrapper()
 	{
 		// Assertions
-		assert(mtbdd_ != static_cast<AbstractSharedMTBDDType*>(0));
+		assert(mtbdd_ != static_cast<SharedMTBDDType*>(0));
 
 		delete mtbdd_;
 	}
