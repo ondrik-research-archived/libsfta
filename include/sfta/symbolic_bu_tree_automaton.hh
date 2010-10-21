@@ -13,6 +13,8 @@
 
 // SFTA headers
 #include <sfta/abstract_bu_tree_automaton.hh>
+#include <sfta/ordered_vector.hh>
+#include <sfta/vector_map.hh>
 
 // insert the class into proper namespace
 namespace SFTA
@@ -56,6 +58,15 @@ class SFTA::SymbolicBUTreeAutomaton
 
 public:   // Public data types
 
+	typedef SymbolicBUTreeAutomaton
+		<
+			MTBDDTransitionTableWrapper,
+			State,
+			Symbol,
+			InputRightHandSide,
+			OutputRightHandSide
+		> Type;
+
 	typedef State StateType;
 	typedef Symbol SymbolType;
 
@@ -67,37 +78,44 @@ public:   // Public data types
 			OutputRightHandSide
 		> ParentClass;
 
+	typedef typename ParentClass::HierarchyRoot HierarchyRoot;
 
-	typedef SymbolicBUTreeAutomaton
-		<
-			MTBDDTransitionTableWrapper,
-			State,
-			Symbol,
-			InputRightHandSide,
-			OutputRightHandSide
-		> Type;
+	typedef MTBDDTransitionTableWrapper MTBDDTTWrapperType;
 
-	typedef MTBDDTransitionTableWrapper MTBDDTransitionTableWrapperType;
-
-	typedef typename MTBDDTransitionTableWrapperType::AbstractSharedMTBDDType::
-		RootType RootType;
+	typedef typename MTBDDTTWrapperType::SharedMTBDDType::RootType 
+		RootType;
 
 	typedef typename ParentClass::LeftHandSideType LeftHandSideType;
 
+	typedef typename ParentClass::InputRightHandSideType InputRightHandSideType;
+	typedef typename ParentClass::OutputRightHandSideType OutputRightHandSideType;
+
+	typedef typename SFTA::OrderedVector
+		<
+			StateType
+		> StateSetType;
+
+	typedef typename SFTA::VectorMap
+		<
+			StateType,
+			RootType
+		> LHSRootContainer;
 
 	class Operation
 		: public ParentClass::Operation
 	{
 	};
 
-private:  // Private data types
-
-	//mapovani Symbol -> MTBDDTransitionFunction::Symbol
-	//mapovani State -> MTBDDTransitionFunction::State
 
 private:  // Private data members
 
-	MTBDDTransitionTableWrapper* ttWrapper_;
+	StateSetType states_;
+
+	MTBDDTTWrapperType* ttWrapper_;
+
+	LHSRootContainer rootMap_;
+
+	RootType sinkSuperState_;
 
 private:  // Private methods
 
@@ -106,24 +124,52 @@ private:  // Private methods
 protected:// Protected methods
 
 
-	virtual MTBDDTransitionTableWrapper* getTTWrapper() const
+	virtual MTBDDTTWrapperType* getTTWrapper() const
 	{
 		// Assertions
-		assert(ttWrapper_ != static_cast<MTBDDTransitionTableWrapper*>(0));
+		assert(ttWrapper_ != static_cast<MTBDDTTWrapperType*>(0));
 
 		return ttWrapper_;
 	}
 
 
-	virtual Operation* CreateOperation() const = 0;
+	virtual Operation* createOperation() const = 0;
 
-	RootType getRoot(const LeftHandSideType& lhs) const
+	inline RootType getRoot(const LeftHandSideType& lhs) const
 	{
-		// TODO: @todo return something sound
-		assert(&lhs != 0);
-		return 0;
+		return rootMap_.GetValue(lhs);
 	}
 
+	inline void setRoot(const LeftHandSideType& lhs, RootType root)
+	{
+		rootMap_.SetValue(lhs, root);
+	}
+
+	void copyStates(const Type& aut)
+	{
+		states_.insert(aut.states_);
+
+		// also copy superstates
+		rootMap_.insert(aut.rootMap_);
+	}
+
+	void copyStates(const HierarchyRoot& aut)
+	{
+		const Type* autSym = static_cast<Type*>(0);
+
+		if ((autSym = dynamic_cast<const Type*>(&aut)) !=
+			static_cast<const Type*>(0))
+		{
+			return copyStates(*autSym);
+		}
+
+		throw std::runtime_error(__func__ + std::string(": Invalid types"));
+	}
+
+	inline RootType getSinkSuperState() const
+	{
+		return sinkSuperState_;
+	}
 
 public:   // Public methods
 
@@ -133,10 +179,17 @@ public:   // Public methods
 	 * Default constructor.
 	 */
 	SymbolicBUTreeAutomaton()
-		: ttWrapper_(0)
+		: states_(),
+			ttWrapper_(new MTBDDTTWrapperType()),
+			rootMap_(),
+			sinkSuperState_()
 	{
 		// Assertions
-		assert(ttWrapper_ != static_cast<MTBDDTransitionTableWrapper*>(0));
+		assert(ttWrapper_ != static_cast<MTBDDTTWrapperType*>(0));
+
+		RootType sinkSuperState_ = getTTWrapper()->GetMTBDD()->CreateRoot();
+
+		rootMap_.SetDefaultValue(sinkSuperState_);
 	}
 
 	/**
@@ -147,13 +200,29 @@ public:   // Public methods
 	 * @param[in]  aut  The automaton to be copied
 	 */
 	SymbolicBUTreeAutomaton(const SymbolicBUTreeAutomaton& aut)
-		: ttWrapper_(aut.getTTWrapper())
+		: ParentClass(aut),
+			states_(aut.states_),
+			ttWrapper_(aut.ttWrapper_),
+			rootMap_(aut.rootMap_),
+			sinkSuperState_(aut.sinkSuperState_)
 	{
-		// TODO @todo
-		assert(false);
-		assert(&aut != 0);
+		// Assertions
+		assert(ttWrapper_ != static_cast<MTBDDTTWrapperType*>(0));
 	}
 
+	virtual void CopyStates(const HierarchyRoot& aut)
+	{
+		copyStates(aut);
+	}
+
+	virtual std::string ToString() const
+	{
+		std::string result;
+
+		result += "automaton";
+
+		return result;
+	}
 };
 
 #endif
