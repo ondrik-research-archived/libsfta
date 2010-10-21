@@ -117,9 +117,6 @@ public:    // Public data types
 	typedef VariableAssignment VariableAssignmentType;
 
 
-private:   // Private data types
-
-
 	/**
 	 * @brief  The type of the parent class
 	 *
