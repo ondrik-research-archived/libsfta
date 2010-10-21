@@ -43,23 +43,15 @@ class SFTA::NDSymbolicBUTreeAutomaton
 			MTBDDTransitionTableWrapper,
 			State,
 			Symbol,
-			InputRightHandSide,
-			OutputRightHandSide
+			InputRightHandSide<State>,
+			OutputRightHandSide<State>
 		>
 {
+private:  // Private data types
+
+	typedef typename SFTA::Private::Convert Convert;
+
 public:   // Public data types
-
-	typedef SFTA::SymbolicBUTreeAutomaton
-		<
-			MTBDDTransitionTableWrapper,
-			State,
-			Symbol,
-			InputRightHandSide,
-			OutputRightHandSide
-		> ParentClass;
-
-	typedef typename ParentClass::HierarchyRoot HierarchyRoot;
-
 
 	typedef NDSymbolicBUTreeAutomaton
 		<
@@ -70,21 +62,44 @@ public:   // Public data types
 			OutputRightHandSide
 		> Type;
 
-	typedef typename ParentClass::MTBDDTransitionTableWrapperType
-		MTBDDTransitionTableWrapperType;
+	typedef SymbolicBUTreeAutomaton
+		<
+			MTBDDTransitionTableWrapper,
+			State,
+			Symbol,
+			InputRightHandSide<State>,
+			OutputRightHandSide<State>
+		> ParentClass;
 
-	typedef typename MTBDDTransitionTableWrapperType::AbstractSharedMTBDDType
-		AbstractSharedMTBDDType;
+	typedef typename ParentClass::HierarchyRoot HierarchyRoot;
 
 	typedef typename ParentClass::LeftHandSideType LeftHandSideType;
+
+#if 0
+
+
+
+	typedef typename MTBDDTTWrapperType::SharedMTBDDType::RootType
+		RootType;
+
+#endif
+
+
+	typedef typename ParentClass::InputRightHandSideType InputRightHandSideType;
+	typedef typename ParentClass::OutputRightHandSideType OutputRightHandSideType;
+
+
+	typedef typename ParentClass::MTBDDTTWrapperType MTBDDTTWrapperType;
+	typedef typename MTBDDTTWrapperType::SharedMTBDDType SharedMTBDDType;
+
 
 	class Operation
 		: public ParentClass::Operation
 	{
 	public:   // Public data types
 
-		typedef typename AbstractSharedMTBDDType::RootType RootType;
-		typedef typename AbstractSharedMTBDDType::LeafType LeafType;
+		typedef typename SharedMTBDDType::RootType RootType;
+		typedef typename SharedMTBDDType::LeafType LeafType;
 
 
 	protected:// Protected methods
@@ -93,29 +108,26 @@ public:   // Public data types
 		{
 			Type* result = new Type(a1);
 
-			result->InsertStates(a2);
+			result->CopyStates(a2);
 
 			RootType lhsMtbdd = a1.getRoot(LeftHandSideType());
 			RootType rhsMtbdd = a2.getRoot(LeftHandSideType());
 
 			class UnionApplyFunctor
-				: public AbstractSharedMTBDDType::AbstractApplyFunctorType
+				: public SharedMTBDDType::AbstractApplyFunctorType
 			{
 				virtual LeafType operator()(const LeafType& lhs, const LeafType& rhs)
 				{
-					assert(&rhs != 0);
-					return lhs;
-
+					return lhs.Union(rhs);
 				}
 			};
 
 			UnionApplyFunctor unionFunc;
-			result->getTTWrapper()->GetMTBDD()->Apply(lhsMtbdd, rhsMtbdd, &unionFunc);
+			RootType resultRoot = result->getTTWrapper()->GetMTBDD()->Apply(
+				lhsMtbdd, rhsMtbdd, &unionFunc);
 
+			result->setRoot(LeftHandSideType(), resultRoot);
 
-			assert(result != static_cast<Type*>(0));
-
-			assert(false);
 			return result;
 		}
 
@@ -146,27 +158,24 @@ public:   // Public data types
 
 protected:// Protected methods
 
-	virtual Operation* CreateOperation() const
+	virtual Operation* createOperation() const
 	{
 		return new Operation();
 	}
 
+
 public:   // Public methods
 
 	NDSymbolicBUTreeAutomaton()
-		: ParentClass()
 	{
-		// TODO @todo
-		assert(false);
+		ParentClass::getTTWrapper()->GetMTBDD()->SetValue(
+			ParentClass::getSinkSuperState(), Symbol::GetUniversalSymbol(),
+			InputRightHandSideType());
 	}
 
 	NDSymbolicBUTreeAutomaton(const NDSymbolicBUTreeAutomaton& aut)
 		: ParentClass(aut)
-	{
-		// TODO @todo
-		assert(false);
-	}
-
+	{ }
 };
 
 #endif
