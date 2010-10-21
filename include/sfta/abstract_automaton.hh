@@ -11,6 +11,10 @@
 #ifndef _ABSTRACT_AUTOMATON_HH_
 #define _ABSTRACT_AUTOMATON_HH_
 
+// SFTA headers
+#include <sfta/base_transition_table_wrapper.hh>
+#include <sfta/convert.hh>
+
 // Standard library headers
 #include <cassert>
 
@@ -72,6 +76,11 @@ public:   // Public data types
 
 	typedef Type HierarchyRoot;
 
+	typedef typename SFTA::BaseTransitionTableWrapper
+		<
+			StateType
+		> BaseTTWrapperType;
+
 	/**
 	 * @brief   Abstract class for automata operations
 	 *
@@ -118,6 +127,14 @@ protected:// Protected methods
 	 */
 	virtual Operation* CreateOperation() const = 0;
 
+	/**
+	 * @brief  Returns a transition table wrapper
+	 *
+	 * This method returns given transition table wrapper of the automaton.
+	 *
+	 * @returns  Transition table wrapper
+	 */
+	virtual BaseTTWrapperType* getTTWrapper() const = 0;
 
 public:   // Public methods
 
