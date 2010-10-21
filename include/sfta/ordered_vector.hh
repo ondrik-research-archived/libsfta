@@ -104,7 +104,7 @@ public:   // Public methods
 	}
 
 
-	inline void insert(const Key& x)
+	void insert(const Key& x)
 	{
 		// Assertions
 		assert(vectorIsSorted());
@@ -138,6 +138,20 @@ public:   // Public methods
 
 		// insert the new element
 		vec_[first] = x;
+
+		// Assertions
+		assert(vectorIsSorted());
+	}
+
+
+	void insert(const OrderedVector& vec)
+	{
+		// Assertions
+		assert(vectorIsSorted());
+		assert(vec.vectorIsSorted());
+
+		OrderedVector result = this->Union(vec);
+		vec_ = result.vec_;
 
 		// Assertions
 		assert(vectorIsSorted());
