@@ -337,7 +337,6 @@ public:   // Public methods
 		return *this;
 	}
 
-
 	/**
 	 * @brief  Overloaded << operator
 	 *
@@ -355,6 +354,12 @@ public:   // Public methods
 		return (os << asgn.ToString());
 	}
 
+public:   // Public static methods
+
+	static CompactVariableAssignment GetUniversalSymbol()
+	{
+		return CompactVariableAssignment();
+	}
 };
 
 #endif
