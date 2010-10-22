@@ -13,7 +13,6 @@
 
 // SFTA headers
 #include <sfta/abstract_automaton.hh>
-#include <sfta/abstract_bu_tree_automaton_transition_function.hh>
 #include <sfta/vector.hh>
 
 // insert the class into proper namespace
