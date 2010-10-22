@@ -4,7 +4,7 @@
  *  Copyright (c) 2010  Ondra Lengal <ondra@lengal.net>
  *
  *  Description:
- *    Test suite for SymbolicBUTreeAutomaton.
+ *    Test suite for NDSymbolicBUTreeAutomaton.
  *
  *****************************************************************************/
 
@@ -21,7 +21,7 @@
 
 // Boost headers
 #define BOOST_TEST_DYN_LINK
-#define BOOST_TEST_MODULE SymbolicBUTreeAutomaton
+#define BOOST_TEST_MODULE NDSymbolicBUTreeAutomaton
 #include <boost/test/unit_test.hpp>
 
 // testing headers
@@ -34,11 +34,11 @@
  ******************************************************************************/
 
 /**
- * @brief  SymbolicBUTreeAutomaton test fixture
+ * @brief  NDSymbolicBUTreeAutomaton test fixture
  *
- * Fixture for test of SymbolicBUTreeAutomaton.
+ * Fixture for test of NDSymbolicBUTreeAutomaton.
  */
-class SymbolicBUTreeAutomatonFixture : public LogFixture
+class NDSymbolicBUTreeAutomatonFixture : public LogFixture
 {
 public:   // Private data types
 
@@ -106,7 +106,7 @@ public:   // Private data types
  ******************************************************************************/
 
 
-BOOST_FIXTURE_TEST_SUITE(suite, SymbolicBUTreeAutomatonFixture)
+BOOST_FIXTURE_TEST_SUITE(suite, NDSymbolicBUTreeAutomatonFixture)
 
 BOOST_AUTO_TEST_CASE(adding_transitions)
 {
