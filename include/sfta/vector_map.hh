@@ -97,54 +97,240 @@ private:  // Private data types
 
 	struct Tconst_iterator
 	{
+	private:  // Private data types
+
+		enum IteratorState
+		{
+			ITERATOR_INVALID = 0,
+			ITERATOR_NULLARY,
+			ITERATOR_UNARY,
+			ITERATOR_BINARY,
+			ITERATOR_NNARY,
+			ITERATOR_END
+		};
+
+
 	private:  // Private data members
 
 		const Type* vecMap_;
 
-		bool end_;
-
 		IndexValueType indexValue_;
+
+		IteratorState state_;
+
+		typename HashTableUnary::const_iterator itUnary_;
+		typename HashTableBinary::const_iterator itBinary_;
+		typename HashTableNnary::const_iterator itNnary_;
 
 	private:  // Private methods
 
 		void reset()
 		{
-			assert(false);
+			state_ = ITERATOR_INVALID;
+		}
+
+		void updateIndexValue()
+		{
+			// Assertions
+			assert(state_ != ITERATOR_INVALID);
+			assert(state_ != ITERATOR_END);
+
+			IndexType index;
+			switch (state_)
+			{
+				case ITERATOR_NULLARY:
+					indexValue_ = std::make_pair(index, vecMap_->container0_); break;
+
+				case ITERATOR_UNARY:
+					index.push_back(itUnary_->first);
+					indexValue_ = std::make_pair(index, itUnary_->second); break;
+
+				case ITERATOR_BINARY:
+					index.push_back(itBinary_->first.first);
+					index.push_back(itBinary_->first.second);
+					indexValue_ = std::make_pair(index, itBinary_->second); break;
+
+				case ITERATOR_NNARY:
+					indexValue_ = std::make_pair(itNnary_->first, itNnary_->second); break;
+
+				default: throw std::logic_error(__func__ +
+					std::string(": invalid iterator state")); break;
+			}
 		}
 
 	public:   // Public methods
 
 		explicit Tconst_iterator(const Type* vecMap, bool end = false)
 			: vecMap_(vecMap),
-				end_(end),
-				indexValue_()
+				indexValue_(),
+				state_((end)? ITERATOR_END : ITERATOR_INVALID),
+				itUnary_(),
+				itBinary_(),
+				itNnary_()
 		{
 			// Assertions
 			assert(vecMap_ != static_cast<const Type*>(0));
 
-			reset();
-			++(*this);
+			if (state_ != ITERATOR_END)
+			{
+				reset();
+				++(*this);
+			}
 		}
+
+
+		Tconst_iterator(const Tconst_iterator& it)
+			: vecMap_(it.vecMap_),
+				indexValue_(it.indexValue_),
+				state_(it.state_),
+				itUnary_(it.itUnary_),
+				itBinary_(it.itBinary_),
+				itNnary_(it.itNnary_)
+		{
+			// Assertions
+			assert(vecMap_ != static_cast<const Type*>(0));
+		}
+
+
+		Tconst_iterator& operator=(const Tconst_iterator& rhs)
+		{
+			if (&rhs != this)
+			{
+				vecMap_ = rhs.vecMap_;
+				indexValue_ = rhs.indexValue_;
+				state_ = rhs.state_;
+				itUnary_ = rhs.itUnary_;
+				itBinary_ = rhs.itBinary_;
+				itNnary_ = rhs.itNnary_;
+			}
+
+			return *this;
+		}
+
 
 		Tconst_iterator& operator++()
 		{
-			//TODO: increment
-			assert(false);
+			// Assertions
+			assert(vecMap_ != static_cast<const Type*>(0));
+
+			bool sound = false;
+
+			while (!sound)
+			{	// until we reach a sound value
+				switch (state_)
+				{
+					case ITERATOR_INVALID:
+						state_ = ITERATOR_NULLARY;
+						if (vecMap_->container0_ != vecMap_->defaultValue_)
+						{
+							sound = true;
+							updateIndexValue();
+						}
+
+						break;
+
+					case ITERATOR_NULLARY:
+						state_ = ITERATOR_UNARY;
+						itUnary_ = vecMap_->container1_.begin();
+						if (itUnary_ != vecMap_->container1_.end())
+						{
+							sound = true;
+							updateIndexValue();
+						}
+
+						break;
+
+					case ITERATOR_UNARY:
+						if (itUnary_ == vecMap_->container1_.end())
+						{
+							state_ = ITERATOR_BINARY;
+							itBinary_ = vecMap_->container2_.begin();
+							if (itBinary_ != vecMap_->container2_.end())
+							{
+								sound = true;
+								updateIndexValue();
+							}
+						}
+						else
+						{
+							sound = true;
+							updateIndexValue();
+							++itUnary_;
+						}
+
+						break;
+
+					case ITERATOR_BINARY:
+						if (itBinary_ == vecMap_->container2_.end())
+						{
+							state_ = ITERATOR_NNARY;
+							itNnary_ = vecMap_->containerN_.begin();
+							if (itNnary_ != vecMap_->containerN_.end())
+							{
+								sound = true;
+								updateIndexValue();
+							}
+						}
+						else
+						{
+							sound = true;
+							updateIndexValue();
+							++itBinary_;
+						}
+
+						break;
+
+					case ITERATOR_NNARY:
+						sound = true;
+						if (itNnary_ == vecMap_->containerN_.end())
+						{
+							state_ = ITERATOR_END;
+						}
+						else
+						{
+							updateIndexValue();
+							++itNnary_;
+						}
+
+						break;
+
+					default: throw std::logic_error(__func__ +
+						std::string(": invalid attempt to increment iterator")); break;
+				}
+			}
+
 			return *this;
 		}
+
 
 		bool operator==(const Tconst_iterator& rhs) const
 		{
 			// Assertions
+			assert(state_ != ITERATOR_INVALID);
 			assert(vecMap_ != static_cast<Type*>(0));
 
 			if (vecMap_ != rhs.vecMap_)
 			{
 				throw std::logic_error(__func__ +
-					std::string(": attempt to compare iterators from different containers"));
+					std::string(": an attempt to compare iterators from different containers"));
 			}
 
-			assert(false);
+			if (state_ != rhs.state_)
+			{
+				return false;
+			}
+
+			switch (state_)
+			{
+				case ITERATOR_INVALID: return false; break;
+				case ITERATOR_NULLARY: return true; break;
+				case ITERATOR_UNARY: return itUnary_ == rhs.itUnary_; break;
+				case ITERATOR_BINARY: return itBinary_ == rhs.itBinary_; break;
+				case ITERATOR_NNARY: return itNnary_ == rhs.itNnary_; break;
+				case ITERATOR_END: return true; break;
+				default: throw std::logic_error(__func__ +
+					std::string(": invalid state")); break;
+			}
 		}
 
 		inline bool operator!=(const Tconst_iterator& rhs) const
@@ -152,14 +338,19 @@ private:  // Private data types
 			return !(*this == rhs);
 		}
 
-		const IndexValueType& operator*() const
+		inline const IndexValueType& operator*() const
 		{
-			return indexValue_;
+			// Assertions
+			assert(state_ != ITERATOR_INVALID);
 
+			return indexValue_;
 		}
 
-		const IndexValueType* operator->() const
+		inline const IndexValueType* operator->() const
 		{
+			// Assertions
+			assert(state_ != ITERATOR_INVALID);
+
 			return &indexValue_;
 		}
 	};
@@ -170,6 +361,8 @@ public:   // Public data types
 
 private:  // Private data members
 
+	ValueType defaultValue_;
+
 	ValueType container0_;
 
 	HashTableUnary container1_;
@@ -177,8 +370,6 @@ private:  // Private data members
 	HashTableBinary container2_;
 
 	HashTableNnary containerN_;
-
-	ValueType defaultValue_;
 
 private:  // Private methods
 
@@ -271,12 +462,12 @@ private:  // Private methods
 
 public:   // Public methods
 
-	VectorMap()
-		: container0_(),
+	VectorMap(const ValueType& defaultValue)
+		: defaultValue_(defaultValue),
+			container0_(defaultValue_),
 			container1_(),
 			container2_(),
-			containerN_(),
-			defaultValue_()
+			containerN_()
 	{ }
 
 	const ValueType& GetValue(const IndexType& index) const
@@ -307,11 +498,6 @@ public:   // Public methods
 		container1_.insert(vecMap.container1_.begin(), vecMap.container1_.end());
 		container2_.insert(vecMap.container2_.begin(), vecMap.container2_.end());
 		containerN_.insert(vecMap.containerN_.begin(), vecMap.containerN_.end());
-	}
-
-	inline void SetDefaultValue(const ValueType& val)
-	{
-		defaultValue_ = val;
 	}
 
 	const_iterator begin() const
