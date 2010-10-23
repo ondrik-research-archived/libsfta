@@ -44,7 +44,15 @@ public:   // Public data types
 	typedef KeyElement KeyElementType;
 	typedef Value ValueType;
 
+	typedef VectorMap
+		<
+			KeyElementType,
+			ValueType
+		> Type;
+
 	typedef typename SFTA::Vector<KeyElementType> IndexType;
+
+	typedef std::pair<IndexType, ValueType> IndexValueType;
 
 private:  // Private data types
 
@@ -86,6 +94,79 @@ private:  // Private data types
 
 	typedef std::tr1::unordered_map<IndexType, ValueType, HasherNnary>
 		HashTableNnary;
+
+	struct Tconst_iterator
+	{
+	private:  // Private data members
+
+		const Type* vecMap_;
+
+		bool end_;
+
+		IndexValueType indexValue_;
+
+	private:  // Private methods
+
+		void reset()
+		{
+			assert(false);
+		}
+
+	public:   // Public methods
+
+		explicit Tconst_iterator(const Type* vecMap, bool end = false)
+			: vecMap_(vecMap),
+				end_(end),
+				indexValue_()
+		{
+			// Assertions
+			assert(vecMap_ != static_cast<const Type*>(0));
+
+			reset();
+			++(*this);
+		}
+
+		Tconst_iterator& operator++()
+		{
+			//TODO: increment
+			assert(false);
+			return *this;
+		}
+
+		bool operator==(const Tconst_iterator& rhs) const
+		{
+			// Assertions
+			assert(vecMap_ != static_cast<Type*>(0));
+
+			if (vecMap_ != rhs.vecMap_)
+			{
+				throw std::logic_error(__func__ +
+					std::string(": attempt to compare iterators from different containers"));
+			}
+
+			assert(false);
+		}
+
+		inline bool operator!=(const Tconst_iterator& rhs) const
+		{
+			return !(*this == rhs);
+		}
+
+		const IndexValueType& operator*() const
+		{
+			return indexValue_;
+
+		}
+
+		const IndexValueType* operator->() const
+		{
+			return &indexValue_;
+		}
+	};
+
+public:   // Public data types
+
+	typedef Tconst_iterator const_iterator;
 
 private:  // Private data members
 
@@ -233,6 +314,15 @@ public:   // Public methods
 		defaultValue_ = val;
 	}
 
+	const_iterator begin() const
+	{
+		return const_iterator(this);
+	}
+
+	const_iterator end() const
+	{
+		return const_iterator(this, true);
+	}
 };
 
 #endif
