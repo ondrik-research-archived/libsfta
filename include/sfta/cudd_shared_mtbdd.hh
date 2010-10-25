@@ -140,6 +140,14 @@ public:    // Public data types
 
 
 	/**
+	 * @brief  Type of description
+	 *
+	 * The data type for MTBDD description
+	 */
+	typedef typename ParentClass::DescriptionType DescriptionType;
+
+
+	/**
 	 * @brief  Type of variable renaming functor
 	 *
 	 * The data type for class of variable renaming functor.
@@ -655,6 +663,32 @@ private:  // Private methods
 		cudd_.RecursiveDeref(root);
 	}
 
+	void getNodeDescription(CUDDFacade::Node* node, VariableAssignmentType asgn,
+		DescriptionType& desc) const
+	{
+		// Assertions
+		assert(node != static_cast<CUDDFacade::Node*>(0));
+
+		if (cudd_.IsNodeConstant(node))
+		{
+			LeafType leaf = LA::getLeafOfHandle(cudd_.GetNodeValue(node));
+
+			if (!desc.insert(std::make_pair(asgn, leaf)).second)
+			{	// in case the index already has a value
+				throw std::logic_error("Inserting to an already existing index!");
+			}
+		}
+		else
+		{
+			asgn.SetIthVariableValue(cudd_.GetNodeIndex(node),
+				VariableAssignmentType::ONE);
+			getNodeDescription(cudd_.GetThenChild(node), asgn, desc);
+			asgn.SetIthVariableValue(cudd_.GetNodeIndex(node),
+				VariableAssignmentType::ZERO);
+			getNodeDescription(cudd_.GetElseChild(node), asgn, desc);
+		}
+	}
+
 public:   // Public methods
 
 
@@ -968,6 +1002,20 @@ public:   // Public methods
 		cudd_.RecursiveDeref(oldRoot);
 
 		return RA::allocateRoot(newRoot);
+	}
+
+
+	virtual DescriptionType GetMinimumDescription(const RootType& root) const
+	{
+		DescriptionType result;
+
+		CUDDFacade::Node* rt = RA::getHandleOfRoot(root);
+		// TODO @todo: do something
+		VariableAssignmentType asgn = VariableAssignmentType::GetUniversalSymbol();
+
+		getNodeDescription(rt, asgn, result);
+
+		return result;
 	}
 
 
