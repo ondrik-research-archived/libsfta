@@ -223,15 +223,6 @@ private:  // Private data members
 	MTBDDRootTypeHashTable containerN_;
 
 
-	/**
-	 * @brief  The name of the Log4cpp category for logging
-	 *
-	 * The name of the Log4cpp category used for logging messages from this
-	 * class.
-	 */
-	static const char* LOG_CATEGORY_NAME;
-
-
 private:  // Private methods
 
 	inline MTBDDType& getMTBDD()
@@ -683,22 +674,5 @@ public:   // Public methods
 
 	template <class> friend class MTBDDOperation;
 };
-
-
-// Setting the logging category name for Log4cpp
-template
-<
-	typename Symbol,
-	typename State,
-	template <typename> class LHS,
-	template <typename> class IRHS,
-	template <typename> class ORHS,
-	typename RT,
-	class MTBDD,
-	typename MTBDDRoot,
-	template <typename> class SA
->
-const char* SFTA::MTBDDTransitionFunction<Symbol, State, LHS, IRHS, ORHS, RT,
-	MTBDD, MTBDDRoot, SA>::LOG_CATEGORY_NAME = "mtbdd_transition_function";
 
 #endif
