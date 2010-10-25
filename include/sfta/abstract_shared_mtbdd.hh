@@ -320,7 +320,7 @@ public:  // Public methods
 	 *
 	 * @param[in]  root  The root of the MTBDD to be erased
 	 */
-	virtual void EraseRoot(RootType root) = 0;
+	virtual void EraseRoot(const RootType& root) = 0;
 
 
 	/**
@@ -372,7 +372,7 @@ public:  // Public methods
 	 *
 	 * @returns  An MTBDD with renamed variables
 	 */
-	virtual RootType RenameVariables(RootType root,
+	virtual RootType RenameVariables(const RootType& root,
 		AbstractVariableRenamingFunctorType* func) = 0;
 
 
@@ -391,7 +391,7 @@ public:  // Public methods
 	 *
 	 * @returns  An MTBDD with trimmed variables
 	 */
-	virtual RootType TrimVariables(RootType root,
+	virtual RootType TrimVariables(const RootType& root,
 		AbstractVariablePredicateFunctorType* pred,
 		AbstractApplyFunctorType* merger) = 0;
 
