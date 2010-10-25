@@ -349,9 +349,64 @@ public:   // Public methods
 	 *
 	 * @returns  Modified output stream
 	 */
-	friend std::ostream& operator<<(std::ostream& os, const CompactVariableAssignment& asgn)
+	friend std::ostream& operator<<(std::ostream& os,
+		const CompactVariableAssignment& asgn)
 	{
 		return (os << asgn.ToString());
+	}
+
+	friend bool operator<(const CompactVariableAssignment& lhs,
+		const CompactVariableAssignment& rhs)
+	{
+		// Assertions
+		assert(lhs.Size() == rhs.Size());
+
+		for (size_t i = 0; i < lhs.Size(); ++i)
+		{
+			char lhsIthValue = lhs.GetIthVariableValue(lhs.Size() - i - 1);
+			char rhsIthValue = rhs.GetIthVariableValue(rhs.Size() - i - 1);
+
+			switch (lhsIthValue)
+			{
+				case ZERO:
+					switch (rhsIthValue)
+					{
+						case ZERO: continue; break;
+						case ONE: return true; break;
+						case DONT_CARE: return true; break;
+						default: throw std::runtime_error("Invalid variable assignment value");
+							break;
+					}
+					break;
+
+				case ONE:
+					switch (rhsIthValue)
+					{
+						case ZERO: return false; break;
+						case ONE: continue; break;
+						case DONT_CARE: return false; break;
+						default: throw std::runtime_error("Invalid variable assignment value");
+							break;
+					}
+					break;
+
+				case DONT_CARE:
+					switch (rhsIthValue)
+					{
+						case ZERO: return false; break;
+						case ONE: return true; break;
+						case DONT_CARE: continue; break;
+						default: throw std::runtime_error("Invalid variable assignment value");
+							break;
+					}
+					break;
+
+				default: throw std::runtime_error("Invalid variable assignment value");
+					break;
+			}
+		}
+
+		return false;
 	}
 
 public:   // Public static methods
