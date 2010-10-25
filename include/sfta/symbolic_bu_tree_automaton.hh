@@ -105,6 +105,12 @@ public:   // Public data types
 	{
 	};
 
+private:  // Private data types
+
+	typedef SFTA::Private::Convert Convert;
+	typedef typename MTBDDTTWrapperType::SharedMTBDDType::DescriptionType
+		TransitionMapType;
+
 
 private:  // Private data members
 
@@ -214,7 +220,28 @@ public:   // Public methods
 	{
 		std::string result;
 
-		result += "automaton";
+		result += "Automaton\n";
+
+		result += "States: " + Convert::ToString(states_) + "\n";
+
+		result += "Transitions: \n";
+
+		for (typename LHSRootContainer::const_iterator itRoot = rootMap_.begin();
+			itRoot != rootMap_.end(); ++itRoot)
+		{
+			TransitionMapType transMap =
+				ttWrapper_->GetMTBDD()->GetMinimumDescription(itRoot->second);
+
+			for (typename TransitionMapType::const_iterator itTrans = transMap.begin();
+				itTrans != transMap.end(); ++itTrans)
+			{
+				result += Convert::ToString(itTrans->first);
+				result += Convert::ToString(itRoot->first);
+				result += " -> ";
+				result += Convert::ToString(itTrans->second);
+				result += "\n";
+			}
+		}
 
 		return result;
 	}
