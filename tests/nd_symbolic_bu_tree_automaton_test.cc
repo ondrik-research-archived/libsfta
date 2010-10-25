@@ -114,6 +114,7 @@ BOOST_AUTO_TEST_CASE(adding_transitions)
 	AAO* oper = ta->GetOperation();
 	AA* unionTa = oper->Union(ta, ta);
 
+	BOOST_TEST_MESSAGE("Input automaton:\n" + ta->ToString());
 	BOOST_TEST_MESSAGE("Union automaton:\n" + unionTa->ToString());
 
 	delete unionTa;
