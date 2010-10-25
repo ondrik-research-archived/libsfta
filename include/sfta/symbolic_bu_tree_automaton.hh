@@ -55,7 +55,6 @@ class SFTA::SymbolicBUTreeAutomaton
 			OutputRightHandSide
 		>
 {
-
 public:   // Public data types
 
 	typedef SymbolicBUTreeAutomaton
@@ -113,9 +112,9 @@ private:  // Private data members
 
 	MTBDDTTWrapperType* ttWrapper_;
 
-	LHSRootContainer rootMap_;
-
 	RootType sinkSuperState_;
+
+	LHSRootContainer rootMap_;
 
 private:  // Private methods
 
@@ -181,15 +180,11 @@ public:   // Public methods
 	SymbolicBUTreeAutomaton()
 		: states_(),
 			ttWrapper_(new MTBDDTTWrapperType()),
-			rootMap_(),
-			sinkSuperState_()
+			sinkSuperState_(getTTWrapper()->GetMTBDD()->CreateRoot()),
+			rootMap_(sinkSuperState_)
 	{
 		// Assertions
 		assert(ttWrapper_ != static_cast<MTBDDTTWrapperType*>(0));
-
-		RootType sinkSuperState_ = getTTWrapper()->GetMTBDD()->CreateRoot();
-
-		rootMap_.SetDefaultValue(sinkSuperState_);
 	}
 
 	/**
@@ -203,8 +198,8 @@ public:   // Public methods
 		: ParentClass(aut),
 			states_(aut.states_),
 			ttWrapper_(aut.ttWrapper_),
-			rootMap_(aut.rootMap_),
-			sinkSuperState_(aut.sinkSuperState_)
+			sinkSuperState_(aut.sinkSuperState_),
+			rootMap_(aut.rootMap_)
 	{
 		// Assertions
 		assert(ttWrapper_ != static_cast<MTBDDTTWrapperType*>(0));
