@@ -111,6 +111,8 @@ public:
 	template <typename T>
 	static std::string ToString(T* ptr)
 	{
+		assert(ptr != static_cast<T*>(0));
+
 		// the output stream for the string
 		std::ostringstream oss;
 		// insert the string of the underlying class into the stream
