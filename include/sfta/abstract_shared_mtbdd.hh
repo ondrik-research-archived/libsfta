@@ -90,6 +90,9 @@ public:  // Public data types
 	typedef std::vector<LeafType*> LeafContainer;
 
 
+	typedef std::map<VariableAssignmentType, LeafType> DescriptionType;
+
+
 	/**
 	 * @brief  The base class for functors that perform @c Apply operations
 	 *
@@ -391,6 +394,9 @@ public:  // Public methods
 	virtual RootType TrimVariables(RootType root,
 		AbstractVariablePredicateFunctorType* pred,
 		AbstractApplyFunctorType* merger) = 0;
+
+
+	virtual DescriptionType GetMinimumDescription(const RootType& root) const = 0;
 
 
 	/**
