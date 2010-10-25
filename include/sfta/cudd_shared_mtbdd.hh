@@ -825,7 +825,7 @@ public:   // Public methods
 	}
 
 
-	virtual void EraseRoot(RootType root)
+	virtual void EraseRoot(const RootType& root)
 	{
 		eraseCUDDRoot(RA::getHandleOfRoot(root));
 		RA::eraseRoot(root);
@@ -898,7 +898,7 @@ public:   // Public methods
 	}
 
 
-	virtual RootType RenameVariables(RootType root,
+	virtual RootType RenameVariables(const RootType& root,
 		AbstractVariableRenamingFunctorType* func)
 	{
 		// Assertions
@@ -922,7 +922,7 @@ public:   // Public methods
 		return RA::allocateRoot(newRoot);
 	}
 
-	virtual RootType TrimVariables(RootType root,
+	virtual RootType TrimVariables(const RootType& root,
 		AbstractVariablePredicateFunctorType* pred,
 		AbstractApplyFunctorType* merger)
 	{
