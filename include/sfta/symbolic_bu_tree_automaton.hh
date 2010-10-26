@@ -280,7 +280,14 @@ public:   // Public methods
 	}
 
 
-	virtual MTBDDTTWrapperType* GetTTWrapper() const
+	/**
+	 * @brief  Returns a transition table wrapper
+	 *
+	 * This method returns given transition table wrapper of the automaton.
+	 *
+	 * @returns  Transition table wrapper
+	 */
+	virtual TTWrapperPtrType GetTTWrapper() const
 	{
 		// Assertions
 		assert(ttWrapper_ != static_cast<MTBDDTTWrapperType*>(0));
