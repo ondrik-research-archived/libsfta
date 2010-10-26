@@ -75,22 +75,13 @@ public:   // Public data types
 
 	typedef typename ParentClass::LeftHandSideType LeftHandSideType;
 
-#if 0
-
-
-
-	typedef typename MTBDDTTWrapperType::SharedMTBDDType::RootType
-		RootType;
-
-#endif
-
-
 	typedef typename ParentClass::InputRightHandSideType InputRightHandSideType;
 	typedef typename ParentClass::OutputRightHandSideType OutputRightHandSideType;
 
 
 	typedef typename ParentClass::MTBDDTTWrapperType MTBDDTTWrapperType;
 	typedef typename MTBDDTTWrapperType::SharedMTBDDType SharedMTBDDType;
+	typedef typename ParentClass::TTWrapperPtrType TTWrapperPtrType;
 
 
 	class Operation
@@ -106,6 +97,13 @@ public:   // Public data types
 
 		virtual Type* Union( const Type& a1, const Type& a2) const
 		{
+			if (a1.GetTTWrapper() != a2.GetTTWrapper())
+			{
+				throw std::runtime_error(__func__ +
+					std::string(": trying to perform operation on automata "
+						"with different transition table wrapper"));
+			}
+
 			Type* result = new Type(a1);
 
 			result->CopyStates(a2);
@@ -177,7 +175,7 @@ public:   // Public methods
 		: ParentClass(aut)
 	{ }
 
-	NDSymbolicBUTreeAutomaton(MTBDDTTWrapperType* ttWrapper)
+	NDSymbolicBUTreeAutomaton(TTWrapperPtrType ttWrapper)
 		: ParentClass(ttWrapper)
 	{ }
 };
