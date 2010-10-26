@@ -116,6 +116,8 @@ private:  // Private data members
 
 	StateSetType states_;
 
+	StateSetType finalStates_;
+
 	MTBDDTTWrapperType* ttWrapper_;
 
 	RootType sinkSuperState_;
@@ -144,6 +146,7 @@ protected:// Protected methods
 	void copyStates(const Type& aut)
 	{
 		states_.insert(aut.states_);
+		finalStates_.insert(aut.finalStates_);
 
 		// also copy superstates
 		rootMap_.insert(aut.rootMap_);
@@ -195,6 +198,7 @@ public:   // Public methods
 	 */
 	SymbolicBUTreeAutomaton()
 		: states_(),
+			finalStates_(),
 			ttWrapper_(new MTBDDTTWrapperType()),
 			sinkSuperState_(GetTTWrapper()->GetMTBDD()->CreateRoot()),
 			rootMap_(sinkSuperState_)
@@ -215,6 +219,7 @@ public:   // Public methods
 	SymbolicBUTreeAutomaton(const SymbolicBUTreeAutomaton& aut)
 		: ParentClass(aut),
 			states_(aut.states_),
+			finalStates_(aut.finalStates_),
 			ttWrapper_(aut.ttWrapper_),
 			sinkSuperState_(aut.sinkSuperState_),
 			rootMap_(aut.rootMap_)
@@ -225,6 +230,7 @@ public:   // Public methods
 
 	SymbolicBUTreeAutomaton(MTBDDTTWrapperType* ttWrapper)
 		: states_(),
+			finalStates_(),
 			ttWrapper_(ttWrapper),
 			sinkSuperState_(GetTTWrapper()->GetMTBDD()->CreateRoot()),
 			rootMap_(sinkSuperState_)
@@ -246,8 +252,19 @@ public:   // Public methods
 		return newState;
 	}
 
-	virtual void AddTransition(const LeftHandSideType& lhs, const SymbolType& symbol,
-		const InputRightHandSideType& rhs)
+	virtual void SetStateFinal(const StateType& state)
+	{
+		if (states_.find(state) == states_.end())
+		{
+			throw std::invalid_argument(__func__ +
+				std::string(": setting as final state that is not in the automaton"));
+		}
+
+		finalStates_.insert(state);
+	}
+
+	virtual void AddTransition(const LeftHandSideType& lhs,
+		const SymbolType& symbol, const InputRightHandSideType& rhs)
 	{
 		// Assertions
 		assert(vectorContainsLocalStates(lhs));
@@ -277,6 +294,7 @@ public:   // Public methods
 		std::string result;
 		result += "Automaton\n";
 		result += "States: " + Convert::ToString(states_) + "\n";
+		result += "Final states: " + Convert::ToString(finalStates_) + "\n";
 		result += "Transitions: \n";
 
 		for (typename LHSRootContainer::const_iterator itRoot = rootMap_.begin();
