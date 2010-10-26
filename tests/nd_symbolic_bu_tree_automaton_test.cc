@@ -150,6 +150,9 @@ public:   // Public methods
 		RightHandSide trans_q2_a = trans_q1_a;
 		result->AddTransition(lhs_q2, SYMBOL_A, trans_q2_a);
 
+		// set final states
+		result->SetStateFinal(state_q2);
+
 		return result;
 	}
 
@@ -199,6 +202,10 @@ public:   // Public methods
 		lhs_q3.push_back(state_q3);
 		RightHandSide trans_q3_b = trans_q1_b;
 		result->AddTransition(lhs_q3, SYMBOL_B, trans_q3_b);
+
+		// set final states
+		result->SetStateFinal(state_q2);
+		result->SetStateFinal(state_q3);
 
 		return result;
 	}
