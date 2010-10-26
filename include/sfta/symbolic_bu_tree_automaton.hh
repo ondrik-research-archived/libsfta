@@ -81,7 +81,7 @@ public:   // Public data types
 
 	typedef MTBDDTransitionTableWrapper MTBDDTTWrapperType;
 
-	typedef typename MTBDDTTWrapperType::SharedMTBDDType::RootType 
+	typedef typename MTBDDTTWrapperType::SharedMTBDDType::RootType
 		RootType;
 
 	typedef typename ParentClass::LeftHandSideType LeftHandSideType;
@@ -127,15 +127,6 @@ private:  // Private methods
 	SymbolicBUTreeAutomaton& operator=(const SymbolicBUTreeAutomaton& aut);
 
 protected:// Protected methods
-
-
-	virtual MTBDDTTWrapperType* getTTWrapper() const
-	{
-		// Assertions
-		assert(ttWrapper_ != static_cast<MTBDDTTWrapperType*>(0));
-
-		return ttWrapper_;
-	}
 
 
 	virtual Operation* createOperation() const = 0;
@@ -216,14 +207,22 @@ public:   // Public methods
 		copyStates(aut);
 	}
 
+
+
+	virtual MTBDDTTWrapperType* GetTTWrapper() const
+	{
+		// Assertions
+		assert(ttWrapper_ != static_cast<MTBDDTTWrapperType*>(0));
+
+		return ttWrapper_;
+	}
+
+
 	virtual std::string ToString() const
 	{
 		std::string result;
-
 		result += "Automaton\n";
-
 		result += "States: " + Convert::ToString(states_) + "\n";
-
 		result += "Transitions: \n";
 
 		for (typename LHSRootContainer::const_iterator itRoot = rootMap_.begin();
