@@ -238,6 +238,29 @@ public:   // Public methods
 		copyStates(aut);
 	}
 
+	virtual StateType AddState()
+	{
+		StateType newState = GetTTWrapper()->CreateState();
+		states_.insert(newState);
+
+		return newState;
+	}
+
+	virtual void AddTransition(const LeftHandSideType& lhs, const SymbolType& symbol,
+		const InputRightHandSideType& rhs)
+	{
+		// Assertions
+		assert(vectorContainsLocalStates(lhs));
+
+		RootType root = rootMap_.GetValue(lhs);
+		if (root == sinkSuperState_)
+		{	// in case there is not any transition from this super-state
+			root = GetTTWrapper()->GetMTBDD()->CreateRoot();
+			rootMap_.SetValue(lhs, root);
+		}
+
+		GetTTWrapper()->GetMTBDD()->SetValue(root, symbol, rhs);
+	}
 
 
 	virtual MTBDDTTWrapperType* GetTTWrapper() const
