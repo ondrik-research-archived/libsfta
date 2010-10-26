@@ -168,7 +168,7 @@ public:   // Public methods
 	{
 		for (size_t i = 0; i < Size(); ++i)
 		{	// for each variable
-			SetIthVariableValue(i, (n & (1 << i) != 0)? ONE : ZERO);
+			SetIthVariableValue(i, ((n & (1 << i)) != 0)? ONE : ZERO);
 		}
 	}
 
