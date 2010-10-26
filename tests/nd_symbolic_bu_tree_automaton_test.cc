@@ -101,6 +101,8 @@ public:   // Private data types
 	typedef NDSBUTA::LeftHandSideType LeftHandSide;
 	typedef NDSBUTA::InputRightHandSideType RightHandSide;
 
+	typedef NDSBUTA::TTWrapperPtrType TTWPtr;
+
 protected:
 
 		Symbol SYMBOL_A;
@@ -125,7 +127,7 @@ public:   // Public methods
 	 *                     |----------|
 	 *
 	 */
-	NDSBUTA* constructAutomaton1(TTW* ttWrapper) const
+	NDSBUTA* constructAutomaton1(TTWPtr ttWrapper) const
 	{
 		NDSBUTA* result = new NDSBUTA(ttWrapper);
 
@@ -172,7 +174,7 @@ public:   // Public methods
 	 *
 	 *
 	 */
-	NDSBUTA* constructAutomaton2(TTW* ttWrapper) const
+	NDSBUTA* constructAutomaton2(TTWPtr ttWrapper) const
 	{
 		NDSBUTA* result = new NDSBUTA(ttWrapper);
 
@@ -239,6 +241,7 @@ BOOST_AUTO_TEST_CASE(operation_union)
 	delete oper;
 	delete ta1;
 	delete ta2;
+	delete taInvalid;
 }
 
 BOOST_AUTO_TEST_SUITE_END()
