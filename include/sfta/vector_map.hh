@@ -236,6 +236,7 @@ private:  // Private data types
 						{
 							sound = true;
 							updateIndexValue();
+							++itUnary_;
 						}
 
 						break;
@@ -269,6 +270,7 @@ private:  // Private data types
 							{
 								sound = true;
 								updateIndexValue();
+								++itNnary_;
 							}
 						}
 						else
@@ -281,13 +283,14 @@ private:  // Private data types
 						break;
 
 					case ITERATOR_NNARY:
-						sound = true;
 						if (itNnary_ == vecMap_->containerN_.end())
 						{
+							sound = true;
 							state_ = ITERATOR_END;
 						}
 						else
 						{
+							sound = true;
 							updateIndexValue();
 							++itNnary_;
 						}
