@@ -159,6 +159,9 @@ public:   // Public methods
 	virtual void CopyStates(const AbstractAutomaton& aut) = 0;
 
 
+	virtual StateType AddState() = 0;
+
+
 	virtual std::string ToString() const = 0;
 
 	/**
