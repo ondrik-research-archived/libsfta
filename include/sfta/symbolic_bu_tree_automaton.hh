@@ -167,6 +167,25 @@ protected:// Protected methods
 		return sinkSuperState_;
 	}
 
+	inline bool isStateLocal(const StateType& state) const
+	{
+		return (states_.find(state) != states_.end());
+	}
+
+	bool vectorContainsLocalStates(const LeftHandSideType& vec) const
+	{
+		for (typename LeftHandSideType::const_iterator it = vec.begin();
+			it != vec.end(); ++it)
+		{
+			if (!isStateLocal(*it))
+			{
+				return false;
+			}
+		}
+
+		return true;
+	}
+
 public:   // Public methods
 
 	/**
