@@ -223,6 +223,16 @@ public:   // Public methods
 		assert(ttWrapper_ != static_cast<MTBDDTTWrapperType*>(0));
 	}
 
+	SymbolicBUTreeAutomaton(MTBDDTTWrapperType* ttWrapper)
+		: states_(),
+			ttWrapper_(ttWrapper),
+			sinkSuperState_(GetTTWrapper()->GetMTBDD()->CreateRoot()),
+			rootMap_(sinkSuperState_)
+	{
+		// Assertions
+		assert(ttWrapper_ != static_cast<MTBDDTTWrapperType*>(0));
+	}
+
 	virtual void CopyStates(const HierarchyRoot& aut)
 	{
 		copyStates(aut);
