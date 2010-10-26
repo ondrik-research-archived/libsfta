@@ -196,11 +196,13 @@ public:   // Public methods
 	SymbolicBUTreeAutomaton()
 		: states_(),
 			ttWrapper_(new MTBDDTTWrapperType()),
-			sinkSuperState_(getTTWrapper()->GetMTBDD()->CreateRoot()),
+			sinkSuperState_(GetTTWrapper()->GetMTBDD()->CreateRoot()),
 			rootMap_(sinkSuperState_)
 	{
 		// Assertions
 		assert(ttWrapper_ != static_cast<MTBDDTTWrapperType*>(0));
+
+		GetTTWrapper()->GetMTBDD()->SetBottomValue(InputRightHandSideType());
 	}
 
 	/**
