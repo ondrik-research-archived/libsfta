@@ -16,6 +16,9 @@
 #include <sfta/ordered_vector.hh>
 #include <sfta/vector_map.hh>
 
+// Loki headers
+#include <loki/SmartPtr.h>
+
 // insert the class into proper namespace
 namespace SFTA
 {
@@ -80,6 +83,7 @@ public:   // Public data types
 	typedef typename ParentClass::HierarchyRoot HierarchyRoot;
 
 	typedef MTBDDTransitionTableWrapper MTBDDTTWrapperType;
+	typedef Loki::SmartPtr<MTBDDTTWrapperType> TTWrapperPtrType;
 
 	typedef typename MTBDDTTWrapperType::SharedMTBDDType::RootType
 		RootType;
@@ -118,7 +122,7 @@ private:  // Private data members
 
 	StateSetType finalStates_;
 
-	MTBDDTTWrapperType* ttWrapper_;
+	TTWrapperPtrType ttWrapper_;
 
 	RootType sinkSuperState_;
 
@@ -204,7 +208,7 @@ public:   // Public methods
 			rootMap_(sinkSuperState_)
 	{
 		// Assertions
-		assert(ttWrapper_ != static_cast<MTBDDTTWrapperType*>(0));
+		assert(ttWrapper_ != static_cast<TTWrapperPtrType>(0));
 
 		GetTTWrapper()->GetMTBDD()->SetBottomValue(InputRightHandSideType());
 	}
@@ -225,10 +229,10 @@ public:   // Public methods
 			rootMap_(aut.rootMap_)
 	{
 		// Assertions
-		assert(ttWrapper_ != static_cast<MTBDDTTWrapperType*>(0));
+		assert(ttWrapper_ != static_cast<TTWrapperPtrType>(0));
 	}
 
-	SymbolicBUTreeAutomaton(MTBDDTTWrapperType* ttWrapper)
+	SymbolicBUTreeAutomaton(TTWrapperPtrType ttWrapper)
 		: states_(),
 			finalStates_(),
 			ttWrapper_(ttWrapper),
@@ -236,7 +240,7 @@ public:   // Public methods
 			rootMap_(sinkSuperState_)
 	{
 		// Assertions
-		assert(ttWrapper_ != static_cast<MTBDDTTWrapperType*>(0));
+		assert(ttWrapper_ != static_cast<TTWrapperPtrType>(0));
 	}
 
 	virtual void CopyStates(const HierarchyRoot& aut)
@@ -290,7 +294,7 @@ public:   // Public methods
 	virtual TTWrapperPtrType GetTTWrapper() const
 	{
 		// Assertions
-		assert(ttWrapper_ != static_cast<MTBDDTTWrapperType*>(0));
+		assert(ttWrapper_ != static_cast<TTWrapperPtrType>(0));
 
 		return ttWrapper_;
 	}
