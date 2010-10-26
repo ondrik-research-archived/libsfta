@@ -103,6 +103,22 @@ public:   // Public methods
 		assert(vectorIsSorted());
 	}
 
+	OrderedVector& operator=(const OrderedVector& rhs)
+	{
+		// Assertions
+		assert(rhs.vectorIsSorted());
+
+		if (&rhs != this)
+		{
+			vec_ = rhs.vec_;
+		}
+
+		// Assertions
+		assert(vectorIsSorted());
+
+		return *this;
+	}
+
 
 	void insert(const Key& x)
 	{
