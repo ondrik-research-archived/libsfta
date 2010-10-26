@@ -123,7 +123,7 @@ public:   // Public data types
 			};
 
 			UnionApplyFunctor unionFunc;
-			RootType resultRoot = result->getTTWrapper()->GetMTBDD()->Apply(
+			RootType resultRoot = result->GetTTWrapper()->GetMTBDD()->Apply(
 				lhsMtbdd, rhsMtbdd, &unionFunc);
 
 			result->setRoot(LeftHandSideType(), resultRoot);
@@ -168,13 +168,17 @@ public:   // Public methods
 
 	NDSymbolicBUTreeAutomaton()
 	{
-		ParentClass::getTTWrapper()->GetMTBDD()->SetValue(
+		ParentClass::GetTTWrapper()->GetMTBDD()->SetValue(
 			ParentClass::getSinkSuperState(), Symbol::GetUniversalSymbol(),
 			InputRightHandSideType());
 	}
 
 	NDSymbolicBUTreeAutomaton(const NDSymbolicBUTreeAutomaton& aut)
 		: ParentClass(aut)
+	{ }
+
+	NDSymbolicBUTreeAutomaton(MTBDDTTWrapperType* ttWrapper)
+		: ParentClass(ttWrapper)
 	{ }
 };
 
