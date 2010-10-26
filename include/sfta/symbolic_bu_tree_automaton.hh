@@ -288,11 +288,14 @@ public:   // Public methods
 			for (typename TransitionMapType::const_iterator itTrans = transMap.begin();
 				itTrans != transMap.end(); ++itTrans)
 			{
-				result += Convert::ToString(itTrans->first);
-				result += Convert::ToString(itRoot->first);
-				result += " -> ";
-				result += Convert::ToString(itTrans->second);
-				result += "\n";
+				if (!(itTrans->second.empty()))
+				{
+					result += Convert::ToString(itTrans->first);
+					result += Convert::ToString(itRoot->first);
+					result += " -> ";
+					result += Convert::ToString(itTrans->second);
+					result += "\n";
+				}
 			}
 		}
 
