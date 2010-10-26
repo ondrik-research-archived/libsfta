@@ -81,10 +81,6 @@ public:   // Public data types
 	{
 	};
 
-protected:// Protected data members
-
-	//AbstractBUTreeAutomatonTransitionFunction* transFunc_;
-
 
 protected:// Protected methods
 
@@ -98,6 +94,9 @@ public:   // Public methods
 	AbstractBUTreeAutomaton(const AbstractBUTreeAutomaton& aut)
 		: ParentClass(aut)
 	{ }
+
+	virtual void AddTransition(const LeftHandSideType& lhs, const SymbolType& symbol,
+		const InputRightHandSideType& rhs) = 0;
 };
 
 #endif
