@@ -127,15 +127,6 @@ protected:// Protected methods
 	 */
 	virtual Operation* createOperation() const = 0;
 
-	/**
-	 * @brief  Returns a transition table wrapper
-	 *
-	 * This method returns given transition table wrapper of the automaton.
-	 *
-	 * @returns  Transition table wrapper
-	 */
-	virtual BaseTTWrapperType* getTTWrapper() const = 0;
-
 public:   // Public methods
 
 
@@ -169,6 +160,15 @@ public:   // Public methods
 
 
 	virtual std::string ToString() const = 0;
+
+	/**
+	 * @brief  Returns a transition table wrapper
+	 *
+	 * This method returns given transition table wrapper of the automaton.
+	 *
+	 * @returns  Transition table wrapper
+	 */
+	virtual BaseTTWrapperType* GetTTWrapper() const = 0;
 
 
 	/**
