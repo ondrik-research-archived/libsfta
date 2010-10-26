@@ -377,7 +377,7 @@ private:  // Private data members
 private:  // Private methods
 
 
-	const ValueType& getRootForArity0(const IndexType& lhs) const
+	const ValueType& getValueForArity0(const IndexType& lhs) const
 	{
 		// Assertions
 		assert(lhs.size() == 0);
@@ -385,7 +385,7 @@ private:  // Private methods
 		return container0_;
 	}
 
-	const ValueType& getRootForArity1(const IndexType& lhs) const
+	const ValueType& getValueForArity1(const IndexType& lhs) const
 	{
 		// Assertions
 		assert(lhs.size() == 1);
@@ -400,7 +400,7 @@ private:  // Private methods
 		return it->second;
 	}
 
-	const ValueType& getRootForArity2(const IndexType& lhs) const
+	const ValueType& getValueForArity2(const IndexType& lhs) const
 	{
 		// Assertions
 		assert(lhs.size() == 2);
@@ -415,7 +415,7 @@ private:  // Private methods
 		return it->second;
 	}
 
-	const ValueType& getRootForArityN(const IndexType& lhs) const
+	const ValueType& getValueForArityN(const IndexType& lhs) const
 	{
 		// Assertions
 		assert(lhs.size() > 2);
@@ -431,7 +431,7 @@ private:  // Private methods
 	}
 
 
-	void setRootForArity0(const IndexType& lhs, const ValueType& value)
+	void setValueForArity0(const IndexType& lhs, const ValueType& value)
 	{
 		// Assertions
 		assert(lhs.size() == 0);
@@ -439,7 +439,7 @@ private:  // Private methods
 		container0_ = value;
 	}
 
-	void setRootForArity1(const IndexType& lhs, const ValueType& value)
+	void setValueForArity1(const IndexType& lhs, const ValueType& value)
 	{
 		// Assertions
 		assert(lhs.size() == 1);
@@ -447,7 +447,7 @@ private:  // Private methods
 		container1_.insert(std::make_pair(lhs[0], value));
 	}
 
-	void setRootForArity2(const IndexType& lhs, const ValueType& value)
+	void setValueForArity2(const IndexType& lhs, const ValueType& value)
 	{
 		// Assertions
 		assert(lhs.size() == 2);
@@ -455,7 +455,7 @@ private:  // Private methods
 		container2_.insert(std::make_pair(std::make_pair(lhs[0],lhs[1]), value));
 	}
 
-	void setRootForArityN(const IndexType& lhs, const ValueType& value)
+	void setValueForArityN(const IndexType& lhs, const ValueType& value)
 	{
 		// Assertions
 		assert(lhs.size() > 2);
@@ -477,10 +477,10 @@ public:   // Public methods
 	{
 		switch (index.size())
 		{
-			case 0: return getRootForArity0(index); break;
-			case 1: return getRootForArity1(index); break;
-			case 2: return getRootForArity2(index); break;
-			default: return getRootForArityN(index); break;
+			case 0: return getValueForArity0(index); break;
+			case 1: return getValueForArity1(index); break;
+			case 2: return getValueForArity2(index); break;
+			default: return getValueForArityN(index); break;
 		}
 	}
 
@@ -488,10 +488,10 @@ public:   // Public methods
 	{
 		switch (index.size())
 		{
-			case 0: setRootForArity0(index, value); break;
-			case 1: setRootForArity1(index, value); break;
-			case 2: setRootForArity2(index, value); break;
-			default: setRootForArityN(index, value); break;
+			case 0: setValueForArity0(index, value); break;
+			case 1: setValueForArity1(index, value); break;
+			case 2: setValueForArity2(index, value); break;
+			default: setValueForArityN(index, value); break;
 		}
 	}
 
