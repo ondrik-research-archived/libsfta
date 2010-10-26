@@ -228,6 +228,34 @@ public:   // Public methods
 		return result;
 	}
 
+	const_iterator find(const Key& key) const
+	{
+		// Assertions
+		assert(vectorIsSorted());
+
+		size_t first = 0;
+		size_t last = vec_.size();
+
+		while (first < last)
+		{	// while the pointers do not overlap
+			size_t middle = first + (last - first) / 2;
+			if (vec_[middle] == key)
+			{	// in case we found x
+				return const_iterator(&vec_[middle]);
+			}
+			else if (vec_[middle] < key)
+			{	// in case middle is less than x
+				first = middle + 1;
+			}
+			else
+			{	// in case middle is greater than x
+				last = middle;
+			}
+		}
+
+		return end();
+	}
+
 
 	inline bool empty() const
 	{
