@@ -14,21 +14,10 @@ LIBRARY_NAME    = sfta
 LIB             = lib$(LIBRARY_NAME).a
 
 # Compiler
-CC              = g++
+CC              = @CXX@
 
 # Compiler flags
-CFLAGS          =
-CFLAGS         += -c
-CFLAGS         += -std=c++98
-CFLAGS         += -pedantic-errors
-CFLAGS         += -Wextra
-CFLAGS         += -Wall
-CFLAGS         += -Wfloat-equal
-CFLAGS         += -Wctor-dtor-privacy
-CFLAGS         += -Weffc++
-CFLAGS         += -Woverloaded-virtual
-CFLAGS         += -finline-functions
-CFLAGS         += -g
+CFLAGS          = @CXXFLAGS@
 
 # Where to search for include files
 INCLUDE_PATHS   =
