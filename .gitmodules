@@ -1,0 +1,3 @@
+[submodule "cudd_facade/cudd"]
+	path = cudd_facade/cudd
+	url = git@github.com:ondrik/cudd4libsfta.git
