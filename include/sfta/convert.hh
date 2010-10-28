@@ -12,6 +12,7 @@
 #define _SFTA_CONVERT_HH_
 
 // Standard library headers
+#include <cassert>
 #include <set>
 #include <sstream>
 #include <stdexcept>
