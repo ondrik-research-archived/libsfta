@@ -2,10 +2,10 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.67])
-AC_INIT(libsfta, 0.1, ilengal@fit.vutbr.cz)
-AM_INIT_AUTOMAKE(libsfta, 0.1)
-AC_CONFIG_SRCDIR([include/sfta/symbol_dictionary.hh])
-AC_CONFIG_HEADERS([config.h])
+AC_INIT([libsfta],[0.1],[ilengal@fit.vutbr.cz])
+AM_INIT_AUTOMAKE([-Wall -Werror])
+AC_CONFIG_SRCDIR([include/sfta/sfta.hh])
+#AC_CONFIG_HEADERS([config.h])
 
 # Checks for programs.
 AC_PROG_CXX
@@ -15,6 +15,8 @@ AC_PROG_MAKE_SET
 AC_PROG_RANLIB
 AC_PROG_CPP
 
+dnl *** includes ************************************************************
+INCLUDES="-I../include"
 
 dnl *** compiler characteristic *********************************************
 CXXFLAGS=""
@@ -35,6 +37,10 @@ CXXFLAGS="$CXXFLAGS -mtune=core2"
 CXXFLAGS="$CXXFLAGS -msse2"
 #CXXFLAGS="$CXXFLAGS -g"
 #CXXFLAGS="$CXXFLAGS -pg"
+
+
+dnl *** Add inlude directories to compiler flags ****************************
+CXXFLAGS="$CXXFLAGS $INCLUDES"
 
 
 # Checks for libraries.
@@ -69,3 +75,4 @@ AC_CONFIG_FILES([Makefile
                  cudd_facade/Makefile
                  src/Makefile
                  tests/Makefile])
+AC_OUTPUT
