@@ -50,13 +50,13 @@ CXXFLAGS="$CXXFLAGS $INCLUDES"
 
 # Checks for libraries.
 # FIXME: Replace `main' with a function in `-lboost_unit_test_framework':
-AC_CHECK_LIB([boost_unit_test_framework], [main],, AC_MSG_ERROR([Cannot find required libraries.]))
+AC_CHECK_LIB([boost_unit_test_framework], [main])
 # FIXME: Replace `main' with a function in `-llog4cpp':
-AC_CHECK_LIB([log4cpp], [main],, AC_MSG_ERROR([Cannot find required libraries.]))
+AC_CHECK_LIB([log4cpp], [main])
 # FIXME: Replace `main' with a function in `-lloki':
-AC_CHECK_LIB([loki], [main],, AC_MSG_ERROR([Cannot find required libraries.]))
+AC_CHECK_LIB([loki], [main])
 # FIXME: Replace `main' with a function in `-lm':
-AC_CHECK_LIB([m], [main],, AC_MSG_ERROR([Cannot find required libraries.]))
+AC_CHECK_LIB([m], [main])
 
 # Checks for header files.
 AC_CHECK_HEADERS([float.h limits.h stdlib.h string.h sys/file.h sys/time.h unistd.h])
