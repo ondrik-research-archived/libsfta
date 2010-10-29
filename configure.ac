@@ -55,13 +55,11 @@ AC_CHECK_LIB([boost_unit_test_framework], [main])
 AC_CHECK_LIB([log4cpp], [main])
 # FIXME: Replace `main' with a function in `-lloki':
 AC_CHECK_LIB([loki], [main])
-# FIXME: Replace `main' with a function in `-lm':
-AC_CHECK_LIB([m], [main])
 
-# Checks for header files.
-AC_CHECK_HEADERS([float.h limits.h stdlib.h string.h sys/file.h sys/time.h unistd.h])
-AC_CHECK_HEADERS([cassert],, AC_MSG_ERROR([Cannot find required header files.]))
+# Checks for standard header files.
+AC_CHECK_HEADERS([cassert cstdlib iostream string cstring vector map set],, AC_MSG_ERROR([Cannot find required header files.]))
 
+# Checks for header files of 3rd party libraries.
 AC_CHECK_HEADERS([log4cpp/Category.hh],, AC_MSG_ERROR([Cannot find liblog4cpp header files.]))
 AC_CHECK_HEADERS([boost/algorithm/string.hpp],, AC_MSG_ERROR([Cannot find libboost header files.]))
 AC_CHECK_HEADERS([boost/test/unit_test.hpp],, AC_MSG_ERROR([Cannot find libboost-test header files.]))
@@ -69,17 +67,17 @@ AC_CHECK_HEADERS([loki/SmartPtr.h],, AC_MSG_ERROR([Cannot find libloki header fi
 
 
 # Checks for typedefs, structures, and compiler characteristics.
-AC_HEADER_STDBOOL
-AC_C_INLINE
-AC_TYPE_OFF_T
-AC_TYPE_SIZE_T
+#AC_HEADER_STDBOOL
+#AC_C_INLINE
+#AC_TYPE_OFF_T
+#AC_TYPE_SIZE_T
 
 # Checks for library functions.
-AC_FUNC_ERROR_AT_LINE
-AC_FUNC_FORK
-AC_FUNC_STRCOLL
-AC_FUNC_WAIT3
-AC_CHECK_FUNCS([bzero dup2 gethostname getpagesize gettimeofday memchr memmove memset pow sqrt strchr strcspn strerror strpbrk strrchr strspn strstr])
+#AC_FUNC_ERROR_AT_LINE
+#AC_FUNC_FORK
+#AC_FUNC_STRCOLL
+#AC_FUNC_WAIT3
+#AC_CHECK_FUNCS([])
 
 AC_CONFIG_FILES([Makefile
                  cudd_facade/Makefile
