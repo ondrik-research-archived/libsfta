@@ -5,7 +5,7 @@ AC_PREREQ([2.67])
 AC_INIT([libsfta],[0.1],[ilengal@fit.vutbr.cz])
 AM_INIT_AUTOMAKE([-Wall -Werror])
 AC_CONFIG_SRCDIR([include/sfta/sfta.hh])
-#AC_CONFIG_HEADERS([config.h])
+AC_LANG([C++])
 
 # Checks for programs.
 AC_PROG_CXX
@@ -55,6 +55,8 @@ AC_CHECK_LIB([m], [main])
 
 # Checks for header files.
 AC_CHECK_HEADERS([float.h limits.h stdlib.h string.h sys/file.h sys/time.h unistd.h])
+AC_CHECK_HEADERS([cassert boost/algorithm/string.hpp log4cpp/Category.hh],,
+                 AC_MSG_ERROR([Can't find required header files.]))
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_HEADER_STDBOOL

@@ -1,5 +1,5 @@
 ## Process this file with automake to produce Makefile.in
 
-SUBDIRS = src tests
+SUBDIRS = cudd_facade src tests
 
 dist_noinst_SCRIPTS = autogen.sh
