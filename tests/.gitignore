@@ -1,3 +1,4 @@
 cudd_facade_test
-cudd_shared_mtbdd_test
-mtbdd_transition_function_test
+cudd_shared_mtbdd_cc_test
+cudd_shared_mtbdd_uv_test
+nd_symbolic_bu_tree_automaton_test
