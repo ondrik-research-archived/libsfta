@@ -50,18 +50,18 @@ CXXFLAGS="$CXXFLAGS $INCLUDES"
 
 # Checks for libraries.
 # FIXME: Replace `main' with a function in `-lboost_unit_test_framework':
-AC_CHECK_LIB([boost_unit_test_framework], [main])
+AC_CHECK_LIB([boost_unit_test_framework], [main],, AC_MSG_ERROR([Cannot find required libraries.]))
 # FIXME: Replace `main' with a function in `-llog4cpp':
-AC_CHECK_LIB([log4cpp], [main])
+AC_CHECK_LIB([log4cpp], [main],, AC_MSG_ERROR([Cannot find required libraries.]))
 # FIXME: Replace `main' with a function in `-lloki':
-AC_CHECK_LIB([loki], [main])
+AC_CHECK_LIB([loki], [main],, AC_MSG_ERROR([Cannot find required libraries.]))
 # FIXME: Replace `main' with a function in `-lm':
-AC_CHECK_LIB([m], [main])
+AC_CHECK_LIB([m], [main],, AC_MSG_ERROR([Cannot find required libraries.]))
 
 # Checks for header files.
 AC_CHECK_HEADERS([float.h limits.h stdlib.h string.h sys/file.h sys/time.h unistd.h])
 AC_CHECK_HEADERS([cassert boost/algorithm/string.hpp log4cpp/Category.hh],,
-                 AC_MSG_ERROR([Can't find required header files.]))
+                 AC_MSG_ERROR([Cannot find required header files.]))
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_HEADER_STDBOOL
