@@ -60,9 +60,13 @@ AC_CHECK_LIB([m], [main])
 
 # Checks for header files.
 AC_CHECK_HEADERS([float.h limits.h stdlib.h string.h sys/file.h sys/time.h unistd.h])
-AC_CHECK_HEADERS([cassert boost/algorithm/string.hpp log4cpp/Category.hh \
-                  boost/test/unit_test.hpp],,
-                 AC_MSG_ERROR([Cannot find required header files.]))
+AC_CHECK_HEADERS([cassert],, AC_MSG_ERROR([Cannot find required header files.]))
+
+AC_CHECK_HEADERS([log4cpp/Category.hh],, AC_MSG_ERROR([Cannot find liblog4cpp header files.]))
+AC_CHECK_HEADERS([boost/algorithm/string.hpp],, AC_MSG_ERROR([Cannot find libboost header files.]))
+AC_CHECK_HEADERS([boost/test/unit_test.hpp],, AC_MSG_ERROR([Cannot find libboost-test header files.]))
+AC_CHECK_HEADERS([loki/SmartPtr.h],, AC_MSG_ERROR([Cannot find libloki header files.]))
+
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_HEADER_STDBOOL
