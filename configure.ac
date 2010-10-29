@@ -38,6 +38,11 @@ CXXFLAGS="$CXXFLAGS -msse2"
 #CXXFLAGS="$CXXFLAGS -g"
 #CXXFLAGS="$CXXFLAGS -pg"
 
+LIBS=""
+LIBS="$LIBS -lboost_unit_test_framework"
+LIBS="$LIBS -llog4cpp"
+LIBS="$LIBS -lloki"
+
 
 dnl *** Add inlude directories to compiler flags ****************************
 CXXFLAGS="$CXXFLAGS $INCLUDES"
