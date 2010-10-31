@@ -107,6 +107,20 @@ public:   // Public data types
 
 
 		/**
+		 * @brief  Intersection of two automata
+		 *
+		 * This method returns an automaton that accepts a language that is the
+		 * intersection of languages of the input automata.
+		 *
+		 * @param[in]  a1  First input automaton
+		 * @param[in]  a2  Second input automaton
+		 *
+		 * @returns  Intersection automaton
+		 */
+		virtual Type* Intersection(const Type* a1, const Type* a2) const = 0;
+
+
+		/**
 		 * @brief  Destructor
 		 *
 		 * Virtual destructor.
