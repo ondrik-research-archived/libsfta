@@ -390,7 +390,7 @@ private:  // Private methods
 		// Assertions
 		assert(lhs.size() == 1);
 
-		typename HashTableUnary::const_iterator it = container1_.end();
+		typename HashTableUnary::const_iterator it;
 		if ((it = container1_.find(lhs[0])) == container1_.end())
 		{	// in case the value is not in the hash table
 			return defaultValue_;
@@ -404,8 +404,9 @@ private:  // Private methods
 		// Assertions
 		assert(lhs.size() == 2);
 
-		typename HashTableBinary::const_iterator it = container2_.end();
-		if ((it = container2_.find(std::make_pair(lhs[0], lhs[1]))) == container2_.end())
+		typename HashTableBinary::const_iterator it;
+		if ((it = container2_.find(std::make_pair(lhs[0], lhs[1]))) ==
+			container2_.end())
 		{	// in case the value is not in the hash table
 			return defaultValue_;
 		}
@@ -418,7 +419,7 @@ private:  // Private methods
 		// Assertions
 		assert(lhs.size() > 2);
 
-		typename HashTableNnary::const_iterator it = containerN_.end();
+		typename HashTableNnary::const_iterator it;
 		if ((it = containerN_.find(lhs)) == containerN_.end())
 		{	// in case the key is not in the hash table
 			return defaultValue_;
