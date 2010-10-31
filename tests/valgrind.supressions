@@ -1,0 +1,16 @@
+{
+   Log4cpp_leak
+   Memcheck:Leak
+   fun:_Znwm
+   fun:_ZN7log4cpp8Appender16_getAllAppendersEv
+   fun:_ZN7log4cpp8Appender12_addAppenderEPS0_
+   fun:_ZN7log4cpp8AppenderC2ERKSs
+   fun:_ZN7log4cpp16AppenderSkeletonC2ERKSs
+   fun:_ZN7log4cpp14LayoutAppenderC2ERKSs
+   fun:_ZN7log4cpp15OstreamAppenderC1ERKSsPSo
+   fun:_ZN10LogFixtureC2Ev
+   fun:_ZN5suiteL23operation_union_invokerEv
+   fun:_ZN5boost9unit_test9ut_detail16callback0_impl_tINS1_6unusedEPFvvEE6invokeEv
+   obj:/usr/lib/libboost_unit_test_framework.so.1.42.0
+   fun:_ZN5boost17execution_monitor13catch_signalsERKNS_9unit_test9callback0IiEE
+}
