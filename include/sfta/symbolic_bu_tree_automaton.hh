@@ -274,6 +274,14 @@ public:   // Public methods
 		finalStates_.insert(state);
 	}
 
+	virtual bool IsStateFinal(const StateType& state) const
+	{
+		// Assertions
+		assert(isStateLocal(state));
+
+		return finalStates_.find(state) != finalStates_.end();
+	}
+
 	virtual void AddTransition(const LeftHandSideType& lhs,
 		const SymbolType& symbol, const InputRightHandSideType& rhs)
 	{
