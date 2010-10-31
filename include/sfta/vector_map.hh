@@ -54,6 +54,9 @@ public:   // Public data types
 
 	typedef std::pair<IndexType, ValueType> IndexValueType;
 
+	typedef std::vector<IndexValueType> SameLengthIndexValueVector;
+	typedef std::vector<SameLengthIndexValueVector> IndexValueArray;
+
 private:  // Private data types
 
 	struct HasherUnary
@@ -491,6 +494,96 @@ public:   // Public methods
 			case 2: setValueForArity2(index, value); break;
 			default: setValueForArityN(index, value); break;
 		}
+	}
+
+	template <template <typename> class TSet>
+	IndexValueArray GetItemsWith(const KeyElementType& elem,
+		const TSet<KeyElementType>& elemDomain) const
+	{
+		typedef TSet<KeyElementType> DomainSetType;
+		// start with arrays for nullary, unary and binary vectors
+		IndexValueArray result(3);
+
+
+		{	// for unary items
+			typename HashTableUnary::const_iterator itUnary;
+			if ((itUnary = container1_.find(elem)) != container1_.end())
+			{	// in case the value is in the hash table
+				IndexType index;
+				index.push_back(elem);
+				IndexValueType valuePair = std::make_pair(index, itUnary->second);
+
+				result[1].push_back(valuePair);
+			}
+		}
+
+
+		// for binary items
+		for (typename DomainSetType::const_iterator itDom = elemDomain.begin();
+			itDom != elemDomain.end(); ++itDom)
+		{
+			// when desired element is at the first position
+			KeyElementPairType binaryKey;
+			binaryKey.first = elem;
+			binaryKey.second = *itDom;
+
+			typename HashTableBinary::const_iterator itBinary;
+			if ((itBinary = container2_.find(binaryKey)) != container2_.end())
+			{	// in case the value is in the hash table
+				IndexType index;
+				index.push_back(elem);
+				index.push_back(*itDom);
+				IndexValueType valuePair = std::make_pair(index, itBinary->second);
+
+				result[2].push_back(valuePair);
+			}
+
+			if (elem == *itDom)
+			{	// in case the first and second element is the same, return only once
+				continue;
+			}
+
+			// when desired element is at the second position
+			binaryKey.first = *itDom;
+			binaryKey.second = elem;
+
+			if ((itBinary = container2_.find(binaryKey)) != container2_.end())
+			{	// in case the value is in the hash table
+				IndexType index;
+				index.push_back(*itDom);
+				index.push_back(elem);
+				IndexValueType valuePair = std::make_pair(index, itBinary->second);
+
+				result[2].push_back(valuePair);
+			}
+		}
+
+
+		// for n-nary items
+		for (typename HashTableNnary::const_iterator itNnary = containerN_.begin();
+			itNnary != containerN_.end(); ++itNnary)
+		{	// traverse the whole container
+			const IndexType& vec = itNnary->first;
+			for (typename IndexType::const_iterator itIndex = vec.begin();
+				itIndex != vec.end(); ++itIndex)
+			{	// try to find desired element in the vector
+				if (*itIndex == elem)
+				{	// in case it is there
+					IndexValueType valuePair = std::make_pair(vec, itNnary->second);
+
+					while (result.size() <= vec.size())
+					{
+						result.push_back(SameLengthIndexValueVector());
+					}
+
+					result[vec.size()].push_back(valuePair);
+
+					break;
+				}
+			}
+		}
+
+		return result;
 	}
 
 	void insert(const VectorMap& vecMap)
