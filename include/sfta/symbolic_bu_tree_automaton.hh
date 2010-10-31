@@ -174,6 +174,16 @@ protected:// Protected methods
 		return sinkSuperState_;
 	}
 
+	inline const LHSRootContainerType& getRootMap() const
+	{
+		return rootMap_;
+	}
+
+	inline const StateSetType& getStates() const
+	{
+		return states_;
+	}
+
 	inline bool isStateLocal(const StateType& state) const
 	{
 		return (states_.find(state) != states_.end());
