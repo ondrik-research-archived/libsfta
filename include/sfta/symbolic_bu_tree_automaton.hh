@@ -102,7 +102,7 @@ public:   // Public data types
 		<
 			StateType,
 			RootType
-		> LHSRootContainer;
+		> LHSRootContainerType;
 
 	class Operation
 		: public ParentClass::Operation
@@ -126,7 +126,7 @@ private:  // Private data members
 
 	RootType sinkSuperState_;
 
-	LHSRootContainer rootMap_;
+	LHSRootContainerType rootMap_;
 
 private:  // Private methods
 
@@ -308,7 +308,7 @@ public:   // Public methods
 		result += "Final states: " + Convert::ToString(finalStates_) + "\n";
 		result += "Transitions: \n";
 
-		for (typename LHSRootContainer::const_iterator itRoot = rootMap_.begin();
+		for (typename LHSRootContainerType::const_iterator itRoot = rootMap_.begin();
 			itRoot != rootMap_.end(); ++itRoot)
 		{
 			TransitionMapType transMap =
