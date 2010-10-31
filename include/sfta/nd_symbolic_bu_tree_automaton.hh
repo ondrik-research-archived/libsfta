@@ -73,11 +73,13 @@ public:   // Public data types
 
 	typedef typename ParentClass::HierarchyRoot HierarchyRoot;
 
+	typedef typename ParentClass::StateType StateType;
 	typedef typename ParentClass::LeftHandSideType LeftHandSideType;
 
 	typedef typename ParentClass::InputRightHandSideType InputRightHandSideType;
 	typedef typename ParentClass::OutputRightHandSideType OutputRightHandSideType;
 
+	typedef typename ParentClass::LHSRootContainerType LHSRootContainerType;
 
 	typedef typename ParentClass::MTBDDTTWrapperType MTBDDTTWrapperType;
 	typedef typename MTBDDTTWrapperType::SharedMTBDDType SharedMTBDDType;
