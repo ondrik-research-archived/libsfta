@@ -268,11 +268,8 @@ public:   // Public methods
 
 	virtual void SetStateFinal(const StateType& state)
 	{
-		if (states_.find(state) == states_.end())
-		{
-			throw std::invalid_argument(__func__ +
-				std::string(": setting as final state that is not in the automaton"));
-		}
+		// Assertions
+		assert(isStateLocal(state));
 
 		finalStates_.insert(state);
 	}
