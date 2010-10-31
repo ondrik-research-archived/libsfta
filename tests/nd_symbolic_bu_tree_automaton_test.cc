@@ -244,4 +244,27 @@ BOOST_AUTO_TEST_CASE(operation_union)
 	delete taInvalid;
 }
 
+BOOST_AUTO_TEST_CASE(operation_intersection)
+{
+	NDSBUTA* taInvalid = new NDSBUTA();
+
+	NDSBUTA* ta1 = constructAutomaton1(taInvalid->GetTTWrapper());
+
+	NDSBUTA* ta2 = constructAutomaton2(taInvalid->GetTTWrapper());
+
+	BOOST_TEST_MESSAGE("A1:\n" + ta1->ToString());
+	BOOST_TEST_MESSAGE("A2:\n" + ta2->ToString());
+
+	AAO* oper = ta1->GetOperation();
+	AA* intersectionTa = oper->Intersection(ta1, ta2);
+
+	BOOST_TEST_MESSAGE("Intersection automaton:\n" + intersectionTa->ToString());
+
+	delete intersectionTa;
+	delete oper;
+	delete ta1;
+	delete ta2;
+	delete taInvalid;
+}
+
 BOOST_AUTO_TEST_SUITE_END()
