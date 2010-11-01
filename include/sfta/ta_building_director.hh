@@ -47,10 +47,16 @@ private:  // Private data members
 
 	AbstractTABuilderType* builder_;
 
+
+private:  // Private methods
+
+	TABuildingDirector(const TABuildingDirector& director);
+	TABuildingDirector& operator=(const TABuildingDirector& rhs);
+
 public:   // Public methods
 
 
-	TABuildingDirector(AbstractTABuilderType* builder)
+	explicit TABuildingDirector(AbstractTABuilderType* builder)
 		: defaultTa_(),
 			builder_(builder)
 	{
