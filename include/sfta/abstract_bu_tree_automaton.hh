@@ -95,8 +95,11 @@ public:   // Public methods
 		: ParentClass(aut)
 	{ }
 
-	virtual void AddTransition(const LeftHandSideType& lhs, const SymbolType& symbol,
-		const InputRightHandSideType& rhs) = 0;
+	virtual void AddTransition(const LeftHandSideType& lhs,
+		const SymbolType& symbol, const InputRightHandSideType& rhs) = 0;
+
+	virtual OutputRightHandSideType GetTransition(const LeftHandSideType& lhs,
+		const SymbolType& symbol) = 0;
 };
 
 #endif

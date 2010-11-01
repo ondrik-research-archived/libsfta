@@ -299,6 +299,35 @@ public:   // Public methods
 	}
 
 
+	virtual OutputRightHandSideType GetTransition(const LeftHandSideType& lhs,
+		const SymbolType& symbol)
+	{
+		// Assertions
+		assert(vectorContainsLocalStates(lhs));
+
+		OutputRightHandSide rhs;
+
+		RootType root = rootMap_.GetValue(lhs);
+		if (root == sinkSuperState_)
+		{	// in case there is not any transition from this super-state
+			return rhs;
+		}
+		else
+		{
+			typename SharedMTBDDType::LeafContainer output =
+				GetTTWrapper()->GetMTBDD()->GetValue(root, symbol);
+
+			for (typename SharedMTBDDType::LeafContainer::const_iterator itCont =
+				output.begin(); itCont != output.end(); ++itCont)
+			{
+				rhs.Union(**itCont);
+			}
+
+			return rhs;
+		}
+	}
+
+
 	/**
 	 * @brief  Returns a transition table wrapper
 	 *
