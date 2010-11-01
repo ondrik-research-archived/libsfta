@@ -242,7 +242,7 @@ public:   // Public methods
 		assert(ttWrapper_ != static_cast<TTWrapperPtrType>(0));
 	}
 
-	SymbolicBUTreeAutomaton(TTWrapperPtrType ttWrapper)
+	explicit SymbolicBUTreeAutomaton(TTWrapperPtrType ttWrapper)
 		: states_(),
 			finalStates_(),
 			ttWrapper_(ttWrapper),
