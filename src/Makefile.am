@@ -1,8 +1,17 @@
 ## Process this file with automake to produce Makefile.in
 
-lib_LIBRARIES = libsfta.a
+SFTA_LIBRARY = libsfta.a
+
+LDADD = ../cudd_facade/libcudd_facade.a \
+				$(SFTA_LIBRARY)
+
+lib_LIBRARIES = $(SFTA_LIBRARY)
 
 libsfta_a_SOURCES = \
 	convert.cc \
 	fake_file.cc \
 	formula_parser.cc
+
+bin_PROGRAMS = union
+
+union_SOURCES = union.cc
