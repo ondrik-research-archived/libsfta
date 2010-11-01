@@ -36,6 +36,9 @@ public:   // Public data types
 public:
 
 	virtual void Build(std::istream& is, TreeAutomatonType* automaton) const = 0;
+
+	virtual ~AbstractTABuilder()
+	{ }
 };
 
 #endif
