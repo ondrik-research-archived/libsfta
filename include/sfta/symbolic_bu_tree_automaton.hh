@@ -112,8 +112,8 @@ public:   // Public data types
 private:  // Private data types
 
 	typedef SFTA::Private::Convert Convert;
-	typedef typename MTBDDTTWrapperType::SharedMTBDDType::DescriptionType
-		TransitionMapType;
+	typedef typename MTBDDTTWrapperType::SharedMTBDDType SharedMTBDDType;
+	typedef typename SharedMTBDDType::DescriptionType TransitionMapType;
 
 
 private:  // Private data members
