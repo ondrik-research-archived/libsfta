@@ -15,7 +15,6 @@
 #include <vector>
 
 // SFTA header files
-#include <sfta/sfta.hh>
 #include <sfta/abstract_ta_builder.hh>
 #include <sfta/convert.hh>
 
@@ -41,64 +40,23 @@ template
 >
 class SFTA::TimbukTABuilder
 	: public AbstractTABuilder
-	  <
+		<
 			TreeAutomaton
 		>
 {
-private:  // Private data types
-
-	typedef AbstractTABuilder<TreeAutomaton> ParentClass;
-
-	typedef SFTA::Private::Convert Convert;
-
 public:   // Public data types
-
-	typedef typename ParentClass::DirectorType DirectorType;
-	typedef typename ParentClass::AddStateFunctionType AddStateFunctionType;
-	typedef typename ParentClass::AddTransitionFunctionType
-		AddTransitionFunctionType;
-	typedef typename ParentClass::SetStateFinalFunctionType
-		SetStateFinalFunctionType;
-	typedef typename ParentClass::SymbolDictionaryType SymbolDictionaryType;
-	typedef typename ParentClass::SymbolDictionaryPtr SymbolDictionaryPtr;
 
 	typedef TreeAutomaton TreeAutomatonType;
 
-	typedef typename SymbolDictionaryType::InputSymbolType InputSymbolType;
-	typedef typename TreeAutomatonType::SymbolType AutomatonSymbolType;
-	typedef typename TreeAutomatonType::RuleLeftHandSideType
-		RuleLeftHandSideType;
-	typedef typename TreeAutomatonType::SetOfStatesType SetOfStatesType;
+private:  // Private data types
 
-private:  // Private data members
-
-
-	/**
-	 * @brief  The name of the Log4cpp category for logging
-	 *
-	 * The name of the Log4cpp category used for logging messages from this
-	 * class.
-	 */
-	static const char* LOG_CATEGORY_NAME;
+	typedef typename TreeAutomatonType::LeftHandSideType LeftHandSideType;
+	typedef typename TreeAutomatonType::RightHandSideType RightHandSideType;
 
 public:   // Public methods 
 
-	TimbukTABuilder(SymbolDictionaryPtr dict)
-		: ParentClass(dict)
-	{ }
-
-	virtual void Build(std::istream& is)
+	virtual void Build(std::istream& is, TreeAutomatonType* automaton) const
 	{
-		// Assertions
-		assert(ParentClass::director_
-			!= static_cast<DirectorType*>(0));
-		assert(ParentClass::addStateFunction_
-			!= static_cast<AddStateFunctionType>(0));
-		assert(ParentClass::addTransitionFunction_
-			!= static_cast<AddTransitionFunctionType>(0));
-		assert(ParentClass::setStateFinalFunction_
-			!= static_cast<SetStateFinalFunctionType>(0));
-
 		bool readingTransitions = false;
 		std::string str;
 		while (std::getline(is, str))
@@ -120,29 +78,20 @@ public:   // Public methods
 					throw std::runtime_error("Unknown token in input stream");
 				}
 
-				SetOfStatesType rhs;
+				RightHandSideType rhs;
 				rhs.insert(spl[2]);
 
 				std::string leftSide = spl[0];
 				size_t pos = leftSide.find('(');
 				if (pos == leftSide.npos)
 				{	// in case we are dealing with nullary symbol
-					AutomatonSymbolType symbol
-						= ParentClass::dict_->TranslateI2A(leftSide);
-
-					RuleLeftHandSideType lhs;
-
 					SFTA_LOGGER_DEBUG("Adding transition: " + spl[0] + " -> " + spl[2]);
 
-					(ParentClass::director_->*ParentClass::addTransitionFunction_)
-						(symbol, lhs, rhs);
+					automaton->AddTransition(LeftHandSideType(), spl[0], rhs);
 				}
 				else
 				{	// in case we are not dealing with nullary symbol
-					std::string symbolName = leftSide.substr(0, pos);
-
-					AutomatonSymbolType symbol
-						= ParentClass::dict_->TranslateI2A(symbolName);
+					std::string symbol = leftSide.substr(0, pos);
 
 					size_t endPos = leftSide.find(')');
 					std::string stateStr = leftSide.substr(pos + 1, endPos - pos - 1);
@@ -152,16 +101,15 @@ public:   // Public methods
 					boost::algorithm::split(states, stateStr, ispunct,
 						boost::algorithm::token_compress_on);
 
-					RuleLeftHandSideType lhs;
+					LeftHandSideType lhs;
 					for (size_t i = 0; i < states.size(); ++i)
 					{	// for each state
 						lhs.push_back(states[i]);
 					}
 
-					//SFTA_LOGGER_DEBUG("Adding transition: " + spl[0] + " -> " + spl[2]);
+					SFTA_LOGGER_DEBUG("Adding transition: " + spl[0] + " -> " + spl[2]);
 
-					(ParentClass::director_->*ParentClass::addTransitionFunction_)
-						(symbol, lhs, rhs);
+					automaton->AddTransition(lhs, symbol, rhs);
 				}
 
 				continue;
@@ -183,7 +131,7 @@ public:   // Public methods
 					stateName.erase(pos);
 					SFTA_LOGGER_DEBUG("Adding state: " + stateName);
 
-					(ParentClass::director_->*ParentClass::addStateFunction_)(stateName);
+					automaton->AddState(stateName);
 				}
 
 				continue;
@@ -195,8 +143,7 @@ public:   // Public methods
 				{	// for each final state in the list
 					SFTA_LOGGER_DEBUG("Setting state as final: " + spl[i]);
 
-					(ParentClass::director_->*ParentClass::setStateFinalFunction_)
-						(spl[i]);
+					automaton->SetStateFinal(spl[i]);
 				}
 
 				continue;
@@ -213,19 +160,6 @@ public:   // Public methods
 			}
 		}
 	}
-
-
-	virtual ~TimbukTABuilder()
-	{ }
 };
-
-
-// Setting the logging category name for Log4cpp
-template
-<
-	class TA
->
-const char* SFTA::TimbukTABuilder<TA>::LOG_CATEGORY_NAME
-	= "timbuk_ta_builder";
 
 #endif
