@@ -382,7 +382,7 @@ public:   // Public methods
 		: ParentClass(aut)
 	{ }
 
-	NDSymbolicBUTreeAutomaton(TTWrapperPtrType ttWrapper)
+	explicit NDSymbolicBUTreeAutomaton(TTWrapperPtrType ttWrapper)
 		: ParentClass(ttWrapper)
 	{ }
 };
