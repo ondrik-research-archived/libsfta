@@ -345,6 +345,33 @@ public:   // Public methods
 
 		return result;
 	}
+
+	virtual std::vector<StateType> GetVectorOfStates() const
+	{
+		std::vector<StateType> result;
+
+		for (typename StateSetType::const_iterator itStates = states_.begin();
+			itStates != states_.end(); ++itStates)
+		{
+			result.push_back(*itStates);
+		}
+
+		return result;
+	}
+
+
+	virtual std::vector<StateType> GetVectorOfFinalStates() const
+	{
+		std::vector<StateType> result;
+
+		for (typename StateSetType::const_iterator itStates = finalStates_.begin();
+			itStates != finalStates_.end(); ++itStates)
+		{
+			result.push_back(*itStates);
+		}
+
+		return result;
+	}
 };
 
 #endif

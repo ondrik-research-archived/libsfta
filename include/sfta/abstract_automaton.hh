@@ -182,6 +182,9 @@ public:   // Public methods
 
 	virtual std::string ToString() const = 0;
 
+	virtual std::vector<StateType> GetVectorOfStates() const = 0;
+
+	virtual std::vector<StateType> GetVectorOfFinalStates() const = 0;
 
 	/**
 	 * @brief  Destructor
