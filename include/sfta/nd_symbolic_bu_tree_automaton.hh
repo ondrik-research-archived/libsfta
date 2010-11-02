@@ -118,7 +118,8 @@ public:   // Public data types
 
 	private:  // Private methods
 
-		Type* safelyPerformOperation(BinaryOperation oper, const HierarchyRoot* a1, const HierarchyRoot* a2) const
+		Type* safelyPerformOperation(BinaryOperation oper,
+			const HierarchyRoot* a1, const HierarchyRoot* a2) const
 		{
 			// Assertions
 			assert(a1 != static_cast<Type*>(0));
