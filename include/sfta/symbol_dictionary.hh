@@ -11,9 +11,6 @@
 #ifndef _SFTA_SYMBOL_DICTIONARY_HH_
 #define _SFTA_SYMBOL_DICTIONARY_HH_
 
-// Loki header files
-#include <loki/SmartPtr.h>
-
 // SFTA header files
 #include <sfta/convert.hh>
 
@@ -44,60 +41,69 @@ public:   // Public data types
 
 private:  // Private data types
 
-	typedef std::map<InputSymbolType, OutputSymbolType> I2AMapType;
+	typedef std::map<InputSymbolType, OutputSymbolType> I2OMapType;
+	typedef std::map<OutputSymbolType, InputSymbolType> O2IMapType;
 
 	typedef SFTA::Private::Convert Convert;
 
 private:  // Private data members
 
-	I2AMapType i2a_;
+	I2OMapType i2o_;
+	O2IMapType o2i_;
 
 	OutputSymbolType nextSymbol_;
 
-
-	/**
-	 * @brief  The name of the Log4cpp category for logging
-	 *
-	 * The name of the Log4cpp category used for logging messages from this
-	 * class.
-	 */
-	static const char* LOG_CATEGORY_NAME;
-
-
 public:   // Public methods
 
+
 	SymbolDictionary()
-		: i2a_(),
+		: i2o_(),
+			o2i_(),
 			nextSymbol_(0)
 	{ }
 
 
-	OutputSymbolType TranslateI2A(const InputSymbolType& symbol)
+	OutputSymbolType Translate(const InputSymbolType& symbol)
 	{
-		typename I2AMapType::const_iterator it;
-		if ((it = i2a_.find(symbol)) == i2a_.end())
+		typename I2OMapType::const_iterator itSymbol;
+		if ((itSymbol = i2o_.find(symbol)) == i2o_.end())
 		{	// in case a new symbol appeared
 			OutputSymbolType newSymbol = nextSymbol_;
-			i2a_.insert(std::make_pair(symbol, newSymbol));
-
-			//SFTA_LOGGER_DEBUG("Adding new symbol: " + Convert::ToString(symbol)
-			//	+ " -> " + Convert::ToString(newSymbol));
-
 			++nextSymbol_;
+
+			if (!(i2o_.insert(std::make_pair(symbol, newSymbol))).second)
+			{
+				throw std::runtime_error(__func__ +
+					std::string(": inserting already existing translation ") +
+					Convert::ToString(symbol) + " -> " + Convert::ToString(newSymbol));
+			}
+
+			if (!(o2i_.insert(std::make_pair(newSymbol, symbol))).second)
+			{
+				throw std::runtime_error(__func__ +
+					std::string(": inserting already existing inverse translation ") +
+					Convert::ToString(newSymbol) + " -> " + Convert::ToString(symbol));
+			}
+
 			return newSymbol;
 		}
 
-		return it->second;
+		return itSymbol->second;
+	}
+
+
+	InputSymbolType TranslateInverse(const OutputSymbolType& symbol)
+	{
+		typename O2IMapType::const_iterator itSymbol;
+		if ((itSymbol = o2i_.find(symbol)) == o2i_.end())
+		{	// in case a new symbol appeared
+			throw std::runtime_error(__func__ +
+				std::string(": invalid translation from ") + Convert::ToString(symbol));
+		}
+
+		return itSymbol->second;
 	}
 
 };
-
-// Setting the logging category name for Log4cpp
-template
-<
-	typename I,
-	typename O
->
-const char* SFTA::SymbolDictionary<I, O>::LOG_CATEGORY_NAME = "symbol_dictionary";
 
 #endif
