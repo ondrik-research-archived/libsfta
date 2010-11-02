@@ -151,6 +151,28 @@ private:  // Private methods
 		return (index * BitsPerVariable) % BitsInChar;
 	}
 
+	static void getAllSymbols(CompactVariableAssignment& var,
+		std::vector<CompactVariableAssignment>& vec, size_t pos)
+	{
+		if (pos == var.Size())
+		{
+			vec.push_back(var);
+		}
+		else
+		{
+			if (var.GetIthVariableValue(pos) == DONT_CARE)
+			{	// in case we fork
+				var.SetIthVariableValue(pos, ZERO);
+				getAllSymbols(var, vec, pos + 1);
+				var.SetIthVariableValue(pos, ONE);
+				getAllSymbols(var, vec, pos + 1);
+			}
+			else
+			{
+				getAllSymbols(var, vec, pos + 1);
+			}
+		}
+	}
 
 public:   // Public methods
 
@@ -336,6 +358,18 @@ public:   // Public methods
 
 		return *this;
 	}
+
+	inline std::vector<CompactVariableAssignment> GetVectorOfConcreteSymbols() const
+	{
+		std::vector<CompactVariableAssignment> result;
+
+		CompactVariableAssignment newVar = *this;
+
+		getAllSymbols(newVar, result, 0);
+
+		return result;
+	}
+
 
 	/**
 	 * @brief  Overloaded << operator
