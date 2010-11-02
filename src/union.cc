@@ -46,21 +46,34 @@ int main(int argc, char* argv[])
 		return EXIT_FAILURE;
 	}
 
-	std::ifstream ifs(argv[1]);
-	if (ifs.fail())
+	std::ifstream ifs1(argv[1]);
+	if (ifs1.fail())
 	{
 		std::cout << "Could not open file " << argv[1] << "!\n";
+		return EXIT_FAILURE;
+	}
+
+	std::ifstream ifs2(argv[2]);
+	if (ifs2.fail())
+	{
+		std::cout << "Could not open file " << argv[2] << "!\n";
 		return EXIT_FAILURE;
 	}
 
 	AbstractTABuilder* builder = new TimbukTABuilder();
 	TABuildingDirector director(builder);
 
-	TreeAutomaton* ta1 = director.Construct(ifs);
+	TreeAutomaton* ta1 = director.Construct(ifs1);
+	TreeAutomaton* ta2 = director.Construct(ifs2);
 
-//	BUTreeAutomatonCover* aut1 = director.Construct();
-//
+	TreeAutomaton::Operation* op = ta1->GetOperation();
+
+	TreeAutomaton* taUnion = op->Union(ta1, ta2);
+
+	std::cout << taUnion->ToString();
+
 	delete ta1;
+	delete ta2;
 	delete builder;
 
 	return EXIT_SUCCESS;
