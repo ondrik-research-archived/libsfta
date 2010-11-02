@@ -104,6 +104,22 @@ public:   // Public data types
 			RootType
 		> LHSRootContainerType;
 
+	struct Transition
+	{
+		LeftHandSideType lhs;
+		SymbolType symbol;
+		OutputRightHandSideType rhs;
+
+		Transition(const LeftHandSideType& inLhs, const SymbolType& inSymbol,
+			const OutputRightHandSideType& inRhs)
+			: lhs(inLhs),
+				symbol(inSymbol),
+				rhs(inRhs)
+		{ }
+	};
+
+	typedef Transition TransitionType;
+
 	class Operation
 		: public ParentClass::Operation
 	{
@@ -343,14 +359,11 @@ public:   // Public methods
 		return ttWrapper_;
 	}
 
-
-	virtual std::string ToString() const
+	virtual std::vector<TransitionType> GetVectorOfTransitions() const
 	{
-		std::string result;
-		result += "Automaton\n";
-		result += "States: " + Convert::ToString(states_) + "\n";
-		result += "Final states: " + Convert::ToString(finalStates_) + "\n";
-		result += "Transitions: \n";
+		typedef std::vector<TransitionType> TransitionVector;
+
+		TransitionVector result;
 
 		for (typename LHSRootContainerType::const_iterator itRoot = rootMap_.begin();
 			itRoot != rootMap_.end(); ++itRoot)
@@ -363,13 +376,33 @@ public:   // Public methods
 			{
 				if (!(itTrans->second.empty()))
 				{
-					result += Convert::ToString(itTrans->first);
-					result += Convert::ToString(itRoot->first);
-					result += " -> ";
-					result += Convert::ToString(itTrans->second);
-					result += "\n";
+					result.push_back(
+						TransitionType(itRoot->first, itTrans->first, itTrans->second));
 				}
 			}
+		}
+
+		return result;
+	}
+
+	virtual std::string ToString() const
+	{
+		std::string result;
+		result += "Automaton\n";
+		result += "States: " + Convert::ToString(states_) + "\n";
+		result += "Final states: " + Convert::ToString(finalStates_) + "\n";
+		result += "Transitions: \n";
+
+		typedef std::vector<TransitionType> TransitionVector;
+		TransitionVector trans = GetVectorOfTransitions();
+		for (typename TransitionVector::const_iterator itTrans = trans.begin();
+			itTrans != trans.end(); ++itTrans)
+		{
+			result += Convert::ToString(itTrans->symbol);
+			result += Convert::ToString(itTrans->lhs);
+			result += " -> ";
+			result += Convert::ToString(itTrans->rhs);
+			result += "\n";
 		}
 
 		return result;
