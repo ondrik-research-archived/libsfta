@@ -41,11 +41,21 @@ public:   // Public data types
 
 	typedef SFTA::AbstractTABuilder<TreeAutomatonType> AbstractTABuilderType;
 
+private:  // Private data types
+
+	typedef typename TreeAutomatonType::SymbolDictionaryType
+		SymbolDictionaryType;
+
+	typedef typename TreeAutomatonType::SymbolDictionaryPtrType
+		SymbolDictionaryPtrType;
+
 private:  // Private data members
 
 	TreeAutomatonType defaultTa_;
 
 	AbstractTABuilderType* builder_;
+
+	SymbolDictionaryPtrType symbolDic_;
 
 
 private:  // Private methods
@@ -58,15 +68,15 @@ public:   // Public methods
 
 	explicit TABuildingDirector(AbstractTABuilderType* builder)
 		: defaultTa_(),
-			builder_(builder)
-	{
-
-	}
+			builder_(builder),
+			symbolDic_(new SymbolDictionaryType())
+	{ }
 
 
 	TreeAutomatonType* Construct(std::istream& is)
 	{
-		TreeAutomatonType* result = new TreeAutomatonType(defaultTa_.GetTTWrapper());
+		TreeAutomatonType* result =
+			new TreeAutomatonType(defaultTa_.GetTTWrapper(), symbolDic_);
 
 		builder_->Build(is, result);
 
