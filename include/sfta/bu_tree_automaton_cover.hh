@@ -23,7 +23,12 @@
 #include <sfta/mtbdd_transition_table_wrapper.hh>
 #include <sfta/nd_symbolic_bu_tree_automaton.hh>
 #include <sfta/set.hh>
+#include <sfta/symbol_dictionary.hh>
 #include <sfta/vector.hh>
+
+
+// Loki header files
+#include <loki/SmartPtr.h>
 
 
 // insert the class into proper namespace
@@ -53,6 +58,11 @@ class SFTA::BUTreeAutomatonCover
 {
 public:   // Public data types
 
+	typedef BUTreeAutomatonCover
+		<
+			SymbolLength
+		> Type;
+
 	typedef std::string StateType;
 	typedef std::string SymbolType;
 
@@ -67,6 +77,7 @@ private:  // Private data types
 	typedef SFTA::Vector<InternalStateType> InternalLeftHandSideType;
 	typedef SFTA::OrderedVector<InternalStateType> InternalRightHandSideType;
 	typedef unsigned MTBDDRootType;
+
 
 
 	typedef SFTA::CUDDSharedMTBDD
@@ -95,7 +106,6 @@ private:  // Private data types
 
 
 	typedef std::map<StateType, InternalStateType> StateToInternalStateMap;
-	typedef std::map<InternalStateType, StateType> InternalStateToStateMap;
 
 	typedef std::map<SymbolType, InternalSymbolType> SymbolToInternalSymbolMap;
 	typedef std::map<InternalSymbolType, SymbolType> InternalSymbolToSymbolMap;
@@ -104,24 +114,85 @@ private:  // Private data types
 
 	typedef std::vector<InternalStateType> InternalStateVector;
 
+	typedef typename NDSymbolicBUTreeAutomaton::TransitionType
+		InternalTransitionType;
+
 public:   // Public data types
 
 	typedef typename NDSymbolicBUTreeAutomaton::TTWrapperPtrType TTWrapperPtr;
 
+	typedef SFTA::SymbolDictionary
+		<
+			SymbolType,
+			InternalSymbolType
+		> SymbolDictionaryType;
+
+	typedef Loki::SmartPtr<SymbolDictionaryType> SymbolDictionaryPtrType;
+
+	class Operation
+	{
+	public:   // Public methods
+
+		Type* Union(Type* lhs, Type* rhs) const
+		{
+			typedef typename NDSymbolicBUTreeAutomaton::HierarchyRoot AbstractAutomaton;
+			typename AbstractAutomaton::Operation* oper =
+				lhs->getAutomaton()->GetOperation();
+			AbstractAutomaton* abstractResult =
+				oper->Union((lhs->getAutomaton()).get(), (rhs->getAutomaton()).get());
+
+			NDSymbolicBUTreeAutomaton* result;
+			if ((result = dynamic_cast<NDSymbolicBUTreeAutomaton*>(abstractResult)) ==
+				static_cast<NDSymbolicBUTreeAutomaton*>(0))
+			{
+				throw std::runtime_error(__func__ +
+					std::string(": cannot convert to proper type"));
+			}
+
+			return new Type(result, lhs->GetSymbolDictionary());
+		}
+	};
+
 
 private:  // Private data members
 
-	NDSymbolicBUTreeAutomaton automaton_;
+	std::auto_ptr<NDSymbolicBUTreeAutomaton> automaton_;
 
 	StateToInternalStateMap state2internalStateMap_;
-	InternalStateToStateMap internalState2stateMap_;
 
-	SymbolToInternalSymbolMap symbol2internalSymbolMap_;
-	InternalSymbolToSymbolMap internalSymbol2symbolMap_;
+	SymbolDictionaryPtrType symbolDict_;
 
 	InternalSymbolType nextSymbol_;
 
 private:  // Private methods
+
+	inline const std::auto_ptr<NDSymbolicBUTreeAutomaton>& getAutomaton() const
+	{
+		return automaton_;
+	}
+
+	inline StateType translateInternalStateToState(
+		const InternalStateType& internalState) const
+	{
+		return "q" + Convert::ToString(internalState);
+	}
+
+	std::vector<SymbolType> translateInternalSymbolToSymbols(
+		const InternalSymbolType& internalSymbol) const
+	{
+		std::vector<SymbolType> result;
+
+		typedef std::vector<InternalSymbolType> InternalSymbolVector;
+
+		InternalSymbolVector symbols = internalSymbol.GetVectorOfConcreteSymbols();
+		for (typename InternalSymbolVector::const_iterator itSym = symbols.begin();
+			itSym != symbols.end(); ++itSym)
+		{
+			result.push_back(symbolDict_->TranslateInverse(*itSym));
+		}
+
+		return result;
+	}
 
 	std::string statesToString(const InternalStateVector& vec) const
 	{
@@ -130,16 +201,7 @@ private:  // Private methods
 		for (typename InternalStateVector::const_iterator itStates = vec.begin();
 			itStates != vec.end(); ++itStates)
 		{
-			typename InternalStateToStateMap::const_iterator itMap;
-			if ((itMap = internalState2stateMap_.find(*itStates)) ==
-				internalState2stateMap_.end())
-			{
-				throw std::runtime_error(__func__ +
-					std::string(": request for invalid state = ") +
-					Convert::ToString(*itStates));
-			}
-
-			result += " " + Convert::ToString(itMap->second);
+			result += " " + translateInternalStateToState(*itStates);
 		}
 
 		return result;
@@ -148,26 +210,29 @@ private:  // Private methods
 public:   // Public methods
 
 	BUTreeAutomatonCover()
-		: automaton_(),
+		: automaton_(new NDSymbolicBUTreeAutomaton()),
 			state2internalStateMap_(),
-			internalState2stateMap_(),
-			symbol2internalSymbolMap_(),
-			internalSymbol2symbolMap_(),
+			symbolDict_(),
 			nextSymbol_(0)
 	{ }
 
-	explicit BUTreeAutomatonCover(TTWrapperPtr wrapper)
-		: automaton_(wrapper),
+	BUTreeAutomatonCover(TTWrapperPtr wrapper, SymbolDictionaryPtrType symbolDict)
+		: automaton_(new NDSymbolicBUTreeAutomaton(wrapper)),
 			state2internalStateMap_(),
-			internalState2stateMap_(),
-			symbol2internalSymbolMap_(),
-			internalSymbol2symbolMap_(),
+			symbolDict_(symbolDict),
+			nextSymbol_(0)
+	{ }
+
+	BUTreeAutomatonCover(NDSymbolicBUTreeAutomaton* automaton, SymbolDictionaryPtrType symbolDict)
+		: automaton_(automaton),
+			state2internalStateMap_(),
+			symbolDict_(symbolDict),
 			nextSymbol_(0)
 	{ }
 
 	void AddState(const StateType& state)
 	{
-		InternalStateType internalState = automaton_.AddState();
+		InternalStateType internalState = automaton_->AddState();
 
 		if (!state2internalStateMap_.insert(
 			std::make_pair(state, internalState)).second)
@@ -175,14 +240,6 @@ public:   // Public methods
 			throw std::runtime_error(__func__ +
 				std::string(": inserting already existing state " +
 				Convert::ToString(state)));
-		}
-
-		if (!internalState2stateMap_.insert(
-			std::make_pair(internalState, state)).second)
-		{	// in case there has already been something in the place
-			throw std::runtime_error(__func__ +
-				std::string(": inserting already existing internal state " +
-				Convert::ToString(internalState)));
 		}
 	}
 
@@ -212,36 +269,12 @@ public:   // Public methods
 			}
 		}
 
-
-		typename SymbolToInternalSymbolMap::const_iterator itSymbols;
-		if ((itSymbols = symbol2internalSymbolMap_.find(symbol)) == 
-			symbol2internalSymbolMap_.end())
-		{	// in case the symbol is unknown
-			std::pair<typename SymbolToInternalSymbolMap::iterator, bool> insertResult;
-			insertResult = symbol2internalSymbolMap_.insert(
-				std::make_pair(symbol, nextSymbol_));
-
-			// Assertion
-			assert(insertResult.second);
-
-			itSymbols = insertResult.first;
-
-			if (!(internalSymbol2symbolMap_.insert(
-				std::make_pair(nextSymbol_, symbol)).second))
-			{	// in case the inverse mapping is already taken
-				throw std::runtime_error(__func__ +
-					std::string(": inserting already existing symbol = " +
-					Convert::ToString(nextSymbol_)));
-			}
-
-			++nextSymbol_;
-		}
-
-		InternalSymbolType internalSymbol = itSymbols->second;
+		// translate the symbol
+		InternalSymbolType internalSymbol = symbolDict_->Translate(symbol);
 
 		// retrieve the original right-hand side
 		InternalRightHandSideType origRhs =
-			automaton_.GetTransition(internalLhs, internalSymbol);
+			automaton_->GetTransition(internalLhs, internalSymbol);
 
 		// add new states
 		for (typename RightHandSideType::const_iterator itRhs = rhs.begin();
@@ -259,7 +292,7 @@ public:   // Public methods
 		}
 
 		// update the right-hand side
-		automaton_.AddTransition(internalLhs, internalSymbol, origRhs);
+		automaton_->AddTransition(internalLhs, internalSymbol, origRhs);
 	}
 
 	void SetStateFinal(const StateType& state)
@@ -274,30 +307,74 @@ public:   // Public methods
 		}
 		else
 		{	// in case we know the state
-			automaton_.SetStateFinal(itStates->second);
+			automaton_->SetStateFinal(itStates->second);
 		}
 	}
 
 	inline TTWrapperPtr GetTTWrapper()
 	{
-		return automaton_.GetTTWrapper();
+		return automaton_->GetTTWrapper();
 	}
 
+	inline Operation* GetOperation() const
+	{
+		return new Operation();
+	}
+
+	inline SymbolDictionaryPtrType GetSymbolDictionary() const
+	{
+		return symbolDict_;
+	}
 
 	std::string ToString() const
 	{
 		std::string result;
 		
 		result += "States";
-		result += statesToString(automaton_.GetVectorOfStates());
+		result += statesToString(automaton_->GetVectorOfStates());
 		result += "\n";
 		result += "\n";
 		result += "Final States";
-		result += statesToString(automaton_.GetVectorOfFinalStates());
+		result += statesToString(automaton_->GetVectorOfFinalStates());
 		result += "\n";
 		result += "\n";
 		result += "Transitions";
 		result += "\n";
+
+		typedef std::vector<InternalTransitionType> TransitionVector;
+
+		TransitionVector trans = automaton_->GetVectorOfTransitions();
+		for (typename TransitionVector::const_iterator itTrans = trans.begin();
+			itTrans != trans.end(); ++itTrans)
+		{
+			const InternalLeftHandSideType& lhs = itTrans->lhs;
+
+			LeftHandSideType outputLhs;
+			for (typename InternalLeftHandSideType::const_iterator itLhs = lhs.begin();
+				 itLhs != lhs.end(); ++itLhs)
+			{
+				outputLhs.push_back(translateInternalStateToState(*itLhs));
+			}
+
+			typedef std::vector<SymbolType> SymbolVector;
+			SymbolVector symbols = translateInternalSymbolToSymbols(itTrans->symbol);
+
+			for (typename SymbolVector::const_iterator itSymbols = symbols.begin();
+				itSymbols != symbols.end(); ++itSymbols)
+			{
+				const InternalRightHandSideType& rhs = itTrans->rhs;
+				for (typename InternalRightHandSideType::const_iterator itRhs = rhs.begin();
+					 itRhs != rhs.end(); ++itRhs)
+				{
+					result += Convert::ToString(*itSymbols);
+					result += Convert::ToString(outputLhs);
+					result += " -> ";
+					result += Convert::ToString(translateInternalStateToState(*itRhs));
+					result += "\n";
+				}
+			}
+
+		}
 
 		return result;
 	}
