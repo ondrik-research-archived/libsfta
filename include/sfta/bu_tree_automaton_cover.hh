@@ -136,8 +136,8 @@ public:   // Public data types
 		Type* Union(Type* lhs, Type* rhs) const
 		{
 			typedef typename NDSymbolicBUTreeAutomaton::HierarchyRoot AbstractAutomaton;
-			typename AbstractAutomaton::Operation* oper =
-				lhs->getAutomaton()->GetOperation();
+			std::auto_ptr<typename AbstractAutomaton::Operation> oper(
+				lhs->getAutomaton()->GetOperation());
 			AbstractAutomaton* abstractResult =
 				oper->Union((lhs->getAutomaton()).get(), (rhs->getAutomaton()).get());
 
