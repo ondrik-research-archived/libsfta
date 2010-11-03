@@ -151,6 +151,25 @@ public:   // Public data types
 
 			return new Type(result, lhs->GetSymbolDictionary());
 		}
+
+		Type* Intersection(Type* lhs, Type* rhs) const
+		{
+			typedef typename NDSymbolicBUTreeAutomaton::HierarchyRoot AbstractAutomaton;
+			std::auto_ptr<typename AbstractAutomaton::Operation> oper(
+				lhs->getAutomaton()->GetOperation());
+			AbstractAutomaton* abstractResult =
+				oper->Intersection((lhs->getAutomaton()).get(), (rhs->getAutomaton()).get());
+
+			NDSymbolicBUTreeAutomaton* result;
+			if ((result = dynamic_cast<NDSymbolicBUTreeAutomaton*>(abstractResult)) ==
+				static_cast<NDSymbolicBUTreeAutomaton*>(0))
+			{
+				throw std::runtime_error(__func__ +
+					std::string(": cannot convert to proper type"));
+			}
+
+			return new Type(result, lhs->GetSymbolDictionary());
+		}
 	};
 
 
