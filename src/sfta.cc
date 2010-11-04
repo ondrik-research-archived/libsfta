@@ -15,6 +15,11 @@
 #include <fstream>
 #include <iostream>
 
+// Log4cpp headers
+#include <log4cpp/Category.hh>
+#include <log4cpp/OstreamAppender.hh>
+#include <log4cpp/BasicLayout.hh>
+
 // SFTA library headers
 #include <sfta/bu_tree_automaton_cover.hh>
 #include <sfta/convert.hh>
@@ -129,6 +134,22 @@ void performIntersection(const std::string& lhsFile, const std::string& rhsFile)
 }
 
 
+
+void startLogger()
+{
+	// create the appender
+	log4cpp::Appender* app1  = new log4cpp::OstreamAppender("ClogAppender", &std::clog);
+
+	// log categery
+	std::string cat_name = "SFTA";
+
+	// set verbosity level etc.
+	log4cpp::Category::getInstance(cat_name).setAdditivity(false);
+	log4cpp::Category::getInstance(cat_name).addAppender(app1);
+	log4cpp::Category::getInstance(cat_name).setPriority(log4cpp::Priority::INFO);
+}
+
+
 int main(int argc, char* argv[])
 {
 	// Assertions
@@ -136,6 +157,8 @@ int main(int argc, char* argv[])
 
 	try
 	{
+		startLogger();
+
 		const char* getoptString = "uih";
 		option longOptions[] = {
 			{"union",                      0, static_cast<int*>(0), 'u'},
@@ -177,7 +200,10 @@ int main(int argc, char* argv[])
 
 		switch (operation)
 		{
-			case OPERATION_HELP: printHelp(argv[0]); break;
+			case OPERATION_HELP:
+				printHelp(argv[0]);
+				break;
+
 			case OPERATION_UNION:
 				needsArguments(inputs.size(), 2);
 				performUnion(inputs[0], inputs[1]);
