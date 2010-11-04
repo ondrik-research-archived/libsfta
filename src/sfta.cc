@@ -41,6 +41,7 @@ enum OperationType
 	OPERATION_INVALID = 0,
 	OPERATION_UNION,
 	OPERATION_INTERSECTION,
+	OPERATION_LOAD,
 
 	OPERATION_HELP,
 
@@ -134,6 +135,22 @@ void performIntersection(const std::string& lhsFile, const std::string& rhsFile)
 }
 
 
+void performLoad(const std::string& file)
+{
+	std::ifstream ifs(file.c_str());
+	if (ifs.fail())
+	{
+		throw std::runtime_error("Could not open file " + file);
+	}
+
+	std::auto_ptr<AbstractTABuilder> builder(new TimbukTABuilder());
+	TABuildingDirector director(builder.get());
+
+	std::auto_ptr<TreeAutomaton> ta(director.Construct(ifs));
+
+	std::cout << ta->ToString();
+}
+
 
 void startLogger()
 {
@@ -159,11 +176,12 @@ int main(int argc, char* argv[])
 	{
 		startLogger();
 
-		const char* getoptString = "uih";
+		const char* getoptString = "uihl";
 		option longOptions[] = {
 			{"union",                      0, static_cast<int*>(0), 'u'},
 			{"intersection",               0, static_cast<int*>(0), 'i'},
 			{"help",                       0, static_cast<int*>(0), 'h'},
+			{"load",                       0, static_cast<int*>(0), 'l'},
 			{static_cast<const char*>(0),  0, static_cast<int*>(0), 0}
 		};
 
@@ -178,6 +196,7 @@ int main(int argc, char* argv[])
 				case 'h': specifyOperation(operation, OPERATION_HELP); break;
 				case 'u': specifyOperation(operation, OPERATION_UNION); break;
 				case 'i': specifyOperation(operation, OPERATION_INTERSECTION); break;
+				case 'l': specifyOperation(operation, OPERATION_LOAD); break;
 				default: throw std::runtime_error("Invalid command line parameter."); break;
 			}
 		}
@@ -212,6 +231,11 @@ int main(int argc, char* argv[])
 			case OPERATION_INTERSECTION:
 				needsArguments(inputs.size(), 2);
 				performIntersection(inputs[0], inputs[1]);
+				break;
+
+			case OPERATION_LOAD:
+				needsArguments(inputs.size(), 1);
+				performLoad(inputs[0]);
 				break;
 
 			default: throw std::runtime_error("Invalid operation type.");break;
