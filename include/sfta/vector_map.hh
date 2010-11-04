@@ -253,6 +253,7 @@ private:  // Private data types
 							{
 								sound = true;
 								updateIndexValue();
+								++itBinary_;
 							}
 						}
 						else
