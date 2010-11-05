@@ -50,9 +50,16 @@ enum OperationType
 
 void printHelp(const std::string& programName)
 {
-	std::cout << "Invalid arguments.\n";
-	std::cout << "Usage:  " << programName << " file1 file2\n";
-	std::cout << "where file1 and file2 are files with tree automata in Timbuk format.\n";
+	std::cout << "usage: " << programName << " (-l|--load)         <file1>\n";
+	std::cout << "   or: " << programName << " (-u|--union)        <file1> <file2>\n";
+	std::cout << "   or: " << programName << " (-i|--intersection) <file1> <file2>\n";
+	std::cout << "\n";
+	std::cout << "    -l, --load             load an automaton from <file1>.\n";
+	std::cout << "    -u, --union            create an automaton with language that is the union\n";
+	std::cout << "                           of languages of automata from <file1> and <file2>.\n";
+	std::cout << "    -i, --intersection     create an automaton with language that is the\n";
+	std::cout << "                           intersection of languages of automata from <file1>\n";
+	std::cout << "                           and <file2>.\n";
 }
 
 void needsArguments(size_t value, size_t needsToBe)
