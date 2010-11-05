@@ -336,7 +336,7 @@ public:   // Public methods
 			for (typename SharedMTBDDType::LeafContainer::const_iterator itCont =
 				output.begin(); itCont != output.end(); ++itCont)
 			{
-				rhs.Union(**itCont);
+				rhs.insert(**itCont);
 			}
 
 			return rhs;
