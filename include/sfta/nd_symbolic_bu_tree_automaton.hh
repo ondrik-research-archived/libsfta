@@ -246,13 +246,14 @@ public:   // Public data types
 									throw std::logic_error(__func__ +
 										std::string(": inserted value found!"));
 								}
+
+								newStates_->push(std::make_pair(productState, resultState));
 							}
 							else
 							{
 								resultState = itPairs->second;
 							}
 
-							newStates_->push(std::make_pair(productState, resultState));
 							result.insert(resultState);
 						}
 					}
