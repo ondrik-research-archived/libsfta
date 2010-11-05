@@ -12,8 +12,6 @@ libsfta_a_SOURCES = \
 	fake_file.cc \
 	formula_parser.cc
 
-bin_PROGRAMS = union sfta
-
-union_SOURCES = union.cc
+bin_PROGRAMS = sfta
 
 sfta_SOURCES = sfta.cc
