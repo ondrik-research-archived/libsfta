@@ -220,6 +220,19 @@ private:  // Private methods
 		for (typename InternalStateVector::const_iterator itStates = vec.begin();
 			itStates != vec.end(); ++itStates)
 		{
+			result += " " + translateInternalStateToState(*itStates) + ":0";
+		}
+
+		return result;
+	}
+
+	std::string finalStatesToString(const InternalStateVector& vec) const
+	{
+		std::string result;
+
+		for (typename InternalStateVector::const_iterator itStates = vec.begin();
+			itStates != vec.end(); ++itStates)
+		{
 			result += " " + translateInternalStateToState(*itStates);
 		}
 
@@ -354,7 +367,7 @@ public:   // Public methods
 		result += "\n";
 		result += "\n";
 		result += "Final States";
-		result += statesToString(automaton_->GetVectorOfFinalStates());
+		result += finalStatesToString(automaton_->GetVectorOfFinalStates());
 		result += "\n";
 		result += "\n";
 		result += "Transitions";
@@ -386,7 +399,7 @@ public:   // Public methods
 					 itRhs != rhs.end(); ++itRhs)
 				{
 					result += Convert::ToString(*itSymbols);
-					result += Convert::ToString(outputLhs);
+					result += (outputLhs.empty()? " " : Convert::ToString(outputLhs));
 					result += " -> ";
 					result += Convert::ToString(translateInternalStateToState(*itRhs));
 					result += "\n";
