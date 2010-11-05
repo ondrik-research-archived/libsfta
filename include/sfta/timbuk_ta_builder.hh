@@ -53,6 +53,8 @@ private:  // Private data types
 	typedef typename TreeAutomatonType::LeftHandSideType LeftHandSideType;
 	typedef typename TreeAutomatonType::RightHandSideType RightHandSideType;
 
+	typedef SFTA::Private::Convert Convert;
+
 public:   // Public methods 
 
 	virtual void Build(std::istream& is, TreeAutomatonType* automaton) const
@@ -62,6 +64,9 @@ public:   // Public methods
 		while (std::getline(is, str))
 		{	// until we get to the end of the file
 			boost::trim(str);
+
+			boost::algorithm::replace_all(str, "  ", " ");
+			boost::algorithm::replace_all(str, ", ", ",");
 
 			std::vector<std::string> spl;
 			boost::algorithm::split(spl, str, isspace,
@@ -75,7 +80,8 @@ public:   // Public methods
 			{	// in case we are reading transitions
 				if (spl.size() != 3)
 				{	// if the format is wrong
-					throw std::runtime_error("Unknown token in input stream");
+					throw std::runtime_error(__func__ +
+						std::string("Unknown token in input stream: ") + Convert::ToString(str));
 				}
 
 				RightHandSideType rhs;
