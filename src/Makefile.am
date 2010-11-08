@@ -1,5 +1,11 @@
 ## Process this file with automake to produce Makefile.in
 
+AUTOMAKE_OPTIONS = dejagnu
+
+DEJATOOL = sfta
+
+RUNTESTFLAGS = --srcdir ./testsuite
+
 SFTA_LIBRARY = libsfta.a
 
 LDADD = ../cudd_facade/libcudd_facade.a \
@@ -13,5 +19,7 @@ libsfta_a_SOURCES = \
 	formula_parser.cc
 
 bin_PROGRAMS = sfta
+
+check_PROGRAMS = sfta
 
 sfta_SOURCES = sfta.cc
