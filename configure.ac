@@ -82,5 +82,5 @@ AC_CHECK_HEADERS([loki/SmartPtr.h],, AC_MSG_ERROR([Cannot find libloki header fi
 AC_CONFIG_FILES([Makefile
                  cudd_facade/Makefile
                  src/Makefile
-                 tests/Makefile])
+                 unit_tests/Makefile])
 AC_OUTPUT
