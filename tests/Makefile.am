@@ -1,5 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 
+AUTOMAKE_OPTIONS = dejagnu
+
 TEST_LIBRARY = libtests.a
 
 LDADD = ../cudd_facade/libcudd_facade.a \

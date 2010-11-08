@@ -3,7 +3,7 @@
 
 AC_PREREQ([2.67])
 AC_INIT([libsfta],[0.1],[ilengal@fit.vutbr.cz])
-AM_INIT_AUTOMAKE([-Wall -Werror color-tests dejagnu])
+AM_INIT_AUTOMAKE([-Wall -Werror color-tests])
 AC_CONFIG_SRCDIR([include/sfta/sfta.hh])
 AC_LANG([C++])
 
