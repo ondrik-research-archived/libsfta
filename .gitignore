@@ -19,5 +19,3 @@ configure
 configure.scan
 config.log
 config.status
-tests/libsfta.log
-tests/libsfta.sum
