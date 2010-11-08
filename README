@@ -3,4 +3,43 @@ Readme
 
        libSFTA : Symbolic Finite Tree Automata library
 
-TODO
+
+
+Installation
+============
+
+Follow these steps for successful installation of libSFTA:
+
+  1. Clone the git repository with libSFTA:
+
+    $ git clone git://github.com/ondrik/libsfta.git libsfta
+
+  2. Enter the directory
+
+    $ cd libsfta
+
+  3. Initialize git submodules in the repository
+
+    $ git submodule init
+
+  4. Update git submodules
+
+    $ git submodule update
+
+  5. Make CUDD package
+
+    $ cd cudd_facade/cudd
+    $ make
+    $ cd ../..
+
+  6. Generate configure script and other files
+
+    $ ./autogen.sh
+
+  7. Compile the sources
+
+    $ make
+
+  8. Run tests
+
+    $ make check
