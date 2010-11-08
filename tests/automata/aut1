@@ -1,0 +1,12 @@
+Ops a0:0 a:1
+
+Automaton aut1
+
+States q1:0 q2:0
+
+Final States q2
+
+Transitions 
+a0 -> q1
+a(q1) -> q2
+a(q2) -> q2
