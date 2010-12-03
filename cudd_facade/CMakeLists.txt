@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 2.8.2)
 project(cudd_facade)
 
 set(CMAKE_COLOR_MAKEFILE ON)
-set(CMAKE_VERBOSE_MAKEFILE ON)
+#set(CMAKE_VERBOSE_MAKEFILE ON)
 
 set(CUDD_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cudd)
 set(CUDD_LIBS "${CUDD_PATH}/cudd/libcudd.a ${CUDD_PATH}/epd/libepd.a ${CUDD_PATH}/mtr/libmtr.a ${CUDD_PATH}/st/libst.a ${CUDD_PATH}/util/libutil.a ${CUDD_PATH}/dddmp/libdddmp.a")

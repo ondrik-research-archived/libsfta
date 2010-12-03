@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 2.8.2)
 project(sfta)
 
 set(CMAKE_COLOR_MAKEFILE ON)
-set(CMAKE_VERBOSE_MAKEFILE ON)
+#set(CMAKE_VERBOSE_MAKEFILE ON)
 
 add_definitions(-std=c++98)
 add_definitions(-pedantic-errors)
