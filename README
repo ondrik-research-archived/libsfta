@@ -32,9 +32,11 @@ Follow these steps for successful installation of libSFTA:
     $ make
     $ cd ../..
 
-  6. Generate configure script and other files
+  6. Generate the Makefile
 
-    $ ./autogen.sh
+    $ mkdir build
+    $ cd build
+    $ cmake ..
 
   7. Compile the sources
 
