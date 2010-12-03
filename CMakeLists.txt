@@ -5,8 +5,11 @@ project(libsfta)
 set(CMAKE_COLOR_MAKEFILE ON)
 #set(CMAKE_VERBOSE_MAKEFILE ON)
 
+enable_testing()
+
 add_subdirectory(cudd_facade)
 add_subdirectory(src)
+add_subdirectory(unit_tests)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 
