@@ -729,11 +729,82 @@ let tree_inclusion reduction filea fileb nskip =
 		print_newline()
 	) l
 
+module Ordered_string =
+    struct
+       type t = string
+       let compare s1 s2 = compare s1 s2
+    end
+
+module String_map = Map.Make(Ordered_string)
+
+let union_of_alphabets alph1 alph2 =
+         let symbols1 = Array.fold_left (fun map a -> String_map.add
+a.f_name a map) String_map.empty alph1  in
+         let symbols12 = Array.fold_left (fun map a ->
+                 try (
+                         let a_alias = String_map.find a.f_name map in
+                         if a_alias.f_rank <> a.f_rank then
+
+failwith"Interim.union_of_alphabets:automata contain a symbol
+                         with the same name but different ranks";
+                         map
+                 ) with Not_found ->
+                         String_map.add a.f_name a map
+                 )
+         symbols1 alph2
+         in
+
+
+         let symarray = Array.of_list (List.rev (((String_map.fold (fun
+_ a l -> a::l))) symbols12 [])) in
+         Array.mapi (fun i {f_name = name;f_rank = rank} ->
+                 {f_name = name;f_rank = rank;f_index = i}) symarray
+
+(*changes the alphabet of an automaton into alph. alph must contain the
+  * original alphabet*)
+let change_alphabet aut alph =
+         let symbols = Array.fold_left (fun map a ->
+                 String_map.add a.f_name a.f_index map) String_map.empty
+alph
+         in
+         let new_indices = Array.map (fun _ -> 0) aut.a_alphabet in
+         Array.iter (fun {f_name=name;f_index = old_i} ->
+                 let new_i =
+                 try String_map.find name symbols
+                 with Not_found -> (failwith"Interm.change_alphabet:the new alphabet
+                 does not contain the original one")
+                 in
+                 new_indices.(old_i) <- new_i;
+         ) aut.a_alphabet;
+         let new_rules =  List.map (fun
+{r_symbol=old_i;r_lhs=rhs;r_rhs=lhs} ->
+                 {r_symbol=new_indices.(old_i);r_lhs=rhs;r_rhs=lhs}
+         ) aut.a_rules in
+         {
+                 a_alphabet=alph;
+                 a_states=aut.a_states;
+                 a_rules=new_rules;
+         }
+
+let unify_alphabets (aut1,aut2) =
+         let alph = union_of_alphabets aut1.a_alphabet aut2.a_alphabet in
+         (change_alphabet aut1 alph),(change_alphabet aut2 alph)
+let dopocitej_ondrovi_aritu aut =
+  List.iter (fun {r_symbol = sym;r_lhs = lhs} ->
+    match aut.a_alphabet.(sym) with {f_name = name} ->
+      aut.a_alphabet.(sym) <- {f_index = sym;f_name =
+        name;f_rank = Array.length lhs})
+  aut.a_rules; aut
+
 
 let tree_equivalence file1 file2 =
-  let l1 = auts_from_file file1 in
-  let l2 = auts_from_file file2 in
-	let result = (UI_incl.is_language_included (List.hd l1) (List.hd l2)) && (UI_incl.is_language_included (List.hd l2) (List.hd l1)) in
+  let l1 = (List.hd (auts_from_file file1)) in
+  let l2 = (List.hd (auts_from_file file2)) in
+  let l1_with_arity = (dopocitej_ondrovi_aritu l1) in
+  let l2_with_arity = (dopocitej_ondrovi_aritu l2) in
+  let (l1_unified_alphabet, l2_unified_alphabet) = (unify_alphabets (l1_with_arity,l2_with_arity)) in
+	let result = (UI_incl.is_language_included l1_unified_alphabet l2_unified_alphabet) &&
+    (UI_incl.is_language_included l1_unified_alphabet l2_unified_alphabet) in
 	Printf.printf "%B\n" result;
 ;;
 

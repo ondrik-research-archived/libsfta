@@ -110,8 +110,8 @@
 
 	trans
 	 :	ID state_list_par LA state		{ let symbol = lookup halphabet $1 ("undeclared symbol - "^$1) in (
-							    if symbol.f_rank != List.length $2 then
-							      parse_error ("symbol rank mismatch - "^$1);
+							    (*if symbol.f_rank != List.length $2 then
+							      parse_error ("symbol rank mismatch - "^$1);*)
 							    { r_symbol = symbol.f_index; r_lhs = Array.of_list $2; r_rhs = $4 }
 							  ) }
 	 ;
