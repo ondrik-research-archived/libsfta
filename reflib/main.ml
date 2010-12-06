@@ -797,14 +797,16 @@ let dopocitej_ondrovi_aritu aut =
   aut.a_rules; aut
 
 
-let tree_equivalence file1 file2 =
+let load_two_automata file1 file2 =
   let l1 = (List.hd (auts_from_file file1)) in
   let l2 = (List.hd (auts_from_file file2)) in
   let l1_with_arity = (dopocitej_ondrovi_aritu l1) in
   let l2_with_arity = (dopocitej_ondrovi_aritu l2) in
-  let (l1_unified_alphabet, l2_unified_alphabet) = (unify_alphabets (l1_with_arity,l2_with_arity)) in
-	let result = (UI_incl.is_language_included l1_unified_alphabet l2_unified_alphabet) &&
-    (UI_incl.is_language_included l1_unified_alphabet l2_unified_alphabet) in
+    unify_alphabets (l1_with_arity, l2_with_arity)
+
+let tree_equivalence file1 file2 =
+  let (l1, l2) = (load_two_automata file1 file2) in
+	let result = (UI_incl.is_language_included l1 l2) && (UI_incl.is_language_included l1 l2) in
 	Printf.printf "%B\n" result;
 ;;
 
