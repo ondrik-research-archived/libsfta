@@ -1,5 +1,4 @@
-Ops xppyblack:0 xblack:0 rootxpblack:0 red:0 normal:0 bot0:0 bot0:0 black:0
-UNDEF:0 NULL:0 bot2:0 something:0
+Ops xppyblack:0 xblack:0 rootxpblack:0 red:0 normal:0 bot0:0 bot0:0 black:0 UNDEF:0 NULL:0 bot2:0 something:0
 
 Automaton A86
 States q0:0 q1:0 q10:0 q2:0 q3:0 q4:0 q5:0 q6:0 q7:0 q8:0 
