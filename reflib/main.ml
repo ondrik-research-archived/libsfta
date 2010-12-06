@@ -816,6 +816,12 @@ let automaton_union file1 file2 =
   print_string (to_taml_str "United" l_result);
 ;;
 
+let automaton_intersection file1 file2 =
+  let (l1, l2) = (load_two_automata file1 file2) in
+  let l_result = Interim.inter l1 l2 in
+  print_string (to_taml_str "Intersected" l_result);
+;;
+
 (*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*)
 
 let _ =
@@ -836,6 +842,7 @@ let _ =
 		| "tree_incl" -> tree_inclusion Sys.argv.(2) Sys.argv.(3) Sys.argv.(4) Sys.argv.(5)
     | "eq" -> tree_equivalence Sys.argv.(2) Sys.argv.(3)
     | "union" -> automaton_union Sys.argv.(2) Sys.argv.(3)
+    | "intersection" -> automaton_intersection Sys.argv.(2) Sys.argv.(3)
 
 		| _ -> failwith "don't know what to do"
 ;;
