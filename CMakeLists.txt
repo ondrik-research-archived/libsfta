@@ -2,10 +2,11 @@ cmake_minimum_required(VERSION 2.8.2)
 
 project(libsfta)
 
+# Include CTest so that sophisticated testing can be done now
+include(CTest)
+
 set(CMAKE_COLOR_MAKEFILE ON)
 #set(CMAKE_VERBOSE_MAKEFILE ON)
-
-enable_testing()
 
 add_subdirectory(cudd_facade)
 add_subdirectory(src)
