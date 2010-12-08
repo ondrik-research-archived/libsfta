@@ -138,10 +138,10 @@ void performIntersection(const std::string& lhsFile, const std::string& rhsFile)
 	std::auto_ptr<TreeAutomaton::Operation> op(taLhs->GetOperation());
 
 
-	clock_t start = clock();
+	//clock_t start = clock();
 	std::auto_ptr<TreeAutomaton> taUnion(op->Intersection(taLhs.get(), taRhs.get()));
-	clock_t finish = clock();
-	SFTA_LOGGER_INFO("Duration: " + Convert::ToString(static_cast<double>(finish - start) / CLOCKS_PER_SEC) + " s");
+	//clock_t finish = clock();
+	//SFTA_LOGGER_INFO("Duration: " + Convert::ToString(static_cast<double>(finish - start) / CLOCKS_PER_SEC) + " s");
 
 	std::cout << taUnion->ToString();
 }
