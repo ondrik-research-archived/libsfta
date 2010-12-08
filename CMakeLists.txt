@@ -11,6 +11,7 @@ set(CMAKE_COLOR_MAKEFILE ON)
 add_subdirectory(cudd_facade)
 add_subdirectory(src)
 add_subdirectory(unit_tests)
+add_subdirectory(tests)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 
