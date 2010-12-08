@@ -34,7 +34,6 @@ Follow these steps for successful installation of libSFTA:
 
   6. Generate the Makefile
 
-    $ mkdir build
     $ cd build
     $ cmake ..
 
@@ -44,4 +43,4 @@ Follow these steps for successful installation of libSFTA:
 
   8. Run tests
 
-    $ make check
+    $ make test
