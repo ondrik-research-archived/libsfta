@@ -1,21 +1,17 @@
 cmake_minimum_required(VERSION 2.8.2)
 
+set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/Modules/")
+set(CMAKE_COLOR_MAKEFILE ON)
+#set(CMAKE_VERBOSE_MAKEFILE ON)
+
+
 project(libsfta)
 
 # Include CTest so that sophisticated testing can be done now
 include(CTest)
 
-set(CMAKE_COLOR_MAKEFILE ON)
-#set(CMAKE_VERBOSE_MAKEFILE ON)
-
 add_subdirectory(cudd_facade)
 add_subdirectory(src)
+add_subdirectory(reflib)
 add_subdirectory(unit_tests)
 add_subdirectory(tests)
-
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
-
-
-#ADD_EXECUTABLE(cudd_facade_test ../unit_tests/cudd_facade_test.cc)
-#ADD_TEST(cudd_facade_test cudd_facade_test)
-
