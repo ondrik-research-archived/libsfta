@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 2.8.2)
 
-project(sfta)
-
 set(CMAKE_COLOR_MAKEFILE ON)
 #set(CMAKE_VERBOSE_MAKEFILE ON)
+
+project(sfta)
 
 add_definitions(-std=c++98)
 add_definitions(-pedantic-errors)
@@ -22,8 +22,6 @@ add_definitions(-mtune=core2)
 add_definitions(-msse2)
 add_definitions(-g)
 #add_definitions(-pg)
-
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 
 find_package(Log4CPP REQUIRED)
 find_package(Loki REQUIRED)
