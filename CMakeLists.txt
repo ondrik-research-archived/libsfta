@@ -10,6 +10,7 @@ project(libsfta)
 # Include CTest so that sophisticated testing can be done now
 include(CTest)
 
+add_subdirectory(cudd_facade/cudd)
 add_subdirectory(cudd_facade)
 add_subdirectory(src)
 add_subdirectory(reflib)
