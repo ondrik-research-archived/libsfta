@@ -29,6 +29,17 @@ namespace SFTA
 }
 
 
+/**
+ * @brief   STL std::set container with fixed allocator
+ * @author  Ondra Lengal <ondra@lengal.net>
+ * @date    2010
+ *
+ * This is a specialization of STL std::set container that has got a fixed
+ * allocator (so it cannot be parameterized using templates). This allows to
+ * use this class as a policy.
+ *
+ * @tparam  T   Contained data type.
+ */
 template
 <
 	typename T

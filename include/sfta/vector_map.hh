@@ -32,6 +32,17 @@ namespace SFTA
 }
 
 
+/**
+ * @brief   Map of vectors to elements
+ * @author  Ondra Lengal <ondra@lengal.net>
+ * @date    2010
+ *
+ * This class implements map that projects vectors of elements to arbitrary
+ * elements.
+ *
+ * @tparam  KeyElement   Data type that is used as contained type of the vector.
+ * @tparam  Value        Data type that is used as the image of the function.
+ */
 template
 <
 	typename KeyElement,
@@ -59,6 +70,12 @@ public:   // Public data types
 
 private:  // Private data types
 
+
+	/**
+	 * @brief  Hasher structure for a single key
+	 *
+	 * This class is a hasher for a single key.
+	 */
 	struct HasherUnary
 	{
 		size_t operator()(const KeyElementType& key) const
@@ -73,6 +90,12 @@ private:  // Private data types
 
 	typedef std::pair<KeyElementType, KeyElementType> KeyElementPairType;
 
+
+	/**
+	 * @brief  Hasher structure for a pair of keys
+	 *
+	 * This class is a hasher for a pair of keys.
+	 */
 	struct HasherBinary
 	{
 		size_t operator()(const KeyElementPairType& key) const
@@ -87,6 +110,12 @@ private:  // Private data types
 	typedef std::tr1::unordered_map<KeyElementPairType, ValueType, HasherBinary>
 		HashTableBinary;
 
+
+	/**
+	 * @brief  Hasher structure for a n-tuple of keys
+	 *
+	 * This class is a hasher for a n-tuple of keys.
+	 */
 	struct HasherNnary
 	{
 		size_t operator()(const IndexType& key) const
@@ -98,6 +127,12 @@ private:  // Private data types
 	typedef std::tr1::unordered_map<IndexType, ValueType, HasherNnary>
 		HashTableNnary;
 
+
+	/**
+	 * @brief  Constant iterator
+	 *
+	 * The class for constant iterator.
+	 */
 	struct Tconst_iterator
 	{
 	private:  // Private data types

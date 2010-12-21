@@ -37,6 +37,24 @@ namespace SFTA
 }
 
 
+/**
+ * @brief   Nondeterministic symbolic bottom-up finite tree automaton class
+ * @author  Ondra Lengal <ondra@lengal.net>
+ * @date    2010
+ *
+ * This class represents a symbolically encoded nondeterministic bottom-up
+ * finite tree automaton.
+ *
+ * @tparam  MTBDDTransitionTableWrapper  Type of MTBDD wrapper of a transition
+ *                                       table.
+ * @tparam  State                        Type of states of the automaton.
+ * @tparam  Symbol                       Type of symbols of the alphabet of
+ *                                       the automaton.
+ * @tparam  InputRightHandSide           Type of the right-hand side of
+ *                                       automaton rules that is used for input.
+ * @tparam  OutputRightHandSide          Type of the right-hand side of
+ *                                       automaton rules that is used for output.
+ */
 template
 <
 	class MTBDDTransitionTableWrapper,
@@ -94,6 +112,11 @@ public:   // Public data types
 	typedef typename ParentClass::TTWrapperPtrType TTWrapperPtrType;
 
 
+	/**
+	 * @brief  @copybrief SFTA::SymbolicBUTreeAutomaton::Operation
+	 *
+	 * @copydetails SFTA::SymbolicBUTreeAutomaton::Operation
+	 */
 	class Operation
 		: public ParentClass::Operation
 	{
@@ -104,6 +127,11 @@ public:   // Public data types
 
 		typedef Type* (Operation::*BinaryOperation)(const Type&, const Type&) const;
 
+		/**
+		 * @brief  Structure for hashing function of a pair
+		 *
+		 * This structure encapsulates hashing function for a pair of elements.
+		 */
 		struct HasherPair
 		{
 			template <typename T>

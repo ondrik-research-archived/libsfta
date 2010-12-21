@@ -27,6 +27,16 @@ namespace SFTA
 }
 
 
+/**
+ * @brief   Dictionary for symbols
+ * @author  Ondra Lengal <ondra@lengal.net>
+ * @date    2010
+ *
+ * This class can be used as a two-way dictionary for two different types.
+ *
+ * @tparam  InputSymbol    Input symbol type.
+ * @tparam  OutputSymbol   Output symbol type.
+ */
 template
 <
 	typename InputSymbol,

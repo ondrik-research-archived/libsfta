@@ -126,6 +126,12 @@ public:   // Public data types
 
 	typedef Loki::SmartPtr<SymbolDictionaryType> SymbolDictionaryPtrType;
 
+	/**
+	 * @brief  Class with operations
+	 *
+	 * This class aggregates operations on the automaton cover into single
+	 * location.
+	 */
 	class Operation
 	{
 	public:   // Public methods

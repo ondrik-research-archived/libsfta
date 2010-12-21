@@ -171,6 +171,12 @@ public:  // Public data types
 	typedef unsigned VariableType;
 
 
+	/**
+	 * @brief  Abstract class for renaming functors
+	 *
+	 * This class serves as the base class for functors that should implement
+	 * renaming of MTBDD's variables.
+	 */
 	class AbstractVariableRenamingFunctorType
 	{
 	public:
@@ -199,6 +205,12 @@ public:  // Public data types
 	};
 
 
+	/**
+	 * @brief  Abstract class for variable predicate functors
+	 *
+	 * This class serves as the base class for functors that implement
+	 * predicates over Boolean variables of MTBDDs.
+	 */
 	class AbstractVariablePredicateFunctorType
 	{
 	public:

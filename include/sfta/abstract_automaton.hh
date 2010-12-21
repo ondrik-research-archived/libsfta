@@ -32,7 +32,7 @@ namespace SFTA
 
 
 /**
- * @brief   Abstract class for automaton operations
+ * @brief   Abstract class for automata
  * @author  Ondra Lengal <ondra@lengal.net>
  * @date    2010
  *
@@ -82,7 +82,7 @@ public:   // Public data types
 		> BaseTTWrapperType;
 
 	/**
-	 * @brief   Abstract class for automata operations
+	 * @brief  Class for automata operations
 	 *
 	 * This class represents an abstract interface to operations that are used by
 	 * all automata, such as language union, intersection and so on.

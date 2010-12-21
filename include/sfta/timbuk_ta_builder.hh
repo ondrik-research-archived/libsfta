@@ -34,6 +34,16 @@ namespace SFTA
 }
 
 
+/**
+ * @brief   Tree automata builder from Timbuk format
+ * @author  Ondra Lengal <ondra@lengal.net>
+ * @date    2010
+ *
+ * This class is used to build tree automata from files that have Timbuk
+ * format.
+ *
+ * @tparam  TreeAutomaton   Tree automaton type.
+ */
 template
 <
 	class TreeAutomaton

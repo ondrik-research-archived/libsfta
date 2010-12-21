@@ -104,6 +104,12 @@ public:   // Public data types
 			RootType
 		> LHSRootContainerType;
 
+
+	/**
+	 * @brief  Data type for transition rule of an automaton
+	 *
+	 * This type is used to store elements of transition rule of an automaton.
+	 */
 	struct Transition
 	{
 		LeftHandSideType lhs;
@@ -120,6 +126,12 @@ public:   // Public data types
 
 	typedef Transition TransitionType;
 
+
+	/**
+	 * @brief  @copybrief SFTA::AbstractBUTreeAutomaton::Operation
+	 *
+	 * @copydetails SFTA::AbstractBUTreeAutomaton::Operation
+	 */
 	class Operation
 		: public ParentClass::Operation
 	{

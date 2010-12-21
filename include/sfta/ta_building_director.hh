@@ -27,6 +27,16 @@ namespace SFTA
 }
 
 
+/**
+ * @brief   Tree automaton building director
+ * @author  Ondra Lengal <ondra@lengal.net>
+ * @date    2010
+ *
+ * Building director for tree automata. It is used as an intermediate layer
+ * between tree automata builders and code that demands building.
+ *
+ * @tparam  TreeAutomaton   The tree automaton type.
+ */
 template
 <
 	class TreeAutomaton

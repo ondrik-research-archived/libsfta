@@ -22,6 +22,15 @@ namespace SFTA
 }
 
 
+/**
+ * @brief   Base class for transition table wrapper
+ * @author  Ondra Lengal <ondra@lengal.net>
+ * @date    2010
+ *
+ * This class serves as the base class for wrappers of transition tables. 
+ *
+ * @tparam  State   Data type used for representation of states.
+ */
 template
 <
 	typename State

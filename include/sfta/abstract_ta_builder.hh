@@ -23,6 +23,17 @@ namespace SFTA
 }
 
 
+/**
+ * @brief   Abstract tree automaton builder
+ * @author  Ondra Lengal <ondra@lengal.net>
+ * @date    2010
+ *
+ * This is an abstract class to be used as the base class for all tree
+ * automata builders.
+ *
+ * @tparam  TreeAutomaton  The type of the tree automaton that should be built
+ *                         by this class.
+ */
 template
 <
 	class TreeAutomaton

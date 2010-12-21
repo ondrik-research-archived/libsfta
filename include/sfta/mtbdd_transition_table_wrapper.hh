@@ -27,6 +27,18 @@ namespace SFTA
 }
 
 
+/**
+ * @brief   Wrapper for MTBDD transition function
+ * @author  Ondra Lengal <ondra@lengal.net>
+ * @date    2010
+ *
+ * This is a class that encapsulates a transition function represented using
+ * a MTBDD.
+ *
+ * @tparam  State        Type of state of the transition function.
+ * @tparam  SharedMTBDD  Type of shared MTBDD that is used to represent the
+ *                       transition function.
+ */
 template
 <
 	typename State,

@@ -76,6 +76,12 @@ public:   // Public data types
 
 	typedef typename ParentClass::HierarchyRoot HierarchyRoot;
 
+
+	/**
+	 * @brief  @copybrief SFTA::AbstractAutomaton::Operation
+	 *
+	 * @copydetails SFTA::AbstractAutomaton::Operation
+	 */
 	class Operation
 		: public ParentClass::Operation
 	{
