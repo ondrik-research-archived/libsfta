@@ -3,8 +3,6 @@
 **/tags
 session.vim
 doc
-Makefile
-**/Makefile
 CMakeFiles
 **/CMakeFiles
 cmake_install.cmake
