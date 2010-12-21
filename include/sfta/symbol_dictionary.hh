@@ -92,6 +92,20 @@ public:   // Public methods
 	}
 
 
+	std::vector<InputSymbolType> GetVectorOfInputSymbols() const
+	{
+		std::vector<InputSymbolType> result;
+
+		for (typename I2OMapType::const_iterator itSymbols = i2o_.begin();
+			itSymbols != i2o_.end(); ++itSymbols)
+		{
+			result.push_back(itSymbols->first);
+		}
+
+		return result;
+	}
+
+
 	InputSymbolType TranslateInverse(const OutputSymbolType& symbol)
 	{
 		typename O2IMapType::const_iterator itSymbol;

@@ -107,9 +107,6 @@ private:  // Private data types
 
 	typedef std::map<StateType, InternalStateType> StateToInternalStateMap;
 
-	typedef std::map<SymbolType, InternalSymbolType> SymbolToInternalSymbolMap;
-	typedef std::map<InternalSymbolType, SymbolType> InternalSymbolToSymbolMap;
-
 	typedef SFTA::Private::Convert Convert;
 
 	typedef std::vector<InternalStateType> InternalStateVector;
@@ -239,6 +236,22 @@ private:  // Private methods
 		return result;
 	}
 
+	static std::string symbolsToString(const std::vector<SymbolType>& vec)
+	{
+		std::string result;
+
+		typedef std::vector<SymbolType> VectorOfSymbols;
+
+		for (typename VectorOfSymbols::const_iterator itSymbols = vec.begin();
+			itSymbols != vec.end(); ++itSymbols)
+		{
+			result += " " + Convert::ToString(*itSymbols) + ":0";
+		}
+
+		return result;
+	}
+
+
 public:   // Public methods
 
 	BUTreeAutomatonCover()
@@ -362,6 +375,13 @@ public:   // Public methods
 	{
 		std::string result;
 		
+		result += "Ops";
+		result += symbolsToString(symbolDict_->GetVectorOfInputSymbols());
+		result += "\n";
+		result += "\n";
+		result += "Automaton babicka";
+		result += "\n";
+		result += "\n";
 		result += "States";
 		result += statesToString(automaton_->GetVectorOfStates());
 		result += "\n";
