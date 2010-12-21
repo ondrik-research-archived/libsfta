@@ -7,6 +7,8 @@ set(CMAKE_COLOR_MAKEFILE ON)
 
 project(libsfta)
 
+find_package(Doxygen)
+
 # Include CTest so that sophisticated testing can be done now
 include(CTest)
 
