@@ -743,10 +743,10 @@ a.f_name a map) String_map.empty alph1  in
          let symbols12 = Array.fold_left (fun map a ->
                  try (
                          let a_alias = String_map.find a.f_name map in
-                         if a_alias.f_rank <> a.f_rank then
+                         (*if a_alias.f_rank <> a.f_rank then
 
 failwith"Interim.union_of_alphabets:automata contain a symbol
-                         with the same name but different ranks";
+                         with the same name but different ranks";*)
                          map
                  ) with Not_found ->
                          String_map.add a.f_name a map
