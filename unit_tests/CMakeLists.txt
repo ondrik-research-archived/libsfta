@@ -29,13 +29,14 @@ include_directories(../include)
 
 add_library(tests log_fixture.cc)
 
-set(TESTS "cudd_facade_test" "cudd_shared_mtbdd_cc_test" "cudd_shared_mtbdd_uv_test")
+set(TESTS "cudd_facade_test" "cudd_shared_mtbdd_cc_test" "cudd_shared_mtbdd_uv_test" "nd_symbolic_bu_tree_automaton_test")
 foreach (TEST ${TESTS})
   add_executable(${TEST} ${TEST}.cc)
 
   target_link_libraries(${TEST} libcudd_facade)
   target_link_libraries(${TEST} libsfta)
   target_link_libraries(${TEST} tests)
+  target_link_libraries(${TEST} ${LOKI_LIBRARY})
   target_link_libraries(${TEST} ${LOG4CPP_LIBRARIES})
   target_link_libraries(${TEST} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 

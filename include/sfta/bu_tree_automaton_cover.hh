@@ -82,13 +82,13 @@ private:  // Private data types
 
 	typedef SFTA::CUDDSharedMTBDD
 	<
-			MTBDDRootType,
-			InternalRightHandSideType,
-			InternalSymbolType,
-			SFTA::Private::DualMapLeafAllocator,
-			SFTA::Private::MapRootAllocator
+		MTBDDRootType,
+		InternalRightHandSideType,
+		InternalSymbolType,
+		SFTA::Private::DualMapLeafAllocator,
+		SFTA::Private::MapRootAllocator
 	> SharedMTBDD;
-	
+
 
 	typedef SFTA::MTBDDTransitionTableWrapper
 	<

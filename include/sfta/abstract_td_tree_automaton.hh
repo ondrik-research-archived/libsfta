@@ -4,16 +4,15 @@
  *  Copyright (c) 2010  Ondra Lengal <ondra@lengal.net>
  *
  *  Description:
- *    Header file for AbstractBUTreeAutomaton class.
+ *    Header file for AbstractTDTreeAutomaton class.
  *
  *****************************************************************************/
 
-#ifndef _ABSTRACT_BU_TREE_AUTOMATON_HH_
-#define _ABSTRACT_BU_TREE_AUTOMATON_HH_
+#ifndef _ABSTRACT_TD_TREE_AUTOMATON_HH_
+#define _ABSTRACT_TD_TREE_AUTOMATON_HH_
 
 // SFTA headers
 #include <sfta/abstract_automaton.hh>
-#include <sfta/vector.hh>
 
 // insert the class into proper namespace
 namespace SFTA
@@ -22,19 +21,19 @@ namespace SFTA
 	<
 		typename State,
 		typename Symbol,
-		class InputRightHandSide,
-		class OutputRightHandSide
+		class InputLeftHandSide,
+		class OutputLeftHandSide
 	>
-	class AbstractBUTreeAutomaton;
+	class AbstractTDTreeAutomaton;
 }
 
 
 /**
- * @brief   Abstract bottom-up tree automaton
+ * @brief   Abstract top-down tree automaton
  * @author  Ondra Lengal <ondra@lengal.net>
  * @date    2010
  *
- * Abstract class defining interface to bottom-up tree automata.
+ * Abstract class defining interface to top-down tree automata.
  */
 template
 <
@@ -43,7 +42,7 @@ template
 	class InputRightHandSide,
 	class OutputRightHandSide = InputRightHandSide
 >
-class SFTA::AbstractBUTreeAutomaton
+class SFTA::AbstractTDTreeAutomaton
 	: public SFTA::AbstractAutomaton
 		<
 			State,
@@ -58,7 +57,7 @@ public:   // Public data types
 			Symbol
 		> ParentClass;
 
-	typedef AbstractBUTreeAutomaton
+	typedef AbstractTDTreeAutomaton
 		<
 			State,
 			Symbol,
@@ -69,13 +68,12 @@ public:   // Public data types
 	typedef typename ParentClass::StateType StateType;
 	typedef typename ParentClass::SymbolType SymbolType;
 
-	typedef typename SFTA::Vector<StateType> LeftHandSideType;
+	typedef StateType LeftHandSideType;
 
 	typedef InputRightHandSide InputRightHandSideType;
 	typedef OutputRightHandSide OutputRightHandSideType;
 
 	typedef typename ParentClass::HierarchyRoot HierarchyRoot;
-
 
 	/**
 	 * @brief  @copybrief SFTA::AbstractAutomaton::Operation
@@ -92,27 +90,14 @@ protected:// Protected methods
 
 	virtual Operation* createOperation() const = 0;
 
+
 public:   // Public methods
 
-	AbstractBUTreeAutomaton()
-	{ }
+	virtual void SetStateInitial(const StateType& state) = 0;
 
-	AbstractBUTreeAutomaton(const AbstractBUTreeAutomaton& aut)
-		: ParentClass(aut)
-	{ }
+	virtual bool IsStateInitial(const StateType& state) const = 0;
 
-	virtual void AddTransition(const LeftHandSideType& lhs,
-		const SymbolType& symbol, const InputRightHandSideType& rhs) = 0;
-
-	virtual OutputRightHandSideType GetTransition(const LeftHandSideType& lhs,
-		const SymbolType& symbol) = 0;
-
-	virtual void SetStateFinal(const StateType& state) = 0;
-
-	virtual bool IsStateFinal(const StateType& state) const = 0;
-
-	virtual std::vector<StateType> GetVectorOfFinalStates() const = 0;
-
+	virtual std::vector<StateType> GetVectorOfInitialStates() const = 0;
 };
 
 #endif

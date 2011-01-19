@@ -175,16 +175,10 @@ public:   // Public methods
 
 	virtual StateType AddState() = 0;
 
-	virtual void SetStateFinal(const StateType& state) = 0;
-
-	virtual bool IsStateFinal(const StateType& state) const = 0;
-
 
 	virtual std::string ToString() const = 0;
 
 	virtual std::vector<StateType> GetVectorOfStates() const = 0;
-
-	virtual std::vector<StateType> GetVectorOfFinalStates() const = 0;
 
 	/**
 	 * @brief  Destructor
