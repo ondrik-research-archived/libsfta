@@ -151,11 +151,15 @@ public:   // Public data types
 
 		Type* langUnion(const Type& a1, const Type& a2) const
 		{
+			assert(&a1 != 0);
+			assert(&a2 != 0);
 			assert(false);
 		}
 
 		Type* langIntersection(const Type& a1, const Type& a2) const
 		{
+			assert(&a1 != 0);
+			assert(&a2 != 0);
 			assert(false);
 		}
 
@@ -197,6 +201,7 @@ public:   // Public methods
 	explicit NDSymbolicTDTreeAutomaton(TTWrapperPtrType ttWrapper)
 		: ParentClass(ttWrapper)
 	{ }
+
 };
 
 #endif

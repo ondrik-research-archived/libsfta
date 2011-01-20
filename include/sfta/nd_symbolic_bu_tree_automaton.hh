@@ -13,6 +13,7 @@
 
 // SFTA headers
 #include <sfta/symbolic_bu_tree_automaton.hh>
+#include <sfta/nd_symbolic_td_tree_automaton.hh>
 
 // Standard library headers
 #include <queue>
@@ -100,6 +101,7 @@ public:   // Public data types
 	typedef typename ParentClass::HierarchyRoot HierarchyRoot;
 
 	typedef typename ParentClass::StateType StateType;
+	typedef typename ParentClass::SymbolType SymbolType;
 	typedef typename ParentClass::LeftHandSideType LeftHandSideType;
 
 	typedef typename ParentClass::InputRightHandSideType InputRightHandSideType;
@@ -110,6 +112,15 @@ public:   // Public data types
 	typedef typename ParentClass::MTBDDTTWrapperType MTBDDTTWrapperType;
 	typedef typename MTBDDTTWrapperType::SharedMTBDDType SharedMTBDDType;
 	typedef typename ParentClass::TTWrapperPtrType TTWrapperPtrType;
+
+	typedef SFTA::NDSymbolicTDTreeAutomaton
+	<
+		SFTA::MTBDDTransitionTableWrapper<StateType, SFTA::CUDDSharedMTBDD<SFTA::OrderedVector<LeftHandSideType>, OutputRightHandSideType, SymbolType, SFTA::Private::DualMapLeafAllocator, SFTA::Private::MapRootAllocator> >,
+		StateType,
+		SymbolType,
+		SFTA::OrderedVector,
+		SFTA::OrderedVector
+	> NDSymbolicTDTreeAutomatonType;
 
 
 	/**
@@ -415,6 +426,14 @@ public:   // Public methods
 	explicit NDSymbolicBUTreeAutomaton(TTWrapperPtrType ttWrapper)
 		: ParentClass(ttWrapper)
 	{ }
+
+
+	NDSymbolicTDTreeAutomatonType* GetTopDownAutomaton() const
+	{
+		assert(false);
+
+	}
+
 };
 
 #endif
