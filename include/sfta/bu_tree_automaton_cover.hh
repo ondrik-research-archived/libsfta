@@ -176,7 +176,7 @@ public:   // Public data types
 			return new Type(result, lhs->GetSymbolDictionary());
 		}
 
-		SimulationRelationType ComputeSimulationPreorder(Type* aut) const
+		SimulationRelationType ComputeSimulationPreorder(const Type* aut) const
 		{
 			SimulationRelationType result;
 

@@ -51,6 +51,7 @@ enum OperationType
 	OPERATION_UNION,
 	OPERATION_INTERSECTION,
 	OPERATION_LOAD,
+	OPERATION_SIMULATION,
 
 	OPERATION_HELP,
 
@@ -205,10 +206,10 @@ void performLoad(bool isTopDown, const std::string& file)
 
 	if (!isTopDown)
 	{
-		std::auto_ptr<AbstractTDTABuilder> builder(new TimbukTDTABuilder());
-		TDTABuildingDirector director(builder.get());
+		std::auto_ptr<AbstractBUTABuilder> builder(new TimbukBUTABuilder());
+		BUTABuildingDirector director(builder.get());
 
-		std::auto_ptr<TDTreeAutomaton> ta(director.Construct(ifs));
+		std::auto_ptr<BUTreeAutomaton> ta(director.Construct(ifs));
 
 		std::cout << ta->ToString();
 	}
@@ -220,6 +221,32 @@ void performLoad(bool isTopDown, const std::string& file)
 		std::auto_ptr<TDTreeAutomaton> ta(director.Construct(ifs));
 
 		std::cout << ta->ToString();
+	}
+}
+
+
+void performComputationOfSimulation(bool isTopDown, const std::string& file)
+{
+	std::ifstream ifs(file.c_str());
+	if (ifs.fail())
+	{
+		throw std::runtime_error("Could not open file " + file);
+	}
+
+	if (!isTopDown)
+	{
+		std::auto_ptr<AbstractBUTABuilder> builder(new TimbukBUTABuilder());
+		BUTABuildingDirector director(builder.get());
+
+		std::auto_ptr<BUTreeAutomaton> ta(director.Construct(ifs));
+
+		std::auto_ptr<BUTreeAutomaton::Operation> op(ta->GetOperation());
+
+		std::cout << Convert::ToString(op->ComputeSimulationPreorder(ta.get())) << "\n";
+	}
+	else
+	{
+		assert(false);
 	}
 }
 
@@ -248,7 +275,7 @@ int main(int argc, char* argv[])
 	{
 		startLogger();
 
-		const char* getoptString = "uihlbt";
+		const char* getoptString = "uihlbts";
 		option longOptions[] = {
 			{"union",                      0, static_cast<int*>(0), 'u'},
 			{"intersection",               0, static_cast<int*>(0), 'i'},
@@ -256,6 +283,7 @@ int main(int argc, char* argv[])
 			{"load",                       0, static_cast<int*>(0), 'l'},
 			{"bottom-up",                  0, static_cast<int*>(0), 'b'},
 			{"top-down",                   0, static_cast<int*>(0), 't'},
+			{"simulation",                 0, static_cast<int*>(0), 's'},
 
 			{static_cast<const char*>(0),  0, static_cast<int*>(0), 0}
 		};
@@ -273,6 +301,7 @@ int main(int argc, char* argv[])
 				case 'i': specifyOperation(operation, OPERATION_INTERSECTION); break;
 				case 'h': specifyOperation(operation, OPERATION_HELP); break;
 				case 'l': specifyOperation(operation, OPERATION_LOAD); break;
+				case 's': specifyOperation(operation, OPERATION_SIMULATION); break;
 				case 'b': isTopDown = false; break;
 				case 't': isTopDown = true; break;
 				default: throw std::runtime_error("Invalid command line parameter."); break;
@@ -314,6 +343,11 @@ int main(int argc, char* argv[])
 			case OPERATION_LOAD:
 				needsArguments(inputs.size(), 1);
 				performLoad(isTopDown, inputs[0]);
+				break;
+
+			case OPERATION_SIMULATION:
+				needsArguments(inputs.size(), 1);
+				performComputationOfSimulation(isTopDown, inputs[0]);
 				break;
 
 			default: throw std::runtime_error("Invalid operation type.");break;

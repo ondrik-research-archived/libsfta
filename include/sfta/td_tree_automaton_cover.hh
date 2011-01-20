@@ -401,6 +401,15 @@ public:   // Public methods
 				itSymbols != symbols.end(); ++itSymbols)
 			{
 				const InternalRightHandSideType& rhs = itTrans->rhs;
+
+				if (rhs.empty())
+				{	// in case there is nullary transition
+					result += Convert::ToString(*itSymbols);
+					result += " -> ";
+					result += Convert::ToString(translateInternalStateToState(itTrans->lhs));
+					result += "\n";
+				}
+
 				for (typename InternalRightHandSideType::const_iterator itRhs = rhs.begin();
 					 itRhs != rhs.end(); ++itRhs)
 				{
