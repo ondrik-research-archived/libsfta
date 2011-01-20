@@ -157,7 +157,7 @@ private:  // Private data members
 
 	LHSRootContainerType rootMap_;
 
-private:  // Private methods
+protected:// Protected methods
 
 	void copyStates(const Type& aut)
 	{
@@ -176,6 +176,11 @@ private:  // Private methods
 		}
 
 		throw std::runtime_error(__func__ + std::string(": Invalid types"));
+	}
+
+	inline RootType getSinkState() const
+	{
+		return sinkState_;
 	}
 
 
@@ -267,6 +272,57 @@ public:   // Public methods
 		assert(isStateLocal(state));
 
 		return initialStates_.find(state) != initialStates_.end();
+	}
+
+	virtual void AddTransition(const LeftHandSideType& lhs,
+		const SymbolType& symbol, const InputRightHandSideType& rhs)
+	{
+		// Assertions
+		assert(isStateLocal(lhs));
+
+		RootType root = sinkState_;
+
+		typename LHSRootContainerType::const_iterator it;
+		if ((it = rootMap_.find(lhs)) == rootMap_.end())
+		{	// in case the value is not in the hash table
+			root = GetTTWrapper()->GetMTBDD()->CreateRoot();
+			rootMap_.insert(std::make_pair(lhs, root));
+		}
+		else
+		{
+			root = it->second;
+		}
+
+		GetTTWrapper()->GetMTBDD()->SetValue(root, symbol, rhs);
+	}
+
+	virtual OutputRightHandSideType GetTransition(const LeftHandSideType& lhs,
+		const SymbolType& symbol)
+	{
+		// Assertions
+		assert(isStateLocal(lhs));
+
+		OutputRightHandSide rhs;
+
+		typename LHSRootContainerType::const_iterator it;
+		if ((it = rootMap_.find(lhs)) == rootMap_.end())
+		{	// in case the value is not in the hash table
+			return rhs;
+		}
+		else
+		{
+			RootType root = it->second;
+			typename SharedMTBDDType::LeafContainer output =
+				GetTTWrapper()->GetMTBDD()->GetValue(root, symbol);
+
+			for (typename SharedMTBDDType::LeafContainer::const_iterator itCont =
+				output.begin(); itCont != output.end(); ++itCont)
+			{
+				rhs.insert(**itCont);
+			}
+
+			return rhs;
+		}
 	}
 
 	/**

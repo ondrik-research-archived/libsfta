@@ -180,6 +180,23 @@ protected:// Protected methods
 		return new Operation();
 	}
 
+
+public:   // Public methods
+
+	NDSymbolicTDTreeAutomaton()
+	{
+		ParentClass::GetTTWrapper()->GetMTBDD()->SetValue(
+			ParentClass::getSinkState(), Symbol::GetUniversalSymbol(),
+			InputRightHandSideType());
+	}
+
+	NDSymbolicTDTreeAutomaton(const NDSymbolicTDTreeAutomaton& aut)
+		: ParentClass(aut)
+	{ }
+
+	explicit NDSymbolicTDTreeAutomaton(TTWrapperPtrType ttWrapper)
+		: ParentClass(ttWrapper)
+	{ }
 };
 
 #endif

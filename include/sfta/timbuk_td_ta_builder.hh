@@ -4,12 +4,12 @@
  *  Copyright (c) 2010  Ondra Lengal <ondra@lengal.net>
  *
  *  Description:
- *    File with TimbukTABuilder class.
+ *    File with TimbukTDTABuilder class.
  *
  *****************************************************************************/
 
-#ifndef _SFTA_TIMBUK_TA_BUILDER_HH_
-#define _SFTA_TIMBUK_TA_BUILDER_HH_
+#ifndef _SFTA_TIMBUK_TD_TA_BUILDER_HH_
+#define _SFTA_TIMBUK_TD_TA_BUILDER_HH_
 
 // Standard library header files
 #include <vector>
@@ -28,46 +28,45 @@ namespace SFTA
 {
 	template
 	<
-		class TreeAutomaton
+		class TDTreeAutomaton
 	>
-	class TimbukTABuilder;
+	class TimbukTDTABuilder;
 }
 
-
 /**
- * @brief   Tree automata builder from Timbuk format
+ * @brief   Top-down tree automata builder from Timbuk format
  * @author  Ondra Lengal <ondra@lengal.net>
  * @date    2010
  *
- * This class is used to build tree automata from files that have Timbuk
- * format.
+ * This class is used to build top-down tree automata from files that have
+ * Timbuk format.
  *
- * @tparam  TreeAutomaton   Tree automaton type.
+ * @tparam  TDTreeAutomaton   Top-down tree automaton type.
  */
 template
 <
-	class TreeAutomaton
+	class TDTreeAutomaton
 >
-class SFTA::TimbukTABuilder
+class SFTA::TimbukTDTABuilder
 	: public AbstractTABuilder
 		<
-			TreeAutomaton
+			TDTreeAutomaton
 		>
 {
 public:   // Public data types
 
-	typedef TreeAutomaton TreeAutomatonType;
+	typedef TDTreeAutomaton TDTreeAutomatonType;
 
 private:  // Private data types
 
-	typedef typename TreeAutomatonType::LeftHandSideType LeftHandSideType;
-	typedef typename TreeAutomatonType::RightHandSideType RightHandSideType;
+	typedef typename TDTreeAutomatonType::LeftHandSideType LeftHandSideType;
+	typedef typename TDTreeAutomatonType::RightHandSideType RightHandSideType;
 
 	typedef SFTA::Private::Convert Convert;
 
 public:   // Public methods 
 
-	virtual void Build(std::istream& is, TreeAutomatonType* automaton) const
+	virtual void Build(std::istream& is, TDTreeAutomatonType* automaton) const
 	{
 		bool readingTransitions = false;
 		std::string str;
@@ -94,8 +93,7 @@ public:   // Public methods
 						std::string("Unknown token in input stream: ") + Convert::ToString(str));
 				}
 
-				RightHandSideType rhs;
-				rhs.insert(spl[2]);
+				LeftHandSideType lhs = spl[2];
 
 				std::string leftSide = spl[0];
 				size_t pos = leftSide.find('(');
@@ -103,7 +101,7 @@ public:   // Public methods
 				{	// in case we are dealing with nullary symbol
 					SFTA_LOGGER_DEBUG("Adding transition: " + spl[0] + " -> " + spl[2]);
 
-					automaton->AddTransition(LeftHandSideType(), spl[0], rhs);
+					automaton->AddTransition(lhs, spl[0], RightHandSideType());
 				}
 				else
 				{	// in case we are not dealing with nullary symbol
@@ -117,11 +115,14 @@ public:   // Public methods
 					boost::algorithm::split(states, stateStr, ispunct,
 						boost::algorithm::token_compress_on);
 
-					LeftHandSideType lhs;
+					typename RightHandSideType::value_type rhsElem;
 					for (size_t i = 0; i < states.size(); ++i)
 					{	// for each state
-						lhs.push_back(states[i]);
+						rhsElem.push_back(states[i]);
 					}
+
+					RightHandSideType rhs;
+					rhs.insert(rhsElem);
 
 					SFTA_LOGGER_DEBUG("Adding transition: " + spl[0] + " -> " + spl[2]);
 
@@ -159,7 +160,7 @@ public:   // Public methods
 				{	// for each final state in the list
 					SFTA_LOGGER_DEBUG("Setting state as final: " + spl[i]);
 
-					automaton->SetStateFinal(spl[i]);
+					automaton->SetStateInitial(spl[i]);
 				}
 
 				continue;

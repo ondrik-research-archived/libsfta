@@ -25,15 +25,23 @@
 #include <sfta/bu_tree_automaton_cover.hh>
 #include <sfta/convert.hh>
 #include <sfta/ta_building_director.hh>
-#include <sfta/timbuk_ta_builder.hh>
+#include <sfta/td_tree_automaton_cover.hh>
+#include <sfta/timbuk_bu_ta_builder.hh>
+#include <sfta/timbuk_td_ta_builder.hh>
 
 
 
-typedef SFTA::BUTreeAutomatonCover<64> TreeAutomaton;
+typedef SFTA::BUTreeAutomatonCover<64> BUTreeAutomaton;
+typedef SFTA::TDTreeAutomatonCover<64> TDTreeAutomaton;
 
-typedef SFTA::TABuildingDirector<TreeAutomaton> TABuildingDirector;
-typedef SFTA::AbstractTABuilder<TreeAutomaton> AbstractTABuilder;
-typedef SFTA::TimbukTABuilder<TreeAutomaton> TimbukTABuilder;
+typedef SFTA::TABuildingDirector<BUTreeAutomaton> BUTABuildingDirector;
+typedef SFTA::TABuildingDirector<TDTreeAutomaton> TDTABuildingDirector;
+
+typedef SFTA::AbstractTABuilder<BUTreeAutomaton> AbstractBUTABuilder;
+typedef SFTA::AbstractTABuilder<TDTreeAutomaton> AbstractTDTABuilder;
+
+typedef SFTA::TimbukBUTABuilder<BUTreeAutomaton> TimbukBUTABuilder;
+typedef SFTA::TimbukTDTABuilder<TDTreeAutomaton> TimbukTDTABuilder;
 
 typedef SFTA::Private::Convert Convert;
 
@@ -87,7 +95,8 @@ void specifyOperation(OperationType& oper, OperationType value)
 }
 
 
-void performUnion(const std::string& lhsFile, const std::string& rhsFile)
+void performUnion(bool isTopDown, const std::string& lhsFile,
+	const std::string& rhsFile)
 {
 	std::ifstream ifsLhs(lhsFile.c_str());
 	if (ifsLhs.fail())
@@ -101,21 +110,39 @@ void performUnion(const std::string& lhsFile, const std::string& rhsFile)
 		throw std::runtime_error("Could not open file " + rhsFile);
 	}
 
-	std::auto_ptr<AbstractTABuilder> builder(new TimbukTABuilder());
-	TABuildingDirector director(builder.get());
+	if (!isTopDown)
+	{
+		std::auto_ptr<AbstractBUTABuilder> builder(new TimbukBUTABuilder());
+		BUTABuildingDirector director(builder.get());
 
-	std::auto_ptr<TreeAutomaton> taLhs(director.Construct(ifsLhs));
-	std::auto_ptr<TreeAutomaton> taRhs(director.Construct(ifsRhs));
+		std::auto_ptr<BUTreeAutomaton> taLhs(director.Construct(ifsLhs));
+		std::auto_ptr<BUTreeAutomaton> taRhs(director.Construct(ifsRhs));
 
-	std::auto_ptr<TreeAutomaton::Operation> op(taLhs->GetOperation());
+		std::auto_ptr<BUTreeAutomaton::Operation> op(taLhs->GetOperation());
 
-	std::auto_ptr<TreeAutomaton> taUnion(op->Union(taLhs.get(), taRhs.get()));
+		std::auto_ptr<BUTreeAutomaton> taUnion(op->Union(taLhs.get(), taRhs.get()));
 
-	std::cout << taUnion->ToString();
+		std::cout << taUnion->ToString();
+	}
+	else
+	{
+		std::auto_ptr<AbstractTDTABuilder> builder(new TimbukTDTABuilder());
+		TDTABuildingDirector director(builder.get());
+
+		std::auto_ptr<TDTreeAutomaton> taLhs(director.Construct(ifsLhs));
+		std::auto_ptr<TDTreeAutomaton> taRhs(director.Construct(ifsRhs));
+
+		std::auto_ptr<TDTreeAutomaton::Operation> op(taLhs->GetOperation());
+
+		std::auto_ptr<TDTreeAutomaton> taUnion(op->Union(taLhs.get(), taRhs.get()));
+
+		std::cout << taUnion->ToString();
+	}
 }
 
 
-void performIntersection(const std::string& lhsFile, const std::string& rhsFile)
+void performIntersection(bool isTopDown, const std::string& lhsFile,
+	const std::string& rhsFile)
 {
 	std::ifstream ifsLhs(lhsFile.c_str());
 	if (ifsLhs.fail())
@@ -129,25 +156,46 @@ void performIntersection(const std::string& lhsFile, const std::string& rhsFile)
 		throw std::runtime_error("Could not open file " + rhsFile);
 	}
 
-	std::auto_ptr<AbstractTABuilder> builder(new TimbukTABuilder());
-	TABuildingDirector director(builder.get());
+	if (!isTopDown)
+	{
+		std::auto_ptr<AbstractBUTABuilder> builder(new TimbukBUTABuilder());
+		BUTABuildingDirector director(builder.get());
 
-	std::auto_ptr<TreeAutomaton> taLhs(director.Construct(ifsLhs));
-	std::auto_ptr<TreeAutomaton> taRhs(director.Construct(ifsRhs));
+		std::auto_ptr<BUTreeAutomaton> taLhs(director.Construct(ifsLhs));
+		std::auto_ptr<BUTreeAutomaton> taRhs(director.Construct(ifsRhs));
 
-	std::auto_ptr<TreeAutomaton::Operation> op(taLhs->GetOperation());
+		std::auto_ptr<BUTreeAutomaton::Operation> op(taLhs->GetOperation());
 
 
-	//clock_t start = clock();
-	std::auto_ptr<TreeAutomaton> taUnion(op->Intersection(taLhs.get(), taRhs.get()));
-	//clock_t finish = clock();
-	//SFTA_LOGGER_INFO("Duration: " + Convert::ToString(static_cast<double>(finish - start) / CLOCKS_PER_SEC) + " s");
+		//clock_t start = clock();
+		std::auto_ptr<BUTreeAutomaton> taUnion(op->Intersection(taLhs.get(), taRhs.get()));
+		//clock_t finish = clock();
+		//SFTA_LOGGER_INFO("Duration: " + Convert::ToString(static_cast<double>(finish - start) / CLOCKS_PER_SEC) + " s");
 
-	std::cout << taUnion->ToString();
+		std::cout << taUnion->ToString();
+	}
+	else
+	{
+		std::auto_ptr<AbstractTDTABuilder> builder(new TimbukTDTABuilder());
+		TDTABuildingDirector director(builder.get());
+
+		std::auto_ptr<TDTreeAutomaton> taLhs(director.Construct(ifsLhs));
+		std::auto_ptr<TDTreeAutomaton> taRhs(director.Construct(ifsRhs));
+
+		std::auto_ptr<TDTreeAutomaton::Operation> op(taLhs->GetOperation());
+
+
+		//clock_t start = clock();
+		std::auto_ptr<TDTreeAutomaton> taUnion(op->Intersection(taLhs.get(), taRhs.get()));
+		//clock_t finish = clock();
+		//SFTA_LOGGER_INFO("Duration: " + Convert::ToString(static_cast<double>(finish - start) / CLOCKS_PER_SEC) + " s");
+
+		std::cout << taUnion->ToString();
+	}
 }
 
 
-void performLoad(const std::string& file)
+void performLoad(bool isTopDown, const std::string& file)
 {
 	std::ifstream ifs(file.c_str());
 	if (ifs.fail())
@@ -155,12 +203,24 @@ void performLoad(const std::string& file)
 		throw std::runtime_error("Could not open file " + file);
 	}
 
-	std::auto_ptr<AbstractTABuilder> builder(new TimbukTABuilder());
-	TABuildingDirector director(builder.get());
+	if (!isTopDown)
+	{
+		std::auto_ptr<AbstractTDTABuilder> builder(new TimbukTDTABuilder());
+		TDTABuildingDirector director(builder.get());
 
-	std::auto_ptr<TreeAutomaton> ta(director.Construct(ifs));
+		std::auto_ptr<TDTreeAutomaton> ta(director.Construct(ifs));
 
-	std::cout << ta->ToString();
+		std::cout << ta->ToString();
+	}
+	else
+	{
+		std::auto_ptr<AbstractTDTABuilder> builder(new TimbukTDTABuilder());
+		TDTABuildingDirector director(builder.get());
+
+		std::auto_ptr<TDTreeAutomaton> ta(director.Construct(ifs));
+
+		std::cout << ta->ToString();
+	}
 }
 
 
@@ -188,16 +248,20 @@ int main(int argc, char* argv[])
 	{
 		startLogger();
 
-		const char* getoptString = "uihl";
+		const char* getoptString = "uihlbt";
 		option longOptions[] = {
 			{"union",                      0, static_cast<int*>(0), 'u'},
 			{"intersection",               0, static_cast<int*>(0), 'i'},
 			{"help",                       0, static_cast<int*>(0), 'h'},
 			{"load",                       0, static_cast<int*>(0), 'l'},
+			{"bottom-up",                  0, static_cast<int*>(0), 'b'},
+			{"top-down",                   0, static_cast<int*>(0), 't'},
+
 			{static_cast<const char*>(0),  0, static_cast<int*>(0), 0}
 		};
 
 		OperationType operation = OPERATION_INVALID;
+		bool isTopDown = false;
 
 		int opt, optIndex;
 		while ((opt = getopt_long(argc, argv,
@@ -205,10 +269,12 @@ int main(int argc, char* argv[])
 		{
 			switch (opt)
 			{
-				case 'h': specifyOperation(operation, OPERATION_HELP); break;
 				case 'u': specifyOperation(operation, OPERATION_UNION); break;
 				case 'i': specifyOperation(operation, OPERATION_INTERSECTION); break;
+				case 'h': specifyOperation(operation, OPERATION_HELP); break;
 				case 'l': specifyOperation(operation, OPERATION_LOAD); break;
+				case 'b': isTopDown = false; break;
+				case 't': isTopDown = true; break;
 				default: throw std::runtime_error("Invalid command line parameter."); break;
 			}
 		}
@@ -237,17 +303,17 @@ int main(int argc, char* argv[])
 
 			case OPERATION_UNION:
 				needsArguments(inputs.size(), 2);
-				performUnion(inputs[0], inputs[1]);
+				performUnion(isTopDown, inputs[0], inputs[1]);
 				break;
 
 			case OPERATION_INTERSECTION:
 				needsArguments(inputs.size(), 2);
-				performIntersection(inputs[0], inputs[1]);
+				performIntersection(isTopDown, inputs[0], inputs[1]);
 				break;
 
 			case OPERATION_LOAD:
 				needsArguments(inputs.size(), 1);
-				performLoad(inputs[0]);
+				performLoad(isTopDown, inputs[0]);
 				break;
 
 			default: throw std::runtime_error("Invalid operation type.");break;

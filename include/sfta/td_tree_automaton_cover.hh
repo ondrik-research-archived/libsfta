@@ -4,32 +4,15 @@
  *  Copyright (c) 2010  Ondra Lengal <ondra@lengal.net>
  *
  *  Description:
- *    Header file for BUTreeAutomatonCover class.
+ *    Header file for TDTreeAutomatonCover class.
  *
  *****************************************************************************/
 
-#ifndef _BU_TREE_AUTOMATON_COVER_HH_
-#define _BU_TREE_AUTOMATON_COVER_HH_
-
-// Standard library headers
-#include <string>
-
+#ifndef _TD_TREE_AUTOMATON_COVER_HH_
+#define _TD_TREE_AUTOMATON_COVER_HH_
 
 // SFTA header files
-#include <sfta/compact_variable_assignment.hh>
-#include <sfta/cudd_shared_mtbdd.hh>
-#include <sfta/dual_map_leaf_allocator.hh>
-#include <sfta/map_root_allocator.hh>
-#include <sfta/mtbdd_transition_table_wrapper.hh>
-#include <sfta/nd_symbolic_bu_tree_automaton.hh>
-#include <sfta/set.hh>
-#include <sfta/symbol_dictionary.hh>
-#include <sfta/vector.hh>
-
-
-// Loki header files
-#include <loki/SmartPtr.h>
-
+#include <sfta/nd_symbolic_td_tree_automaton.hh>
 
 // insert the class into proper namespace
 namespace SFTA
@@ -38,27 +21,27 @@ namespace SFTA
 	<
 		size_t SymbolLength = 64
 	>
-	class BUTreeAutomatonCover;
+	class TDTreeAutomatonCover;
 }
 
 
 /**
- * @brief   Cover class for bottom-up tree automaton
+ * @brief   Cover class for top-down tree automaton
  * @author  Ondra Lengal <ondra@lengal.net>
  * @date    2010
  *
- * Class that provides nice interface to nondeterministic bottom-up finite
+ * Class that provides nice interface to nondeterministic top-down finite
  * tree automaton.
  */
 template
 <
 	size_t SymbolLength
 >
-class SFTA::BUTreeAutomatonCover
+class SFTA::TDTreeAutomatonCover
 {
 public:   // Public data types
 
-	typedef BUTreeAutomatonCover
+	typedef TDTreeAutomatonCover
 		<
 			SymbolLength
 		> Type;
@@ -66,18 +49,17 @@ public:   // Public data types
 	typedef std::string StateType;
 	typedef std::string SymbolType;
 
-	typedef SFTA::Vector<StateType> LeftHandSideType;
-	typedef SFTA::Set<StateType> RightHandSideType;
+	typedef StateType LeftHandSideType;
+	typedef SFTA::Set<SFTA::Vector<StateType> > RightHandSideType;
 
 private:  // Private data types
 
 	typedef unsigned InternalStateType;
 	typedef SFTA::Private::CompactVariableAssignment<SymbolLength>
 		InternalSymbolType;
-	typedef SFTA::Vector<InternalStateType> InternalLeftHandSideType;
-	typedef SFTA::OrderedVector<InternalStateType> InternalRightHandSideType;
+	typedef InternalStateType InternalLeftHandSideType;
+	typedef SFTA::OrderedVector<SFTA::Vector<InternalStateType> > InternalRightHandSideType;
 	typedef unsigned MTBDDRootType;
-
 
 
 	typedef SFTA::CUDDSharedMTBDD
@@ -96,13 +78,13 @@ private:  // Private data types
 		SharedMTBDD
 	> MTBDDTransitionTableWrapper;
 
-	typedef SFTA::NDSymbolicBUTreeAutomaton
+	typedef SFTA::NDSymbolicTDTreeAutomaton
 	<
 		MTBDDTransitionTableWrapper,
 		InternalStateType,
 		InternalSymbolType,
 		SFTA::OrderedVector
-	> NDSymbolicBUTreeAutomaton;
+	> NDSymbolicTDTreeAutomaton;
 
 
 	typedef std::map<StateType, InternalStateType> StateToInternalStateMap;
@@ -111,12 +93,13 @@ private:  // Private data types
 
 	typedef std::vector<InternalStateType> InternalStateVector;
 
-	typedef typename NDSymbolicBUTreeAutomaton::TransitionType
+	typedef typename NDSymbolicTDTreeAutomaton::TransitionType
 		InternalTransitionType;
+
 
 public:   // Public data types
 
-	typedef typename NDSymbolicBUTreeAutomaton::TTWrapperPtrType TTWrapperPtr;
+	typedef typename NDSymbolicTDTreeAutomaton::TTWrapperPtrType TTWrapperPtr;
 
 	typedef SFTA::SymbolDictionary
 		<
@@ -125,6 +108,7 @@ public:   // Public data types
 		> SymbolDictionaryType;
 
 	typedef Loki::SmartPtr<SymbolDictionaryType> SymbolDictionaryPtrType;
+
 
 	/**
 	 * @brief  Class with operations
@@ -138,15 +122,15 @@ public:   // Public data types
 
 		Type* Union(Type* lhs, Type* rhs) const
 		{
-			typedef typename NDSymbolicBUTreeAutomaton::HierarchyRoot AbstractAutomaton;
+			typedef typename NDSymbolicTDTreeAutomaton::HierarchyRoot AbstractAutomaton;
 			std::auto_ptr<typename AbstractAutomaton::Operation> oper(
 				lhs->getAutomaton()->GetOperation());
 			AbstractAutomaton* abstractResult =
 				oper->Union((lhs->getAutomaton()).get(), (rhs->getAutomaton()).get());
 
-			NDSymbolicBUTreeAutomaton* result;
-			if ((result = dynamic_cast<NDSymbolicBUTreeAutomaton*>(abstractResult)) ==
-				static_cast<NDSymbolicBUTreeAutomaton*>(0))
+			NDSymbolicTDTreeAutomaton* result;
+			if ((result = dynamic_cast<NDSymbolicTDTreeAutomaton*>(abstractResult)) ==
+				static_cast<NDSymbolicTDTreeAutomaton*>(0))
 			{
 				throw std::runtime_error(__func__ +
 					std::string(": cannot convert to proper type"));
@@ -157,15 +141,15 @@ public:   // Public data types
 
 		Type* Intersection(Type* lhs, Type* rhs) const
 		{
-			typedef typename NDSymbolicBUTreeAutomaton::HierarchyRoot AbstractAutomaton;
+			typedef typename NDSymbolicTDTreeAutomaton::HierarchyRoot AbstractAutomaton;
 			std::auto_ptr<typename AbstractAutomaton::Operation> oper(
 				lhs->getAutomaton()->GetOperation());
 			AbstractAutomaton* abstractResult =
 				oper->Intersection((lhs->getAutomaton()).get(), (rhs->getAutomaton()).get());
 
-			NDSymbolicBUTreeAutomaton* result;
-			if ((result = dynamic_cast<NDSymbolicBUTreeAutomaton*>(abstractResult)) ==
-				static_cast<NDSymbolicBUTreeAutomaton*>(0))
+			NDSymbolicTDTreeAutomaton* result;
+			if ((result = dynamic_cast<NDSymbolicTDTreeAutomaton*>(abstractResult)) ==
+				static_cast<NDSymbolicTDTreeAutomaton*>(0))
 			{
 				throw std::runtime_error(__func__ +
 					std::string(": cannot convert to proper type"));
@@ -175,10 +159,9 @@ public:   // Public data types
 		}
 	};
 
-
 private:  // Private data members
 
-	std::auto_ptr<NDSymbolicBUTreeAutomaton> automaton_;
+	std::auto_ptr<NDSymbolicTDTreeAutomaton> automaton_;
 
 	StateToInternalStateMap state2internalStateMap_;
 
@@ -186,9 +169,10 @@ private:  // Private data members
 
 	InternalSymbolType nextSymbol_;
 
+
 private:  // Private methods
 
-	inline const std::auto_ptr<NDSymbolicBUTreeAutomaton>& getAutomaton() const
+	inline const std::auto_ptr<NDSymbolicTDTreeAutomaton>& getAutomaton() const
 	{
 		return automaton_;
 	}
@@ -229,7 +213,7 @@ private:  // Private methods
 		return result;
 	}
 
-	std::string finalStatesToString(const InternalStateVector& vec) const
+	std::string initialStatesToString(const InternalStateVector& vec) const
 	{
 		std::string result;
 
@@ -257,29 +241,29 @@ private:  // Private methods
 		return result;
 	}
 
-
 public:   // Public methods
 
-	BUTreeAutomatonCover()
-		: automaton_(new NDSymbolicBUTreeAutomaton()),
+	TDTreeAutomatonCover()
+		: automaton_(new NDSymbolicTDTreeAutomaton()),
 			state2internalStateMap_(),
 			symbolDict_(),
 			nextSymbol_(0)
 	{ }
 
-	BUTreeAutomatonCover(TTWrapperPtr wrapper, SymbolDictionaryPtrType symbolDict)
-		: automaton_(new NDSymbolicBUTreeAutomaton(wrapper)),
+	TDTreeAutomatonCover(TTWrapperPtr wrapper, SymbolDictionaryPtrType symbolDict)
+		: automaton_(new NDSymbolicTDTreeAutomaton(wrapper)),
 			state2internalStateMap_(),
 			symbolDict_(symbolDict),
 			nextSymbol_(0)
 	{ }
 
-	BUTreeAutomatonCover(NDSymbolicBUTreeAutomaton* automaton, SymbolDictionaryPtrType symbolDict)
+	TDTreeAutomatonCover(NDSymbolicTDTreeAutomaton* automaton, SymbolDictionaryPtrType symbolDict)
 		: automaton_(automaton),
 			state2internalStateMap_(),
 			symbolDict_(symbolDict),
 			nextSymbol_(0)
 	{ }
+
 
 	void AddState(const StateType& state)
 	{
@@ -303,21 +287,17 @@ public:   // Public methods
 		const RightHandSideType& rhs)
 	{
 		InternalLeftHandSideType internalLhs;
-		for (typename LeftHandSideType::const_iterator itLhs = lhs.begin();
-			itLhs != lhs.end(); ++itLhs)
-		{
-			typename StateToInternalStateMap::const_iterator itStates;
-			if ((itStates = state2internalStateMap_.find(*itLhs)) ==
-				state2internalStateMap_.end())
-			{	// in case the state is unknown
-				throw std::runtime_error(__func__ +
-					std::string(": unknown state in a left-hand side = " +
-					Convert::ToString(*itLhs)));
-			}
-			else
-			{	// in case we know the state
-				internalLhs.push_back(itStates->second);
-			}
+		typename StateToInternalStateMap::const_iterator itStates;
+		if ((itStates = state2internalStateMap_.find(lhs)) ==
+			state2internalStateMap_.end())
+		{	// in case the state is unknown
+			throw std::runtime_error(__func__ +
+				std::string(": unknown state in a left-hand side = " +
+				Convert::ToString(lhs)));
+		}
+		else
+		{	// in case we know the state
+			internalLhs = itStates->second;
 		}
 
 		// translate the symbol
@@ -331,22 +311,31 @@ public:   // Public methods
 		for (typename RightHandSideType::const_iterator itRhs = rhs.begin();
 			itRhs != rhs.end(); ++itRhs)
 		{
-			typename StateToInternalStateMap::const_iterator itStates;
-			if ((itStates = state2internalStateMap_.find(*itRhs)) ==
-				state2internalStateMap_.end())
-			{	// in case some state is unknown
-				throw std::runtime_error(__func__ +
-					std::string(": transition to unknown symbol = " +
-					Convert::ToString(*itRhs)));
+			SFTA::Vector<InternalStateType> newSuperState;
+
+			for (typename SFTA::Vector<StateType>::const_iterator itVec = itRhs->begin();
+				itVec != itRhs->end(); ++itVec)
+			{
+				typename StateToInternalStateMap::const_iterator itStates;
+				if ((itStates = state2internalStateMap_.find(*itVec)) ==
+					state2internalStateMap_.end())
+				{	// in case some state is unknown
+					throw std::runtime_error(__func__ +
+						std::string(": transition to unknown symbol = " +
+						Convert::ToString(*itRhs)));
+				}
+
+				newSuperState.push_back(itStates->second);
 			}
-			origRhs.insert(itStates->second);
+
+			origRhs.insert(newSuperState);
 		}
 
 		// update the right-hand side
 		automaton_->AddTransition(internalLhs, internalSymbol, origRhs);
 	}
 
-	void SetStateFinal(const StateType& state)
+	void SetStateInitial(const StateType& state)
 	{
 		typename StateToInternalStateMap::const_iterator itStates;
 		if ((itStates = state2internalStateMap_.find(state)) ==
@@ -358,7 +347,7 @@ public:   // Public methods
 		}
 		else
 		{	// in case we know the state
-			automaton_->SetStateFinal(itStates->second);
+			automaton_->SetStateInitial(itStates->second);
 		}
 	}
 
@@ -385,7 +374,7 @@ public:   // Public methods
 		result += symbolsToString(symbolDict_->GetVectorOfInputSymbols());
 		result += "\n";
 		result += "\n";
-		result += "Automaton babicka";
+		result += "Automaton dedecek";
 		result += "\n";
 		result += "\n";
 		result += "States";
@@ -393,7 +382,7 @@ public:   // Public methods
 		result += "\n";
 		result += "\n";
 		result += "Final States";
-		result += finalStatesToString(automaton_->GetVectorOfFinalStates());
+		result += initialStatesToString(automaton_->GetVectorOfInitialStates());
 		result += "\n";
 		result += "\n";
 		result += "Transitions";
@@ -405,15 +394,6 @@ public:   // Public methods
 		for (typename TransitionVector::const_iterator itTrans = trans.begin();
 			itTrans != trans.end(); ++itTrans)
 		{
-			const InternalLeftHandSideType& lhs = itTrans->lhs;
-
-			LeftHandSideType outputLhs;
-			for (typename InternalLeftHandSideType::const_iterator itLhs = lhs.begin();
-				 itLhs != lhs.end(); ++itLhs)
-			{
-				outputLhs.push_back(translateInternalStateToState(*itLhs));
-			}
-
 			typedef std::vector<SymbolType> SymbolVector;
 			SymbolVector symbols = translateInternalSymbolToSymbols(itTrans->symbol);
 
@@ -424,16 +404,26 @@ public:   // Public methods
 				for (typename InternalRightHandSideType::const_iterator itRhs = rhs.begin();
 					 itRhs != rhs.end(); ++itRhs)
 				{
+	        const SFTA::Vector<InternalStateType>& rhs = *itRhs;
+					SFTA::Vector<StateType> outputRhs;
+					for (typename SFTA::Vector<InternalStateType>::const_iterator itRhs = rhs.begin();
+						 itRhs != rhs.end(); ++itRhs)
+					{
+						outputRhs.push_back(translateInternalStateToState(*itRhs));
+					}
+
 					result += Convert::ToString(*itSymbols);
-					result += (outputLhs.empty()? " " : Convert::ToString(outputLhs));
+					result += (outputRhs.empty()? " " : Convert::ToString(outputRhs));
 					result += " -> ";
-					result += Convert::ToString(translateInternalStateToState(*itRhs));
+					result += Convert::ToString(translateInternalStateToState(itTrans->lhs));
 					result += "\n";
 				}
 			}
+
 		}
 
 		return result;
 	}
 };
+
 #endif
