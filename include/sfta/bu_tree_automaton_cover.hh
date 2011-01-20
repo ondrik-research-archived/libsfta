@@ -118,6 +118,8 @@ public:   // Public data types
 
 	typedef typename NDSymbolicBUTreeAutomaton::TTWrapperPtrType TTWrapperPtr;
 
+	typedef std::multimap<StateType, StateType> SimulationRelationType;
+
 	typedef SFTA::SymbolDictionary
 		<
 			SymbolType,
@@ -172,6 +174,13 @@ public:   // Public data types
 			}
 
 			return new Type(result, lhs->GetSymbolDictionary());
+		}
+
+		SimulationRelationType ComputeSimulationPreorder(Type* aut) const
+		{
+			SimulationRelationType result;
+
+			return result;
 		}
 	};
 
