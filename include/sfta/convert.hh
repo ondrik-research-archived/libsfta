@@ -13,6 +13,7 @@
 
 // Standard library headers
 #include <cassert>
+#include <map>
 #include <set>
 #include <sstream>
 #include <stdexcept>
@@ -193,6 +194,64 @@ public:
 		// return the string
 		return oss.str();
 	}
+
+
+	/**
+	 * @brief  Converts an object to string (std::multimap specialization)
+	 *
+	 * Static method for conversion of a multimap of objects of any class with the
+	 * << output operator into a string
+	 *
+	 * @param[in]  mm  The multimap for the conversion
+	 *
+	 * @returns  The string representation of the multimap
+	 */
+	template <typename T, typename U>
+	static std::string ToString(const std::multimap<T, U>& mm)
+	{
+		typedef std::multimap<T, U> MultiMapType;
+
+		// the output stream for the string
+		std::ostringstream oss;
+
+		oss << "{";		// opening tag
+		for (typename MultiMapType::const_iterator it = mm.begin();
+			it != mm.end(); ++it)
+		{	// for each element of the set
+			if (it != mm.begin())
+			{	// if we are not at the first element
+				oss << ", ";
+			}
+
+			oss << "[";
+
+			std::pair
+			<
+				typename MultiMapType::const_iterator,
+				typename MultiMapType::const_iterator
+			> findRes = mm.equal_range(it->first);
+
+			typename MultiMapType::const_iterator innerIt = findRes.first;
+			while (innerIt != findRes.second)
+			{
+				if (innerIt != findRes.first)
+				{	// if we are not at the first element
+					oss << "; ";
+				}
+
+				// the string of the element
+				oss << ToString(innerIt->second);
+			}
+
+			oss << "]";
+		}
+
+		oss << "}";		// closing tag
+
+		// return the string
+		return oss.str();
+	}
+
 
 
 
