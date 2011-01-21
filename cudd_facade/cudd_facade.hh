@@ -363,7 +363,7 @@ public:  // Public methods
 	 *
 	 * @returns  The resulting MTBDD
 	 */
-	Node* Apply(Node* lhs, Node* mhs, Node* rhs, AbstractTernaryApplyFunctor* func) const;
+	Node* TernaryApply(Node* lhs, Node* mhs, Node* rhs, AbstractTernaryApplyFunctor* func) const;
 
 
 	/**

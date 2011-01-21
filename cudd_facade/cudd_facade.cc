@@ -296,6 +296,46 @@ DdNode* applyCallback(DdManager* dd, DdNode** f, DdNode** g, void* data)
 }
 
 
+DdNode* ternaryApplyCallback(DdManager* dd, DdNode** f, DdNode** g, DdNode** h, void* data)
+{
+	// Assertions
+	assert(dd   != static_cast<DdManager*>(0));
+	assert(f    != static_cast<DdNode**>(0));
+	assert(g    != static_cast<DdNode**>(0));
+	assert(h    != static_cast<DdNode**>(0));
+	assert(data != static_cast<void*>(0));
+
+	// get values of the nodes
+	DdNode* F = *f;
+	DdNode* G = *g;
+	DdNode* H = *h;
+
+	// Further assertions
+	assert(F    != static_cast<DdNode*>(0));
+	assert(G    != static_cast<DdNode*>(0));
+	assert(H    != static_cast<DdNode*>(0));
+
+	if (cuddIsConstant(F) && cuddIsConstant(G) && cuddIsConstant(H))
+	{	// in case we are at leaves
+
+		// get the functor from the container
+		CUDDFacade::AbstractTernaryApplyFunctor& func =
+			*(static_cast<CUDDFacade::AbstractTernaryApplyFunctor*>(data));
+
+		DdNode* res = cuddUniqueConst(dd, func(cuddV(F), cuddV(G), cuddV(H)));
+
+		// check the return value
+		assert(res != static_cast<DdNode*>(0));
+
+		return res;
+	}
+	else
+	{	// in case we are not at leaves
+		return static_cast<DdNode*>(0);
+	}
+}
+
+
 DdNode* monadicApplyCallback(DdManager* dd, DdNode* f, void* data)
 {
 	// Assertions
@@ -335,6 +375,26 @@ CUDDFacade::Node* CUDDFacade::Apply(Node* lhs, Node* rhs,
 
 	Node* res = fromCUDD(Cudd_addApplyWithData(
 		toCUDD(manager_), applyCallback, toCUDD(lhs), toCUDD(rhs), func));
+
+	// check the return value
+	assert(res != static_cast<Node*>(0));
+
+	return res;
+}
+
+
+CUDDFacade::Node* CUDDFacade::TernaryApply(Node* lhs, Node* mhs, Node* rhs,
+	AbstractTernaryApplyFunctor* func) const
+{
+	// Assertions
+	assert(manager_ != static_cast<Manager*>(0));
+	assert(lhs != static_cast<Node*>(0));
+	assert(mhs != static_cast<Node*>(0));
+	assert(rhs != static_cast<Node*>(0));
+	assert(func != static_cast<AbstractTernaryApplyFunctor*>(0));
+
+	Node* res = fromCUDD(Cudd_addTernaryApplyWithData(toCUDD(manager_),
+		ternaryApplyCallback, toCUDD(lhs), toCUDD(mhs), toCUDD(rhs), func));
 
 	// check the return value
 	assert(res != static_cast<Node*>(0));
