@@ -180,7 +180,9 @@ public:   // Public data types
 		virtual typename HierarchyRoot::Operation::SimulationRelationType*
 			ComputeSimulationPreorder(const HierarchyRoot* aut) const
 		{
-			assert(false);
+			assert(aut != static_cast<const HierarchyRoot*>(0));
+
+			throw std::runtime_error(__func__ + std::string(": not implemented"));
 		}
 	};
 

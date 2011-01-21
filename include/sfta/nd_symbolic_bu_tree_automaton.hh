@@ -115,7 +115,7 @@ public:   // Public data types
 
 	typedef SFTA::NDSymbolicTDTreeAutomaton
 	<
-		SFTA::MTBDDTransitionTableWrapper<StateType, SFTA::CUDDSharedMTBDD<SFTA::OrderedVector<LeftHandSideType>, OutputRightHandSideType, SymbolType, SFTA::Private::DualMapLeafAllocator, SFTA::Private::MapRootAllocator> >,
+		SFTA::MTBDDTransitionTableWrapper<StateType, SFTA::CUDDSharedMTBDD<StateType, OutputRightHandSide<LeftHandSideType>, SymbolType, SFTA::Private::DualMapLeafAllocator, SFTA::Private::MapRootAllocator> >,
 		StateType,
 		SymbolType,
 		SFTA::OrderedVector,
@@ -419,6 +419,9 @@ public:   // Public data types
 			typedef typename HierarchyRoot::Operation::SimulationRelationType SimType;
 
 			SimType* result = new SimType();
+
+			std::auto_ptr<NDSymbolicTDTreeAutomatonType> topDown(
+				autSym->GetTopDownAutomaton());
 
 			return result;
 		}
