@@ -95,6 +95,50 @@ public:   // public data types
 
 
 	/**
+	 * @brief  The abstract class for an MTBDD ternary Apply functor
+	 *
+	 * This class is an abstract class that defines the interface that all
+	 * functors that perform ternary Apply operation on an MTBDD need to
+	 * implement.
+	 */
+	class AbstractTernaryApplyFunctor
+	{
+	public:   // Public methods
+
+		/**
+		 * @brief  Constructor
+		 *
+		 * The constructor of the class
+		 */
+		AbstractTernaryApplyFunctor()
+		{ }
+
+		/**
+		 * @brief  The operator
+		 *
+		 * The operator of the functor, that is the method that performs the
+		 * operation.
+		 *
+		 * @param[in]  lhs  Left-hand operand of the operation
+		 * @param[in]  mhs  Middle-hand operand of the operation
+		 * @param[in]  rhs  Right-hand operand of the operation
+		 *
+		 * @returns  Result of the operation
+		 */
+		virtual LeafType operator()(const LeafType& lhs, const LeafType& mhs,
+			const LeafType& rhs) = 0;
+
+		/**
+		 * @brief  Destructor
+		 *
+		 * Virtual destructor.
+		 */
+		virtual ~AbstractTernaryApplyFunctor()
+		{ }
+	};
+
+
+	/**
 	 * @brief  The abstract class for an MTBDD monadic Apply functor
 	 *
 	 * This class is an abstract class that defines the interface that all

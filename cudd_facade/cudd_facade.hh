@@ -94,6 +94,14 @@ public:  // Public types
 
 
 	/**
+	 * @brief  CUDD type of abstract ternary Apply functor
+	 *
+	 * CUDD type of abstract functor for ternary Apply operation.
+	 */
+	typedef ParentClass::AbstractTernaryApplyFunctor AbstractTernaryApplyFunctor;
+
+
+	/**
 	 * @brief  CUDD type of abstract monadic Apply functor
 	 *
 	 * CUDD type of abstract functor for monadic Apply operation.
@@ -337,6 +345,25 @@ public:  // Public methods
 	 * @returns  The resulting MTBDD
 	 */
 	Node* Apply(Node* lhs, Node* rhs, AbstractApplyFunctor* func) const;
+
+
+	/**
+	 * @brief  Ternary Apply operation
+	 *
+	 * Performs the ternary Apply operation passed as a callback function in @c
+	 * cbParams on two MTBDDs.
+	 *
+	 * @see  ApplyCallbackParameters
+	 * @see  Apply()
+	 *
+	 * @param[in]  lhs   Left-hand side MTBDD of Apply operation
+	 * @param[in]  mhs   Middle-hand side MTBDD of Apply operation
+	 * @param[in]  rhs   Right-hand side MTBDD of Apply operation 
+	 * @param[in]  func  Functor with Apply operation
+	 *
+	 * @returns  The resulting MTBDD
+	 */
+	Node* Apply(Node* lhs, Node* mhs, Node* rhs, AbstractTernaryApplyFunctor* func) const;
 
 
 	/**
