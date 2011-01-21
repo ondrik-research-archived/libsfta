@@ -163,6 +163,9 @@ protected:// Protected methods
 	{
 		states_.insert(aut.states_);
 		initialStates_.insert(aut.initialStates_);
+
+		// also copy MTBDD root nodes
+		rootMap_.insert(aut.rootMap_.begin(), aut.rootMap_.end());
 	}
 
 	void copyStates(const HierarchyRoot& aut)

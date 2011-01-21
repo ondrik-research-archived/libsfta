@@ -151,9 +151,10 @@ public:   // Public data types
 
 		Type* langUnion(const Type& a1, const Type& a2) const
 		{
-			assert(&a1 != 0);
-			assert(&a2 != 0);
-			assert(false);
+			Type* result = new Type(a1);
+			result->CopyStates(a2);
+
+			return result;
 		}
 
 		Type* langIntersection(const Type& a1, const Type& a2) const

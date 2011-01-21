@@ -389,10 +389,6 @@ public:   // Public data types
 			return result;
 		}
 
-		typename HierarchyRoot::Operation::SimulationRelationType*
-			simulationComputation(const Type& aut) const
-		{
-		}
 
 	public:   // Public methods
 
