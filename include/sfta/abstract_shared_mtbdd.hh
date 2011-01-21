@@ -129,6 +129,43 @@ public:  // Public data types
 
 
 	/**
+	 * @brief  The base class for functors that perform ternary @c Apply operations
+	 *
+	 * Abstract class that defines the interface for functors that carry out
+	 * ternary @c Apply operations.
+	 */
+	class AbstractTernaryApplyFunctorType
+	{
+	public:   // Public methods
+
+
+		/**
+		 * @brief  The operation of the functor
+		 *
+		 * Abstract method that performs the operation of the functor
+		 *
+		 * @param[in]  lhs  Left-hand side of the operation
+		 * @param[in]  mhs  Middle-hand side of the operation
+		 * @param[in]  rhs  Right-hand side of the operation
+		 *
+		 * @returns  Result of the operation
+		 */
+		virtual LeafType operator()(const LeafType& lhs, const LeafType& mhs,
+			const LeafType& rhs) = 0;
+
+
+		/**
+		 * @brief  Destructor
+		 *
+		 * The destructor
+		 */
+		virtual ~AbstractTernaryApplyFunctorType()
+		{ }
+
+	};
+
+
+	/**
 	 * @brief  The base class for functors that perform monadic @c Apply
 	 *         operations
 	 *

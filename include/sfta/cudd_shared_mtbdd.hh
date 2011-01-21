@@ -175,6 +175,15 @@ public:    // Public data types
 
 
 	/**
+	 * @brief  Type of ternary Apply functor
+	 *
+	 * The data type for class of ternary Apply functor.
+	 */
+	typedef typename ParentClass::AbstractTernaryApplyFunctorType
+		AbstractTernaryApplyFunctorType;
+
+
+	/**
 	 * @brief  Type of monadic Apply functor
 	 *
 	 * The data type for class of monadic Apply functor.
@@ -332,6 +341,97 @@ private:   // Private data types
 			// perform the operation
 			typename LA::LeafType res = (*func_)(
 				mtbdd_->LA::getLeafOfHandle(lhs), mtbdd_->LA::getLeafOfHandle(rhs));
+
+			// create a leaf and return its handle
+			return mtbdd_->LA::createLeaf(res);
+		}
+	};
+
+
+	/**
+	 * @brief  Generic ternary Apply functor
+	 *
+	 * Ternary Apply functor that can generically carry out an arbitrary
+	 * operation defined on higher level, i.e. using the leaves of
+	 * CUDDSharedMTBDD
+	 */
+	class GenericTernaryApplyFunctor
+		: public CUDDFacade::AbstractTernaryApplyFunctor
+	{
+	private:
+
+		/**
+		 * The MTBDD in which is the operation carried out.
+		 */
+		CUDDSharedMTBDD* mtbdd_;
+
+		/**
+		 * The higher level operation functor.
+		 */
+		typename ParentClass::AbstractTernaryApplyFunctorType* func_;
+
+	private:
+
+		/**
+		 * @brief  Copy constructor
+		 *
+		 * Copy constructor.
+		 *
+		 * @param[in]  func  Copied functor
+		 */
+		GenericTernaryApplyFunctor(const GenericTernaryApplyFunctor& func);
+
+
+		/**
+		 * @brief  Assignment operator
+		 *
+		 * Assignment operator.
+		 *
+		 * @param[in]  func  Assigned value
+		 *
+		 * @returns  New value
+		 */
+		GenericTernaryApplyFunctor& operator=(const GenericTernaryApplyFunctor& func);
+
+	public:
+
+		/**
+		 * @brief  Constructor
+		 *
+		 * Constructor of the functor.
+		 *
+		 * @param[in]  mtbdd  The MTBDD in which the operation is carried out
+		 * @param[in]  func   The functor performing the higher level operation
+		 */
+		GenericTernaryApplyFunctor(CUDDSharedMTBDD* mtbdd,
+			typename ParentClass::AbstractTernaryApplyFunctorType* func)
+			: mtbdd_(mtbdd), func_(func)
+		{
+			// Assertions
+			assert(mtbdd != static_cast<CUDDSharedMTBDD*>(0));
+			assert(func
+				!= static_cast<typename ParentClass::AbstractTernaryApplyFunctorType*>(0));
+		}
+
+
+		/**
+		 * @brief  The operation
+		 *
+		 * The operation of the functor. It calls the higher level operation and
+		 * correctly handles new leaves.
+		 *
+		 * @param[in]  lhs  Left-hand side leaf
+		 * @param[in]  mhs  Middle-hand side leaf
+		 * @param[in]  rhs  Right-hand side leaf
+		 *
+		 * @returns  Result leaf
+		 */
+		virtual CUDDFacade::ValueType operator()(const CUDDFacade::ValueType& lhs,
+			const CUDDFacade::ValueType& mhs, const CUDDFacade::ValueType& rhs)
+		{
+			// perform the operation
+			typename LA::LeafType res = (*func_)(mtbdd_->LA::getLeafOfHandle(lhs),
+				mtbdd_->LA::getLeafOfHandle(mhs), mtbdd_->LA::getLeafOfHandle(rhs));
 
 			// create a leaf and return its handle
 			return mtbdd_->LA::createLeaf(res);
