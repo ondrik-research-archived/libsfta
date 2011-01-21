@@ -101,7 +101,10 @@ public:   // Public methods
 				{	// in case we are dealing with nullary symbol
 					SFTA_LOGGER_DEBUG("Adding transition: " + spl[0] + " -> " + spl[2]);
 
-					automaton->AddTransition(lhs, spl[0], RightHandSideType());
+					RightHandSideType rhs;
+					rhs.insert(typename RightHandSideType::value_type());
+
+					automaton->AddTransition(lhs, spl[0], rhs);
 				}
 				else
 				{	// in case we are not dealing with nullary symbol
