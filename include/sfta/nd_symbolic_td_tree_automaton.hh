@@ -175,6 +175,12 @@ public:   // Public data types
 		{
 			return safelyPerformOperation(&Operation::langIntersection, a1, a2);
 		}
+
+		virtual typename HierarchyRoot::Operation::SimulationRelationType*
+			ComputeSimulationPreorder(const HierarchyRoot* aut) const
+		{
+			assert(false);
+		}
 	};
 
 protected:// Protected methods

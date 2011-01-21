@@ -157,6 +157,7 @@ public:   // Public data types
 
 	private:  // Private methods
 
+
 		Type* safelyPerformOperation(BinaryOperation oper,
 			const HierarchyRoot* a1, const HierarchyRoot* a2) const
 		{
@@ -388,6 +389,11 @@ public:   // Public data types
 			return result;
 		}
 
+		typename HierarchyRoot::Operation::SimulationRelationType*
+			simulationComputation(const Type& aut) const
+		{
+		}
+
 	public:   // Public methods
 
 		virtual Type* Union(const HierarchyRoot* a1, const HierarchyRoot* a2) const
@@ -398,6 +404,27 @@ public:   // Public data types
 		virtual Type* Intersection(const HierarchyRoot* a1, const HierarchyRoot* a2) const
 		{
 			return safelyPerformOperation(&Operation::langIntersection, a1, a2);
+		}
+
+		virtual typename HierarchyRoot::Operation::SimulationRelationType*
+			ComputeSimulationPreorder(const HierarchyRoot* aut) const
+		{
+			// Assertions
+			assert(aut != static_cast<Type*>(0));
+
+			const Type* autSym = static_cast<Type*>(0);
+
+			if ((autSym = dynamic_cast<const Type*>(aut)) ==
+				static_cast<const Type*>(0))
+			{	// in case the type is not OK
+				throw std::runtime_error(__func__ + std::string(": Invalid type"));
+			}
+
+			typedef typename HierarchyRoot::Operation::SimulationRelationType SimType;
+
+			SimType* result = new SimType();
+
+			return result;
 		}
 	};
 

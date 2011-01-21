@@ -180,6 +180,13 @@ public:   // Public data types
 		{
 			SimulationRelationType result;
 
+			typedef typename NDSymbolicBUTreeAutomaton::HierarchyRoot AbstractAutomaton;
+			std::auto_ptr<typename AbstractAutomaton::Operation> oper(
+				aut->getAutomaton()->GetOperation());
+			std::auto_ptr<typename AbstractAutomaton::Operation::SimulationRelationType>simulation(
+				oper->ComputeSimulationPreorder((aut->getAutomaton()).get()));
+
+
 			return result;
 		}
 	};

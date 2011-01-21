@@ -89,6 +89,11 @@ public:   // Public data types
 	 */
 	class Operation
 	{
+	public:   // Public data types
+
+		typedef std::vector<std::pair<StateType, StateType> > SimulationRelationType;
+
+
 	public:   // Public methods
 
 
@@ -118,6 +123,18 @@ public:   // Public data types
 		 * @returns  Intersection automaton
 		 */
 		virtual Type* Intersection(const Type* a1, const Type* a2) const = 0;
+
+
+		/**
+		 * @brief  Computation of simulation relation
+		 *
+		 * This method returns the simulation relation on states of the automaton.
+		 *
+		 * @param[in]  a1  Input automaton
+		 *
+		 * @returns  Simulation relation on states of the input automaton
+		 */
+		virtual SimulationRelationType* ComputeSimulationPreorder(const Type* aut) const = 0;
 
 
 		/**
