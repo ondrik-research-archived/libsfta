@@ -927,6 +927,30 @@ public:   // Public methods
 
 
 	/**
+	 * @brief  @copybrief  SFTA::AbstractSharedMTBDD::TernaryApply()
+	 *
+	 * @copydetails  SFTA::AbstractSharedMTBDD::TernaryApply()
+	 */
+	virtual RootType TernaryApply(const RootType& lhs, const RootType& rhs,
+		const RootType& mhs, AbstractTernaryApplyFunctorType* func)
+	{
+		// Assertions
+		assert(func
+			!= static_cast<typename ParentClass::AbstractTernaryApplyFunctorType*>(0));
+
+		GenericTernaryApplyFunctor applier(this, func);
+
+		// carry out the ternary Apply operation
+		CUDDFacade::Node* res = cudd_.TernaryApply(RA::getHandleOfRoot(lhs),
+			RA::getHandleOfRoot(mhs), RA::getHandleOfRoot(rhs), &applier);
+
+		cudd_.Ref(res);
+
+		return RA::allocateRoot(res);
+	}
+
+
+	/**
 	 * @brief  @copybrief  SFTA::AbstractSharedMTBDD::MonadicApply()
 	 *
 	 * @copydetails  SFTA::AbstractSharedMTBDD::MonadicApply()

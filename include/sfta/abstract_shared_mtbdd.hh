@@ -335,6 +335,25 @@ public:  // Public methods
 
 
 	/**
+	 * @brief  Ternary Apply function for two MTBDDs
+	 *
+	 * Performs given ternary Apply operation on two MTBDD specified by their roots.
+	 *
+	 * @see  AbstractSharedMTBDD::AbstractApplyFunctorType
+	 *
+	 * @param[in]  lhs   Left-hand side MTBDD
+	 * @param[in]  mhs   Middle-hand side MTBDD
+	 * @param[in]  rhs   Right-hand side MTBDD
+	 * @param[in]  func  The operation to be performed on respective leaves of
+	 *                   given MTBDDs
+	 *
+	 * @returns  Root of the MTBDD with the result of the operation
+	 */
+	virtual RootType TernaryApply(const RootType& lhs, const RootType& mhs,
+		const RootType& rhs, AbstractTernaryApplyFunctorType* func) = 0;
+
+
+	/**
 	 * @brief  Monadic Apply function for an MTBDD
 	 *
 	 * Performs given monadic Apply operation on an MTBDD specified by its root.
