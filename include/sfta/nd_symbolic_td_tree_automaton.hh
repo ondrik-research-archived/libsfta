@@ -24,10 +24,111 @@ namespace SFTA
 		class MTBDDTransitionTableWrapper,
 		typename State,
 		typename Symbol,
-		template <typename> class InputRightHandSide,
-		template <typename> class OutputRightHandSide
+		template <typename> class RightHandSide
 	>
 	class NDSymbolicTDTreeAutomaton;
+}
+
+
+namespace SFTA
+{
+	namespace Private
+	{
+		template <typename T>
+		struct ElemOrVector
+		{
+			typedef T Type;
+			typedef SFTA::Vector<T> VectorType;
+
+			bool isElem;               // if true, elem is valid, if false, elemVector is valid
+			Type elem;
+			VectorType elemVector;
+
+			ElemOrVector()
+				: isElem(true), elem(), elemVector()
+			{	}
+
+			ElemOrVector(const Type& el)
+				: isElem(true), elem(el), elemVector()
+			{ }
+
+			ElemOrVector(const VectorType& elVec)
+				: isElem(false), elem(), elemVector(elVec)
+			{ }
+
+			operator Type() const
+			{
+				if (!isElem)
+				{
+					throw std::runtime_error(__func__ +
+						std::string(": an attempt to convert vector to element"));
+				}
+
+				return elem;
+			}
+
+			operator VectorType() const
+			{
+				if (isElem)
+				{
+					throw std::runtime_error(__func__ +
+						std::string(": an attempt to convert element to vector"));
+				}
+
+				return elemVector;
+			}
+
+			friend bool operator<(const ElemOrVector<T>& lhs, const ElemOrVector<T>& rhs)
+			{
+				if ((lhs.isElem && !rhs.isElem) || (!lhs.isElem && rhs.isElem))
+				{
+					throw std::runtime_error(__func__ +
+						std::string(": an attempt to compare inconsistent instances"));
+				}
+
+				if (lhs.isElem)
+				{
+					return lhs.elem < rhs.elem;
+				}
+				else
+				{
+					return lhs.elemVector < rhs.elemVector;
+				}
+			}
+
+			friend bool operator==(const ElemOrVector<T>& lhs, const ElemOrVector<T>& rhs)
+			{
+				if ((lhs.isElem && !rhs.isElem) || (!lhs.isElem && rhs.isElem))
+				{
+					throw std::runtime_error(__func__ +
+						std::string(": an attempt to compare inconsistent instances"));
+				}
+
+				if (lhs.isElem)
+				{
+					return lhs.elem == rhs.elem;
+				}
+				else
+				{
+					return lhs.elemVector == rhs.elemVector;
+				}
+			}
+
+			friend std::ostream& operator<<(std::ostream& os, const ElemOrVector& eov)
+			{
+				if (eov.isElem)
+				{
+					os << eov.elem;
+				}
+				else
+				{
+					os << eov.elemVector;
+				}
+
+				return os;
+			}
+		};
+	}
 }
 
 
@@ -44,18 +145,15 @@ namespace SFTA
  * @tparam  State                        Type of states of the automaton.
  * @tparam  Symbol                       Type of symbols of the alphabet of
  *                                       the automaton.
- * @tparam  InputRightHandSide           Type of the left-hand side of
- *                                       automaton rules that is used for input.
- * @tparam  OutputRightHandSide          Type of the left-hand side of
- *                                       automaton rules that is used for output.
+ * @tparam  RightHandSide                Type of the left-hand side of
+ *                                       automaton rules.
  */
 template
 <
 	class MTBDDTransitionTableWrapper,
 	typename State,
 	typename Symbol,
-	template <typename> class InputRightHandSide,
-	template <typename> class OutputRightHandSide = InputRightHandSide
+	template <typename> class RightHandSide
 >
 class SFTA::NDSymbolicTDTreeAutomaton
 	: public SFTA::SymbolicTDTreeAutomaton
@@ -63,8 +161,7 @@ class SFTA::NDSymbolicTDTreeAutomaton
 			MTBDDTransitionTableWrapper,
 			State,
 			Symbol,
-			InputRightHandSide<SFTA::Vector<State> >,
-			OutputRightHandSide<SFTA::Vector<State> >
+			RightHandSide<SFTA::Private::ElemOrVector<State> >
 		>
 {
 public:   // Public data types
@@ -74,8 +171,7 @@ public:   // Public data types
 			MTBDDTransitionTableWrapper,
 			State,
 			Symbol,
-			InputRightHandSide,
-			OutputRightHandSide
+			RightHandSide
 		> Type;
 
 	typedef SymbolicTDTreeAutomaton
@@ -83,8 +179,7 @@ public:   // Public data types
 			MTBDDTransitionTableWrapper,
 			State,
 			Symbol,
-			InputRightHandSide<SFTA::Vector<State> >,
-			OutputRightHandSide<SFTA::Vector<State> >
+			RightHandSide<SFTA::Private::ElemOrVector<State> >
 		> ParentClass;
 
 	typedef typename ParentClass::HierarchyRoot HierarchyRoot;
@@ -92,8 +187,7 @@ public:   // Public data types
 	typedef typename ParentClass::StateType StateType;
 	typedef typename ParentClass::LeftHandSideType LeftHandSideType;
 
-	typedef typename ParentClass::InputRightHandSideType InputRightHandSideType;
-	typedef typename ParentClass::OutputRightHandSideType OutputRightHandSideType;
+	typedef typename ParentClass::RightHandSideType RightHandSideType;
 
 	typedef typename ParentClass::LHSRootContainerType LHSRootContainerType;
 
@@ -200,7 +294,7 @@ public:   // Public methods
 	{
 		ParentClass::GetTTWrapper()->GetMTBDD()->SetValue(
 			ParentClass::getSinkState(), Symbol::GetUniversalSymbol(),
-			InputRightHandSideType());
+			RightHandSideType());
 	}
 
 	NDSymbolicTDTreeAutomaton(const NDSymbolicTDTreeAutomaton& aut)

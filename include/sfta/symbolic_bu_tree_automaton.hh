@@ -27,8 +27,7 @@ namespace SFTA
 		class MTBDDTransitionTableWrapper,
 		typename State,
 		typename Symbol,
-		class InputRightHandSide,
-		class OutputRightHandSide
+		class RightHandSide
 	>
 	class SymbolicBUTreeAutomaton;
 }
@@ -46,16 +45,14 @@ template
 	class MTBDDTransitionTableWrapper,
 	typename State,
 	typename Symbol,
-	class InputRightHandSide,
-	class OutputRightHandSide = InputRightHandSide
+	class RightHandSide
 >
 class SFTA::SymbolicBUTreeAutomaton
 	: public SFTA::AbstractBUTreeAutomaton
 		<
 			State,
 			Symbol,
-			InputRightHandSide,
-			OutputRightHandSide
+			RightHandSide
 		>
 {
 public:   // Public data types
@@ -65,8 +62,7 @@ public:   // Public data types
 			MTBDDTransitionTableWrapper,
 			State,
 			Symbol,
-			InputRightHandSide,
-			OutputRightHandSide
+			RightHandSide
 		> Type;
 
 	typedef State StateType;
@@ -76,8 +72,7 @@ public:   // Public data types
 		<
 			StateType,
 			SymbolType,
-			InputRightHandSide,
-			OutputRightHandSide
+			RightHandSide
 		> ParentClass;
 
 	typedef typename ParentClass::HierarchyRoot HierarchyRoot;
@@ -90,8 +85,7 @@ public:   // Public data types
 
 	typedef typename ParentClass::LeftHandSideType LeftHandSideType;
 
-	typedef typename ParentClass::InputRightHandSideType InputRightHandSideType;
-	typedef typename ParentClass::OutputRightHandSideType OutputRightHandSideType;
+	typedef typename ParentClass::RightHandSideType RightHandSideType;
 
 	typedef typename SFTA::OrderedVector
 		<
@@ -114,10 +108,10 @@ public:   // Public data types
 	{
 		LeftHandSideType lhs;
 		SymbolType symbol;
-		OutputRightHandSideType rhs;
+		RightHandSideType rhs;
 
 		Transition(const LeftHandSideType& inLhs, const SymbolType& inSymbol,
-			const OutputRightHandSideType& inRhs)
+			const RightHandSideType& inRhs)
 			: lhs(inLhs),
 				symbol(inSymbol),
 				rhs(inRhs)
@@ -248,7 +242,7 @@ public:   // Public methods
 		// Assertions
 		assert(ttWrapper_ != static_cast<TTWrapperPtrType>(0));
 
-		GetTTWrapper()->GetMTBDD()->SetBottomValue(InputRightHandSideType());
+		GetTTWrapper()->GetMTBDD()->SetBottomValue(RightHandSideType());
 	}
 
 	/**
@@ -311,7 +305,7 @@ public:   // Public methods
 	}
 
 	virtual void AddTransition(const LeftHandSideType& lhs,
-		const SymbolType& symbol, const InputRightHandSideType& rhs)
+		const SymbolType& symbol, const RightHandSideType& rhs)
 	{
 		// Assertions
 		assert(vectorContainsLocalStates(lhs));
@@ -323,17 +317,24 @@ public:   // Public methods
 			rootMap_.SetValue(lhs, root);
 		}
 
-		GetTTWrapper()->GetMTBDD()->SetValue(root, symbol, rhs);
+		RightHandSideType outRhs;
+		for (typename RightHandSideType::const_iterator it = rhs.begin();
+			it != rhs.end(); ++it)
+		{
+			outRhs.insert(*it);
+		}
+
+		GetTTWrapper()->GetMTBDD()->SetValue(root, symbol, outRhs);
 	}
 
 
-	virtual OutputRightHandSideType GetTransition(const LeftHandSideType& lhs,
+	virtual RightHandSideType GetTransition(const LeftHandSideType& lhs,
 		const SymbolType& symbol)
 	{
 		// Assertions
 		assert(vectorContainsLocalStates(lhs));
 
-		OutputRightHandSide rhs;
+		RightHandSide rhs;
 
 		RootType root = rootMap_.GetValue(lhs);
 		if (root == sinkSuperState_)

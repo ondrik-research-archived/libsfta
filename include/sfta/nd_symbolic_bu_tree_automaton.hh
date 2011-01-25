@@ -31,8 +31,7 @@ namespace SFTA
 		class MTBDDTransitionTableWrapper,
 		typename State,
 		typename Symbol,
-		template <typename> class InputRightHandSide,
-		template <typename> class OutputRightHandSide
+		template <typename> class RightHandSide
 	>
 	class NDSymbolicBUTreeAutomaton;
 }
@@ -51,18 +50,15 @@ namespace SFTA
  * @tparam  State                        Type of states of the automaton.
  * @tparam  Symbol                       Type of symbols of the alphabet of
  *                                       the automaton.
- * @tparam  InputRightHandSide           Type of the right-hand side of
- *                                       automaton rules that is used for input.
- * @tparam  OutputRightHandSide          Type of the right-hand side of
- *                                       automaton rules that is used for output.
+ * @tparam  RightHandSide                Type of the right-hand side of
+ *                                       automaton rules.
  */
 template
 <
 	class MTBDDTransitionTableWrapper,
 	typename State,
 	typename Symbol,
-	template <typename> class InputRightHandSide,
-	template <typename> class OutputRightHandSide = InputRightHandSide
+	template <typename> class RightHandSide
 >
 class SFTA::NDSymbolicBUTreeAutomaton
 	: public SFTA::SymbolicBUTreeAutomaton
@@ -70,8 +66,7 @@ class SFTA::NDSymbolicBUTreeAutomaton
 			MTBDDTransitionTableWrapper,
 			State,
 			Symbol,
-			InputRightHandSide<State>,
-			OutputRightHandSide<State>
+			RightHandSide<SFTA::Private::ElemOrVector<State> >
 		>
 {
 private:  // Private data types
@@ -85,8 +80,7 @@ public:   // Public data types
 			MTBDDTransitionTableWrapper,
 			State,
 			Symbol,
-			InputRightHandSide,
-			OutputRightHandSide
+			RightHandSide
 		> Type;
 
 	typedef SymbolicBUTreeAutomaton
@@ -94,8 +88,7 @@ public:   // Public data types
 			MTBDDTransitionTableWrapper,
 			State,
 			Symbol,
-			InputRightHandSide<State>,
-			OutputRightHandSide<State>
+			RightHandSide<SFTA::Private::ElemOrVector<State> >
 		> ParentClass;
 
 	typedef typename ParentClass::HierarchyRoot HierarchyRoot;
@@ -104,8 +97,7 @@ public:   // Public data types
 	typedef typename ParentClass::SymbolType SymbolType;
 	typedef typename ParentClass::LeftHandSideType LeftHandSideType;
 
-	typedef typename ParentClass::InputRightHandSideType InputRightHandSideType;
-	typedef typename ParentClass::OutputRightHandSideType OutputRightHandSideType;
+	typedef typename ParentClass::RightHandSideType RightHandSideType;
 
 	typedef typename ParentClass::LHSRootContainerType LHSRootContainerType;
 
@@ -115,10 +107,9 @@ public:   // Public data types
 
 	typedef SFTA::NDSymbolicTDTreeAutomaton
 	<
-		SFTA::MTBDDTransitionTableWrapper<StateType, SFTA::CUDDSharedMTBDD<StateType, OutputRightHandSide<LeftHandSideType>, SymbolType, SFTA::Private::DualMapLeafAllocator, SFTA::Private::MapRootAllocator> >,
+		MTBDDTransitionTableWrapper,
 		StateType,
 		SymbolType,
-		SFTA::OrderedVector,
 		SFTA::OrderedVector
 	> NDSymbolicTDTreeAutomatonType;
 
@@ -271,7 +262,7 @@ public:   // Public data types
 						for (typename LeafType::const_iterator rhsIt = rhs.begin();
 							rhsIt != rhs.end(); ++rhsIt)
 						{
-							StatePair productState = std::make_pair(*lhsIt, *rhsIt);
+							StatePair productState = std::make_pair(StateType(*lhsIt), StateType(*rhsIt));
 							StateType resultState;
 
 							typename StatePairToStateTable::const_iterator itPairs;
@@ -442,7 +433,7 @@ public:   // Public methods
 	{
 		ParentClass::GetTTWrapper()->GetMTBDD()->SetValue(
 			ParentClass::getSinkSuperState(), Symbol::GetUniversalSymbol(),
-			InputRightHandSideType());
+			RightHandSideType());
 	}
 
 	NDSymbolicBUTreeAutomaton(const NDSymbolicBUTreeAutomaton& aut)
@@ -456,8 +447,8 @@ public:   // Public methods
 
 	NDSymbolicTDTreeAutomatonType* GetTopDownAutomaton() const
 	{
-		assert(false);
 
+		assert(false);
 	}
 
 };

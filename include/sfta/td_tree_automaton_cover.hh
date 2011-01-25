@@ -58,7 +58,10 @@ private:  // Private data types
 	typedef SFTA::Private::CompactVariableAssignment<SymbolLength>
 		InternalSymbolType;
 	typedef InternalStateType InternalLeftHandSideType;
-	typedef SFTA::OrderedVector<SFTA::Vector<InternalStateType> > InternalRightHandSideType;
+
+	typedef SFTA::Private::ElemOrVector<InternalStateType> InternalDualStateType;
+
+	typedef SFTA::OrderedVector<InternalDualStateType> InternalRightHandSideType;
 	typedef unsigned MTBDDRootType;
 
 
@@ -413,12 +416,17 @@ public:   // Public methods
 				for (typename InternalRightHandSideType::const_iterator itRhs = rhs.begin();
 					 itRhs != rhs.end(); ++itRhs)
 				{
-	        const SFTA::Vector<InternalStateType>& rhs = *itRhs;
-					SFTA::Vector<StateType> outputRhs;
-					for (typename SFTA::Vector<InternalStateType>::const_iterator itRhs = rhs.begin();
-						 itRhs != rhs.end(); ++itRhs)
+					if (itRhs->isElem)
 					{
-						outputRhs.push_back(translateInternalStateToState(*itRhs));
+						throw std::runtime_error(__func__ + std::string(": invalid type"));
+
+					}
+	        const typename InternalDualStateType::VectorType& vecRhs = itRhs->elemVector;
+					SFTA::Vector<StateType> outputRhs;
+					for (typename InternalDualStateType::VectorType::const_iterator itVecRhs = vecRhs.begin();
+						 itVecRhs != vecRhs.end(); ++itVecRhs)
+					{
+						outputRhs.push_back(translateInternalStateToState(*itVecRhs));
 					}
 
 					result += Convert::ToString(*itSymbols);

@@ -69,7 +69,7 @@ private:  // Private methods
 		for (typename VectorType::const_iterator itVec = vec_.begin() + 1;
 			itVec < vec_.end(); ++itVec)
 		{	// check that the vector is sorted
-			if (*(itVec - 1) >= *itVec)
+			if (!(*(itVec - 1) < *itVec))
 			{	// in case there is an unordered pair (or there is one element twice)
 				return false;
 			}
@@ -222,7 +222,7 @@ public:   // Public methods
 					newVector.push_back(*lhsIt);
 					++lhsIt;
 				}
-				else if (*lhsIt > *rhsIt)
+				else if (*rhsIt < *lhsIt)
 				{
 					newVector.push_back(*rhsIt);
 					++rhsIt;

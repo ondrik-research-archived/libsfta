@@ -22,8 +22,7 @@ namespace SFTA
 	<
 		typename State,
 		typename Symbol,
-		class InputRightHandSide,
-		class OutputRightHandSide
+		class RightHandSide
 	>
 	class AbstractBUTreeAutomaton;
 }
@@ -40,8 +39,7 @@ template
 <
 	typename State,
 	typename Symbol,
-	class InputRightHandSide,
-	class OutputRightHandSide = InputRightHandSide
+	class RightHandSide
 >
 class SFTA::AbstractBUTreeAutomaton
 	: public SFTA::AbstractAutomaton
@@ -62,8 +60,7 @@ public:   // Public data types
 		<
 			State,
 			Symbol,
-			InputRightHandSide,
-			OutputRightHandSide
+			RightHandSide
 		> Type;
 
 	typedef typename ParentClass::StateType StateType;
@@ -71,8 +68,7 @@ public:   // Public data types
 
 	typedef typename SFTA::Vector<StateType> LeftHandSideType;
 
-	typedef InputRightHandSide InputRightHandSideType;
-	typedef OutputRightHandSide OutputRightHandSideType;
+	typedef RightHandSide RightHandSideType;
 
 	typedef typename ParentClass::HierarchyRoot HierarchyRoot;
 
@@ -102,9 +98,9 @@ public:   // Public methods
 	{ }
 
 	virtual void AddTransition(const LeftHandSideType& lhs,
-		const SymbolType& symbol, const InputRightHandSideType& rhs) = 0;
+		const SymbolType& symbol, const RightHandSideType& rhs) = 0;
 
-	virtual OutputRightHandSideType GetTransition(const LeftHandSideType& lhs,
+	virtual RightHandSideType GetTransition(const LeftHandSideType& lhs,
 		const SymbolType& symbol) = 0;
 
 	virtual void SetStateFinal(const StateType& state) = 0;

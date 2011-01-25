@@ -75,7 +75,10 @@ private:  // Private data types
 	typedef SFTA::Private::CompactVariableAssignment<SymbolLength>
 		InternalSymbolType;
 	typedef SFTA::Vector<InternalStateType> InternalLeftHandSideType;
-	typedef SFTA::OrderedVector<InternalStateType> InternalRightHandSideType;
+
+	typedef SFTA::Private::ElemOrVector<InternalStateType> InternalDualStateType;
+
+	typedef SFTA::OrderedVector<InternalDualStateType> InternalRightHandSideType;
 	typedef unsigned MTBDDRootType;
 
 
@@ -210,8 +213,13 @@ private:  // Private methods
 	}
 
 	inline StateType translateInternalStateToState(
-		const InternalStateType& internalState) const
+		const InternalDualStateType& internalState) const
 	{
+		if (!internalState.isElem)
+		{
+			throw std::runtime_error(__func__ +
+				std::string(": invalid state type"));
+		}
 		return "q" + Convert::ToString(internalState);
 	}
 

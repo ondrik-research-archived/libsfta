@@ -21,8 +21,7 @@ namespace SFTA
 	<
 		typename State,
 		typename Symbol,
-		class InputLeftHandSide,
-		class OutputLeftHandSide
+		class RightHandSide
 	>
 	class AbstractTDTreeAutomaton;
 }
@@ -39,8 +38,7 @@ template
 <
 	typename State,
 	typename Symbol,
-	class InputRightHandSide,
-	class OutputRightHandSide = InputRightHandSide
+	class RightHandSide
 >
 class SFTA::AbstractTDTreeAutomaton
 	: public SFTA::AbstractAutomaton
@@ -61,8 +59,7 @@ public:   // Public data types
 		<
 			State,
 			Symbol,
-			InputRightHandSide,
-			OutputRightHandSide
+			RightHandSide
 		> Type;
 
 	typedef typename ParentClass::StateType StateType;
@@ -70,8 +67,7 @@ public:   // Public data types
 
 	typedef StateType LeftHandSideType;
 
-	typedef InputRightHandSide InputRightHandSideType;
-	typedef OutputRightHandSide OutputRightHandSideType;
+	typedef RightHandSide RightHandSideType;
 
 	typedef typename ParentClass::HierarchyRoot HierarchyRoot;
 
