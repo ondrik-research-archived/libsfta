@@ -153,6 +153,27 @@ private:  // Private data members
 
 protected:// Protected methods
 
+	inline RootType getRoot(const LeftHandSideType& lhs)
+	{
+		// Assertions
+		assert(isStateLocal(lhs));
+
+		RootType root = sinkState_;
+
+		typename LHSRootContainerType::const_iterator it;
+		if ((it = rootMap_.find(lhs)) == rootMap_.end())
+		{	// in case the value is not in the hash table
+			root = GetTTWrapper()->GetMTBDD()->CreateRoot();
+			rootMap_.insert(std::make_pair(lhs, root));
+		}
+		else
+		{
+			root = it->second;
+		}
+
+		return root;
+	}
+
 	void copyStates(const Type& aut)
 	{
 		states_.insert(aut.states_);
@@ -180,8 +201,6 @@ protected:// Protected methods
 		return sinkState_;
 	}
 
-
-protected:// Protected methods
 
 	virtual Operation* createOperation() const = 0;
 
@@ -253,6 +272,17 @@ public:   // Public methods
 		states_.insert(newState);
 
 		return newState;
+	}
+
+	virtual void AddState(const StateType& state)
+	{
+		if (states_.find(state) != states_.end())
+		{	// in case the state is already there
+			throw std::runtime_error(__func__ +
+				std::string(": an attempt to insert already present state"));
+		}
+
+		states_.insert(state);
 	}
 
 	virtual void SetStateInitial(const StateType& state)

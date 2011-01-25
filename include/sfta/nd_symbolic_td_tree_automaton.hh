@@ -30,6 +30,17 @@ namespace SFTA
 }
 
 
+// forward declaration
+template
+<
+	class MTBDDTransitionTableWrapper,
+	typename State,
+	typename Symbol,
+	template <typename> class RightHandSide
+>
+class NDSymbolicBUTreeAutomaton;
+
+
 namespace SFTA
 {
 	namespace Private
@@ -165,6 +176,9 @@ class SFTA::NDSymbolicTDTreeAutomaton
 		>
 {
 public:   // Public data types
+
+	template < class, typename, typename, template <typename> class >
+		friend class NDSymbolicBUTreeAutomaton;
 
 	typedef NDSymbolicTDTreeAutomaton
 		<

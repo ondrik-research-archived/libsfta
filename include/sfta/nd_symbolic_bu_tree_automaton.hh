@@ -447,8 +447,33 @@ public:   // Public methods
 
 	NDSymbolicTDTreeAutomatonType* GetTopDownAutomaton() const
 	{
+		typedef typename SharedMTBDDType::RootType RootType;
 
-		assert(false);
+		NDSymbolicTDTreeAutomatonType* tdAut =
+			new NDSymbolicTDTreeAutomatonType(this->GetTTWrapper());
+
+		std::vector<StateType> states = this->GetVectorOfStates();
+
+		const LHSRootContainerType& rootMap = this->getRootMap();
+
+		for (typename std::vector<StateType>::const_iterator itStates = states.begin();
+			itStates != states.end(); ++itStates)
+		{
+			tdAut->AddState(*itStates);
+			RootType tdRoot = tdAut->getRoot(*itStates);
+
+			for (typename LHSRootContainerType::const_iterator itSuperStates = rootMap.begin();
+				itSuperStates != rootMap.end(); ++itSuperStates)
+			{
+			}
+
+
+
+		}
+
+		//assert(false);
+
+		return tdAut;
 	}
 
 };
