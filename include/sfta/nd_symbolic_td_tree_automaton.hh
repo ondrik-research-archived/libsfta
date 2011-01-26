@@ -91,13 +91,15 @@ namespace SFTA
 
 			friend bool operator<(const ElemOrVector<T>& lhs, const ElemOrVector<T>& rhs)
 			{
-				if ((lhs.isElem && !rhs.isElem) || (!lhs.isElem && rhs.isElem))
+				if (lhs.isElem && !rhs.isElem)
 				{
-					throw std::runtime_error(__func__ +
-						std::string(": an attempt to compare inconsistent instances"));
+					return true;    // elements are smaller than vectors
 				}
-
-				if (lhs.isElem)
+				else if (!lhs.isElem && rhs.isElem)
+				{
+					return false;   // elements are smaller than vectors
+				}
+				else if (lhs.isElem)
 				{
 					return lhs.elem < rhs.elem;
 				}
@@ -111,11 +113,9 @@ namespace SFTA
 			{
 				if ((lhs.isElem && !rhs.isElem) || (!lhs.isElem && rhs.isElem))
 				{
-					throw std::runtime_error(__func__ +
-						std::string(": an attempt to compare inconsistent instances"));
+					return false;
 				}
-
-				if (lhs.isElem)
+				else if (lhs.isElem)
 				{
 					return lhs.elem == rhs.elem;
 				}

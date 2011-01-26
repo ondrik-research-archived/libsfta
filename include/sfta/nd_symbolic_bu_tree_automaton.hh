@@ -449,6 +449,52 @@ public:   // Public methods
 	{
 		typedef typename SharedMTBDDType::RootType RootType;
 
+		class CollectorApplyFunctor
+			: public SharedMTBDDType::AbstractApplyFunctorType
+		{
+		private:  // Private data types
+
+			StateType wantedState_;
+			LeftHandSideType addedSuperState_;
+
+		public:   // Public data types
+
+			typedef typename SharedMTBDDType::LeafType LeafType;
+
+		public:   // Public methods
+
+			CollectorApplyFunctor()
+				: wantedState_(),
+					addedSuperState_()
+			{ }
+
+			void SetWantedState(const StateType& wantedState)
+			{
+				wantedState_ = wantedState;
+			}
+
+			void SetAddedSuperState(const LeftHandSideType& addedSuperState)
+			{
+				addedSuperState_ = addedSuperState;
+			}
+
+			virtual LeafType operator()(const LeafType& lhs, const LeafType& rhs)
+			{
+				if (lhs.find(wantedState_) != lhs.end())
+				{	// in case the state we are looking for is in the leaf
+					LeafType result = rhs;
+					result.insert(addedSuperState_);
+					return result;
+				}
+				else
+				{
+					return rhs;
+				}
+			}
+		};
+
+		CollectorApplyFunctor collectorFunc;
+
 		NDSymbolicTDTreeAutomatonType* tdAut =
 			new NDSymbolicTDTreeAutomatonType(this->GetTTWrapper());
 
@@ -456,22 +502,32 @@ public:   // Public methods
 
 		const LHSRootContainerType& rootMap = this->getRootMap();
 
+
 		for (typename std::vector<StateType>::const_iterator itStates = states.begin();
 			itStates != states.end(); ++itStates)
 		{
-			tdAut->AddState(*itStates);
-			RootType tdRoot = tdAut->getRoot(*itStates);
+			const StateType& newState = *itStates;
+
+			tdAut->AddState(newState);
+			if (this->IsStateFinal(newState))
+			{	// set state as initial in case it is final in the original automaton
+				tdAut->SetStateInitial(newState);
+			}
+
+			RootType tdRoot = tdAut->getRoot(newState);
+
+			collectorFunc.SetWantedState(newState);
 
 			for (typename LHSRootContainerType::const_iterator itSuperStates = rootMap.begin();
 				itSuperStates != rootMap.end(); ++itSuperStates)
 			{
+				collectorFunc.SetAddedSuperState(itSuperStates->first);
+				tdRoot = tdAut->GetTTWrapper()->GetMTBDD()->Apply(
+					itSuperStates->second, tdRoot, &collectorFunc);
 			}
 
-
-
+			tdAut->setRoot(newState, tdRoot);
 		}
-
-		//assert(false);
 
 		return tdAut;
 	}

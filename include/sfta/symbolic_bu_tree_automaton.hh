@@ -411,7 +411,7 @@ public:   // Public methods
 		for (typename TransitionVector::const_iterator itTrans = trans.begin();
 			itTrans != trans.end(); ++itTrans)
 		{
-			result += Convert::ToString(itTrans->symbol);
+			result += Convert::ToString(itTrans->symbol) + " ";
 			result += Convert::ToString(itTrans->lhs);
 			result += " -> ";
 			result += Convert::ToString(itTrans->rhs);

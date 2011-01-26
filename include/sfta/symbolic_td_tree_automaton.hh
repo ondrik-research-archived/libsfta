@@ -202,6 +202,20 @@ protected:// Protected methods
 	}
 
 
+	void setRoot(const LeftHandSideType& lhs, const RootType& root)
+	{
+		typename LHSRootContainerType::iterator itRoots;
+		if ((itRoots = rootMap_.find(lhs)) == rootMap_.end())
+		{
+			rootMap_.insert(std::make_pair(lhs, root));
+		}
+		else
+		{
+			itRoots->second = root;
+		}
+	}
+
+
 	virtual Operation* createOperation() const = 0;
 
 	inline bool isStateLocal(const StateType& state) const
@@ -406,7 +420,7 @@ public:   // Public methods
 		for (typename TransitionVector::const_iterator itTrans = trans.begin();
 			itTrans != trans.end(); ++itTrans)
 		{
-			result += Convert::ToString(itTrans->symbol);
+			result += Convert::ToString(itTrans->symbol) + " ";
 			result += Convert::ToString(itTrans->lhs);
 			result += " -> ";
 			result += Convert::ToString(itTrans->rhs);
