@@ -184,11 +184,20 @@ public:   // Public data types
 			SimulationRelationType result;
 
 			typedef typename NDSymbolicBUTreeAutomaton::HierarchyRoot AbstractAutomaton;
-			std::auto_ptr<typename AbstractAutomaton::Operation> oper(
-				aut->getAutomaton()->GetOperation());
-			std::auto_ptr<typename AbstractAutomaton::Operation::SimulationRelationType>simulation(
+			typedef typename AbstractAutomaton::Operation InternalOperationType;
+			typedef typename InternalOperationType::SimulationRelationType
+				InternalSimulationType;
+
+			std::auto_ptr<InternalOperationType> oper(aut->getAutomaton()->GetOperation());
+			std::auto_ptr<InternalSimulationType> simulation(
 				oper->ComputeSimulationPreorder((aut->getAutomaton()).get()));
 
+			for (typename InternalSimulationType::const_iterator itSim = simulation->begin();
+				itSim != simulation->end(); ++itSim)
+			{
+				result.insert(std::make_pair(aut->translateInternalStateToState(itSim->first),
+					aut->translateInternalStateToState(itSim->second)));
+			}
 
 			return result;
 		}

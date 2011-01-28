@@ -216,14 +216,15 @@ public:
 
 		oss << "{";		// opening tag
 		for (typename MultiMapType::const_iterator it = mm.begin();
-			it != mm.end(); ++it)
+			it != mm.end(); )
 		{	// for each element of the set
 			if (it != mm.begin())
 			{	// if we are not at the first element
 				oss << ", ";
 			}
 
-			oss << "[";
+			oss << Convert::ToString(it->first);
+			oss << " -> [";
 
 			std::pair
 			<
@@ -231,16 +232,17 @@ public:
 				typename MultiMapType::const_iterator
 			> findRes = mm.equal_range(it->first);
 
-			typename MultiMapType::const_iterator innerIt = findRes.first;
-			while (innerIt != findRes.second)
+			while (it != findRes.second)
 			{
-				if (innerIt != findRes.first)
+				if (it != findRes.first)
 				{	// if we are not at the first element
 					oss << "; ";
 				}
 
 				// the string of the element
-				oss << ToString(innerIt->second);
+				oss << ToString(it->second);
+
+				++it;
 			}
 
 			oss << "]";

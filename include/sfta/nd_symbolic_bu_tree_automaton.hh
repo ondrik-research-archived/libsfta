@@ -399,6 +399,75 @@ public:   // Public data types
 			// Assertions
 			assert(aut != static_cast<Type*>(0));
 
+			typedef typename HierarchyRoot::Operation::SimulationRelationType SimType;
+			typedef std::pair<StateType, StateType> StatePair;
+			typedef VectorMap<StateType, RootType> CountersType;
+
+			class SimulationCounterInitializationApplyFunctor
+				: public SharedMTBDDType::AbstractApplyFunctorType
+			{
+			private:
+
+				StateType state_;
+
+			public:
+
+				SimulationCounterInitializationApplyFunctor()
+					: state_()
+				{ }
+
+				void SetState(const StateType& state)
+				{
+					state_ = state;
+				}
+
+				virtual LeafType operator()(const LeafType& lhs, const LeafType& rhs)
+				{
+					LeafType newRhs = rhs;
+
+					SFTA::Vector<StateType> newVec;
+					newVec.push_back(state_);
+					newVec.push_back(lhs.size());
+					newRhs.insert(newVec);
+
+					return newRhs;
+				}
+			};
+
+			class SimulationDetectorApplyFunctor
+				: public SharedMTBDDType::AbstractApplyFunctorType
+			{
+			private:
+
+				bool doesSimulationHold_;
+
+			public:
+
+				SimulationDetectorApplyFunctor()
+					: doesSimulationHold_()
+				{ }
+
+				inline void Reset()
+				{
+					doesSimulationHold_ = true;
+				}
+
+				inline bool DoesSimulationHold() const
+				{
+					return doesSimulationHold_;
+				}
+
+				virtual LeafType operator()(const LeafType& lhs, const LeafType& rhs)
+				{
+					if (lhs.empty() && !rhs.empty())
+					{
+						doesSimulationHold_ = false;
+					}
+
+					return LeafType();
+				}
+			};
+
 			const Type* autSym = static_cast<Type*>(0);
 
 			if ((autSym = dynamic_cast<const Type*>(aut)) ==
@@ -407,14 +476,76 @@ public:   // Public data types
 				throw std::runtime_error(__func__ + std::string(": Invalid type"));
 			}
 
-			typedef typename HierarchyRoot::Operation::SimulationRelationType SimType;
-
-			SimType* result = new SimType();
+			SimType* sim = new SimType();
 
 			std::auto_ptr<NDSymbolicTDTreeAutomatonType> topDown(
 				autSym->GetTopDownAutomaton());
 
-			return result;
+			std::queue<StatePair> remove;
+
+			RootType initCnt = topDown->GetTTWrapper()->GetMTBDD()->CreateRoot();
+
+			std::vector<StateType> states = autSym->GetVectorOfStates();
+
+			SimulationCounterInitializationApplyFunctor simulationCounterInitializer;
+			SimulationDetectorApplyFunctor simulationDetector;
+
+			for (typename std::vector<StateType>::const_iterator itStates = states.begin();
+				itStates != states.end(); ++itStates)
+			{
+				const StateType& state = *itStates;
+
+				simulationCounterInitializer.SetState(state);
+				RootType stateRoot = topDown->getRoot(state);
+
+				// accumulate the initial counters
+				RootType newCnt = topDown->GetTTWrapper()->GetMTBDD()->Apply(stateRoot, initCnt,
+						&simulationCounterInitializer);
+				topDown->GetTTWrapper()->GetMTBDD()->EraseRoot(initCnt);
+				initCnt = newCnt;
+
+				for (typename std::vector<StateType>::const_iterator itHigherStates = states.begin();
+					itHigherStates != states.end(); ++itHigherStates)
+				{
+					const StateType& higherState = *itHigherStates;
+
+					bool simulationHolds = false;
+
+					if (!autSym->IsStateFinal(state) || autSym->IsStateFinal(higherState))
+					{	// in case the pair (itStates, itHigherStates) is in the initial preorder
+						RootType higherStateRoot = topDown->getRoot(state);
+
+						simulationDetector.Reset();
+
+						RootType tmp = topDown->GetTTWrapper()->GetMTBDD()->Apply(stateRoot,
+							higherStateRoot, &simulationDetector);
+						topDown->GetTTWrapper()->GetMTBDD()->EraseRoot(tmp);
+
+						if (simulationDetector.DoesSimulationHold())
+						{	// in case there holds the simulation relation
+							simulationHolds = true;
+							sim->insert(std::make_pair(state, higherState));
+						}
+					}
+
+					if (!simulationHolds)
+					{	// in case state is not simulated by higherState
+						remove.push(std::make_pair(state, higherState));
+					}
+				}
+			}
+
+			LHSRootContainerType buLHSs =	autSym->getRootMap();
+
+			CountersType cnt(autSym->getSinkSuperState());
+			 
+			
+
+
+
+
+
+			return sim;
 		}
 	};
 
@@ -522,8 +653,10 @@ public:   // Public methods
 				itSuperStates != rootMap.end(); ++itSuperStates)
 			{
 				collectorFunc.SetAddedSuperState(itSuperStates->first);
-				tdRoot = tdAut->GetTTWrapper()->GetMTBDD()->Apply(
+				RootType newRoot = tdAut->GetTTWrapper()->GetMTBDD()->Apply(
 					itSuperStates->second, tdRoot, &collectorFunc);
+				tdAut->GetTTWrapper()->GetMTBDD()->EraseRoot(tdRoot);
+				tdRoot = newRoot;
 			}
 
 			tdAut->setRoot(newState, tdRoot);

@@ -91,7 +91,7 @@ public:   // Public data types
 	{
 	public:   // Public data types
 
-		typedef std::vector<std::pair<StateType, StateType> > SimulationRelationType;
+		typedef std::multimap<StateType, StateType> SimulationRelationType;
 
 
 	public:   // Public methods
