@@ -482,18 +482,38 @@ public:   // Public data types
 			{
 			private:
 
+				SimType* sim_;
 
+				RemoveSetType* remove_;
+
+				StateToLHSsType* stateToLhss_;
 				
+			private:
+
+				SimulationRefinementApplyFunctor(const SimulationRefinementApplyFunctor& rhs);
+				SimulationRefinementApplyFunctor& operator=(
+					const SimulationRefinementApplyFunctor& rhs);
+
 			public:
 
 				SimulationRefinementApplyFunctor(SimType* sim, RemoveSetType* remove,
-					StateToLHSsType* stateToLHSs)
+					StateToLHSsType* stateToLhss)
+					: sim_(sim),
+						remove_(remove),
+						stateToLhss_(stateToLhss)
 				{
+					assert(sim_ != static_cast<SimType*>(0));
+					assert(remove_ != static_cast<RemoveSetType*>(0));
+					assert(stateToLhss_ != static_cast<StateToLHSsType*>(0));
 				}
 
 				virtual LeafType operator()(const LeafType& preR, const LeafType& preQ,
 					const LeafType& cntQ)
 				{
+					assert(&preR != static_cast<LeafType*>(0));
+					assert(&preQ != static_cast<LeafType*>(0));
+					assert(&cntQ != static_cast<LeafType*>(0));
+
 					LeafType newCntQ = cntQ;
 
 					assert(false);
