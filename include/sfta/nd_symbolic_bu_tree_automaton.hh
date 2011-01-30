@@ -468,6 +468,30 @@ public:   // Public data types
 				}
 			};
 
+			class SimulationRefinementApplyFunctor
+				: public SharedMTBDDType::AbstractTernaryApplyFunctorType
+			{
+			private:
+
+
+				
+			public:
+
+				SimulationRefinementApplyFunctor(std::queue<StatePair>* remove, SimType* sim)
+				{
+				}
+
+				virtual LeafType operator()(const LeafType& preR, const LeafType& preQ,
+					const LeafType& cntQ)
+				{
+					LeafType newCntQ = cntQ;
+
+					assert(false);
+
+					return newCntQ;
+				}
+			};
+
 			const Type* autSym = static_cast<Type*>(0);
 
 			if ((autSym = dynamic_cast<const Type*>(aut)) ==
@@ -476,19 +500,26 @@ public:   // Public data types
 				throw std::runtime_error(__func__ + std::string(": Invalid type"));
 			}
 
+			// ********************************************************************
+			//                         INITIALIZATION
+			// ********************************************************************
+
 			SimType* sim = new SimType();
 
 			std::auto_ptr<NDSymbolicTDTreeAutomatonType> topDown(
 				autSym->GetTopDownAutomaton());
 
+			SharedMTBDDType* mtbdd = autSym->GetTTWrapper()->GetMTBDD();
+
 			std::queue<StatePair> remove;
 
-			RootType initCnt = topDown->GetTTWrapper()->GetMTBDD()->CreateRoot();
+			RootType initCnt = mtbdd->CreateRoot();
 
 			std::vector<StateType> states = autSym->GetVectorOfStates();
 
 			SimulationCounterInitializationApplyFunctor simulationCounterInitializer;
 			SimulationDetectorApplyFunctor simulationDetector;
+			SimulationRefinementApplyFunctor simulationRefineFunc(&remove, sim);
 
 			for (typename std::vector<StateType>::const_iterator itStates = states.begin();
 				itStates != states.end(); ++itStates)
@@ -499,9 +530,9 @@ public:   // Public data types
 				RootType stateRoot = topDown->getRoot(state);
 
 				// accumulate the initial counters
-				RootType newCnt = topDown->GetTTWrapper()->GetMTBDD()->Apply(stateRoot, initCnt,
+				RootType newCnt = mtbdd->Apply(stateRoot, initCnt,
 						&simulationCounterInitializer);
-				topDown->GetTTWrapper()->GetMTBDD()->EraseRoot(initCnt);
+				mtbdd->EraseRoot(initCnt);
 				initCnt = newCnt;
 
 				for (typename std::vector<StateType>::const_iterator itHigherStates = states.begin();
@@ -513,13 +544,12 @@ public:   // Public data types
 
 					if (!autSym->IsStateFinal(state) || autSym->IsStateFinal(higherState))
 					{	// in case the pair (itStates, itHigherStates) is in the initial preorder
-						RootType higherStateRoot = topDown->getRoot(state);
+						RootType higherStateRoot = topDown->getRoot(higherState);
 
 						simulationDetector.Reset();
 
-						RootType tmp = topDown->GetTTWrapper()->GetMTBDD()->Apply(stateRoot,
-							higherStateRoot, &simulationDetector);
-						topDown->GetTTWrapper()->GetMTBDD()->EraseRoot(tmp);
+						RootType tmp = mtbdd->Apply(stateRoot, higherStateRoot, &simulationDetector);
+						mtbdd->EraseRoot(tmp);
 
 						if (simulationDetector.DoesSimulationHold())
 						{	// in case there holds the simulation relation
@@ -538,12 +568,121 @@ public:   // Public data types
 			LHSRootContainerType buLHSs =	autSym->getRootMap();
 
 			CountersType cnt(autSym->getSinkSuperState());
+
+			for (typename LHSRootContainerType::const_iterator itSuperStates =
+				buLHSs.begin(); itSuperStates != buLHSs.end(); ++itSuperStates)
+			{	// fill the counters
+				cnt.SetValue(itSuperStates->first, initCnt);
+			}
+
+			// TODO: prepare for erasing
+//			mtbdd->EraseRoot(initCnt);
+
+
+			// ********************************************************************
+			//                           COMPUTATION
+			// ********************************************************************
+
+			while (!remove.empty())
+			{	// while there is a need for backwards propagation of cut simulations
+				StatePair cutRel = remove.front();
+				remove.pop();
+
+				const StateType& q = cutRel.first;
+				const StateType& r = cutRel.second;
+
+				SFTA_LOGGER_INFO("removed pair (" + Convert::ToString(q) + ", " + Convert::ToString(r) + ")");
+
+				// TODO: this is a stupid implementation and should be optimized by
+				// using some nice data structure, e.g. multimap (Q -> Q*)
+				for (typename LHSRootContainerType::const_iterator itFirstLhs = buLHSs.begin();
+					itFirstLhs != buLHSs.end(); ++itFirstLhs)
+				{
+					const LeftHandSideType& qVec = itFirstLhs->first;
+
+					for (size_t iQVec = 0; iQVec < qVec.size(); ++iQVec)
+					{
+						if (qVec[iQVec] == q)
+						{	// we bind q to position iQVec
+							for (typename LHSRootContainerType::const_iterator itSecondLhs = buLHSs.begin();
+								itSecondLhs != buLHSs.end(); ++itSecondLhs)
+							{
+								const LeftHandSideType& rVec = itSecondLhs->first;
+
+								if (qVec.size() == rVec.size())
+								{	// if the sizes match
+									if (rVec[iQVec] == r)
+									{	// in case positions match
+										SFTA_LOGGER_INFO("Found two LHSs: " + Convert::ToString(qVec) +
+											", " + Convert::ToString(rVec));
+
+										bool doesVectorSimulationHold = true;
+										for (size_t iPosition = 0; iPosition < qVec.size(); ++iPosition)
+										{
+											SFTA_LOGGER_INFO("Checking whether simulation holds between the two vectors...");
+											// TODO: rewrite this to use equal_range
+											typename SimType::const_iterator lowerBound =
+												sim->lower_bound(qVec[iPosition]);
+											typename SimType::const_iterator upperBound =
+												sim->upper_bound(qVec[iPosition]);
+
+											bool found = false;
+											while (lowerBound != upperBound)
+											{
+												if (lowerBound->second == rVec[iPosition])
+												{
+													found = true;
+												}
+
+												++lowerBound;
+											}
+
+											if (!found)
+											{	// in case the two states are not in the simulation relation
+												doesVectorSimulationHold = false;
+											}
+										}
+
+										if (doesVectorSimulationHold)
+										{	// in case the vectors simulate each other
+											RootType tmpRoot = mtbdd->TernaryApply(autSym->getRoot(qVec),
+												autSym->getRoot(rVec), cnt.GetValue(qVec),
+												&simulationRefineFunc);
+
+											cnt.SetValue(qVec, tmpRoot);
+
+											//TODO: erase the old cnt counter
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+
+
+
+
+
+
+
+
+			}
 			 
+			// ********************************************************************
+			//                           TIDYING UP
+			// ********************************************************************
 			
+			// TODO: there should be something like erasing all counters, etc., but
+			// I guess that there currently no way how to do it nicely (it would
+			// mean doing something like CopyRoot that would increase the reference
+			// counter of some nodes of the MTBDD
 
-
-
-
+//			for (typename LHSRootContainerType::const_iterator itCounters =
+//				cnt.begin(); itCounters != cnt.end(); ++itCounters)
+//			{	// fill the counters
+//				mtbdd->EraseRoot(itCounters->second);
+//			}
 
 			return sim;
 		}
