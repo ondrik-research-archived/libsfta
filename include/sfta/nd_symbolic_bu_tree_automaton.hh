@@ -571,13 +571,13 @@ public:   // Public data types
 			for (typename std::vector<StateType>::const_iterator itStates = states.begin();
 				itStates != states.end(); ++itStates)
 			{
-				const StateType& state = *itStates;
+				const StateType& q = *itStates;
 
-				simulationCounterInitializer.SetState(state);
-				RootType stateRoot = topDown->getRoot(state);
+				simulationCounterInitializer.SetState(q);
+				RootType qRoot = topDown->getRoot(q);
 
 				// accumulate the initial counters
-				RootType newCnt = mtbdd->Apply(stateRoot, initCnt,
+				RootType newCnt = mtbdd->Apply(qRoot, initCnt,
 						&simulationCounterInitializer);
 				mtbdd->EraseRoot(initCnt);
 				initCnt = newCnt;
@@ -585,31 +585,69 @@ public:   // Public data types
 				for (typename std::vector<StateType>::const_iterator itHigherStates = states.begin();
 					itHigherStates != states.end(); ++itHigherStates)
 				{
-					const StateType& higherState = *itHigherStates;
+					const StateType& r = *itHigherStates;
 
 					bool simulationHolds = false;
 
-					if (!autSym->IsStateFinal(state) || autSym->IsStateFinal(higherState))
+					if (!autSym->IsStateFinal(q) || autSym->IsStateFinal(r))
 					{	// in case the pair (itStates, itHigherStates) is in the initial preorder
-						RootType higherStateRoot = topDown->getRoot(higherState);
+						RootType rRoot = topDown->getRoot(r);
 
 						simulationDetector.Reset();
 
-						RootType tmp = mtbdd->Apply(stateRoot, higherStateRoot, &simulationDetector);
+						RootType tmp = mtbdd->Apply(qRoot, rRoot, &simulationDetector);
 						mtbdd->EraseRoot(tmp);
 
 						if (simulationDetector.DoesSimulationHold())
 						{	// in case there holds the simulation relation
 							simulationHolds = true;
-							sim->insert(std::make_pair(state, higherState));
+							sim->insert(std::make_pair(q, r));
 						}
 					}
 
 					if (!simulationHolds)
-					{	// in case state is not simulated by higherState
+					{	// in case q is not simulated by r
+						typename StateToLHSsType::iterator itState2LHSsQ;
+						if ((itState2LHSsQ = stateToLhss.find(q)) != stateToLhss.end())
+						{	// in case there is something for q
+							InflatableListOfInflatableListsOfVectorsType& innerContainerQ = 
+								itState2LHSsQ->second;
 
-						// here should be filling of remove
-						assert(false);
+							for (size_t iSize = 0; iSize < innerContainerQ.size(); ++iSize)
+							{	// for all sizes of vector in which q is present
+								const InflatableListOfVectorsType& listOfPositions = innerContainerQ[iSize];
+
+								for (size_t iPosition = 0; iPosition < listOfPositions.size(); ++iPosition)
+								{	// for all positions in vectors of given size
+									const SFTA::Vector<StateVector>& listOfStateVectorsQ =
+										listOfPositions[iPosition];
+
+									for (typename SFTA::Vector<StateVector>::const_iterator itListQ =
+										listOfStateVectorsQ.begin(); itListQ != listOfStateVectorsQ.end(); ++itListQ)
+									{	// for all vectors of given size that have q at the iPosition-th position
+										const StateVector& qVec = *itListQ;
+
+										typename StateToLHSsType::iterator itState2LHSsR;
+										if ((itState2LHSsR = stateToLhss.find(r)) != stateToLhss.end())
+										{	// if there is something for r
+											InflatableListOfInflatableListsOfVectorsType& innerContainerR = 
+												itState2LHSsR->second;
+
+											const SFTA::Vector<StateVector>& listOfStateVectorsR =
+												innerContainerR[iSize][iPosition];
+
+											for (typename SFTA::Vector<StateVector>::const_iterator itListR =
+												listOfStateVectorsR.begin(); itListR != listOfStateVectorsR.end(); ++itListR)
+											{	// for all vectors of given size that have r at the iPosition-th position
+												const StateVector& rVec = *itListR;
+
+												remove.insert(std::make_pair(qVec, rVec));
+											}
+										}
+									}
+								}
+							}
+						}
 					}
 				}
 			}
