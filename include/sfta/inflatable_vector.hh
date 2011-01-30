@@ -48,6 +48,8 @@ class SFTA::InflatableVector
 {
 private:   // Private data types
 
+	typedef SFTA::InflatableVector<T> Type;
+
 	typedef SFTA::Vector<T> ParentClass;
 
 	typedef SFTA::Private::Convert Convert;
@@ -59,11 +61,11 @@ public:   // Public data types
 
 private:  // Private methods
 
-	inline void inflateTo(size_t n)
+	inline void inflateTo(size_t n) const
 	{
 		while (n >= ParentClass::size())
 		{
-			push_back(T());
+			(const_cast<Type*>(this))->push_back(T());
 		}
 	}
 
