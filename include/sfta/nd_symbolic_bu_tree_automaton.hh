@@ -486,7 +486,8 @@ public:   // Public data types
 				
 			public:
 
-				SimulationRefinementApplyFunctor(RemoveSetType* remove, SimType* sim)
+				SimulationRefinementApplyFunctor(SimType* sim, RemoveSetType* remove,
+					StateToLHSsType* stateToLHSs)
 				{
 				}
 
@@ -565,7 +566,7 @@ public:   // Public data types
 			// create necessary apply functors
 			SimulationCounterInitializationApplyFunctor simulationCounterInitializer;
 			SimulationDetectorApplyFunctor simulationDetector;
-			SimulationRefinementApplyFunctor simulationRefineFunc(&remove, sim);
+			SimulationRefinementApplyFunctor simulationRefineFunc(sim, &remove, &stateToLhss);
 
 			// now we perform initial refinement
 			for (typename std::vector<StateType>::const_iterator itStates = states.begin();
