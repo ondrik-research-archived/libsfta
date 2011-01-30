@@ -400,8 +400,10 @@ public:   // Public data types
 			assert(aut != static_cast<Type*>(0));
 
 			typedef typename HierarchyRoot::Operation::SimulationRelationType SimType;
-			typedef std::pair<StateType, StateType> StatePair;
+			typedef LeftHandSideType StateVector;
+			typedef std::pair<StateVector, StateVector> StateVectorPair;
 			typedef VectorMap<StateType, RootType> CountersType;
+			typedef std::set<StateVectorPair> RemoveSetType;
 
 			class SimulationCounterInitializationApplyFunctor
 				: public SharedMTBDDType::AbstractApplyFunctorType
@@ -477,7 +479,7 @@ public:   // Public data types
 				
 			public:
 
-				SimulationRefinementApplyFunctor(std::queue<StatePair>* remove, SimType* sim)
+				SimulationRefinementApplyFunctor(RemoveSetType* remove, SimType* sim)
 				{
 				}
 
@@ -511,11 +513,15 @@ public:   // Public data types
 
 			SharedMTBDDType* mtbdd = autSym->GetTTWrapper()->GetMTBDD();
 
-			std::queue<StatePair> remove;
+			RemoveSetType remove;
 
 			RootType initCnt = mtbdd->CreateRoot();
 
 			std::vector<StateType> states = autSym->GetVectorOfStates();
+
+			// here should be filling of LHSs
+			assert(false);
+
 
 			SimulationCounterInitializationApplyFunctor simulationCounterInitializer;
 			SimulationDetectorApplyFunctor simulationDetector;
@@ -560,7 +566,9 @@ public:   // Public data types
 
 					if (!simulationHolds)
 					{	// in case state is not simulated by higherState
-						remove.push(std::make_pair(state, higherState));
+
+						// here should be filling of remove
+						assert(false);
 					}
 				}
 			}
@@ -585,88 +593,21 @@ public:   // Public data types
 
 			while (!remove.empty())
 			{	// while there is a need for backwards propagation of cut simulations
-				StatePair cutRel = remove.front();
-				remove.pop();
+				StateVectorPair cutRel = *(remove.begin());
+				remove.erase(remove.begin());
 
-				const StateType& q = cutRel.first;
-				const StateType& r = cutRel.second;
+				const StateVector& qVec = cutRel.first;
+				const StateVector& rVec = cutRel.second;
 
-				SFTA_LOGGER_INFO("removed pair (" + Convert::ToString(q) + ", " + Convert::ToString(r) + ")");
+				SFTA_LOGGER_INFO("removed pair (" + Convert::ToString(qVec) + ", " + Convert::ToString(rVec) + ")");
 
-				// TODO: this is a stupid implementation and should be optimized by
-				// using some nice data structure, e.g. multimap (Q -> Q*)
-				for (typename LHSRootContainerType::const_iterator itFirstLhs = buLHSs.begin();
-					itFirstLhs != buLHSs.end(); ++itFirstLhs)
-				{
-					const LeftHandSideType& qVec = itFirstLhs->first;
+				RootType tmpRoot = mtbdd->TernaryApply(autSym->getRoot(qVec),
+					autSym->getRoot(rVec), cnt.GetValue(qVec),
+					&simulationRefineFunc);
 
-					for (size_t iQVec = 0; iQVec < qVec.size(); ++iQVec)
-					{
-						if (qVec[iQVec] == q)
-						{	// we bind q to position iQVec
-							for (typename LHSRootContainerType::const_iterator itSecondLhs = buLHSs.begin();
-								itSecondLhs != buLHSs.end(); ++itSecondLhs)
-							{
-								const LeftHandSideType& rVec = itSecondLhs->first;
+				cnt.SetValue(qVec, tmpRoot);
 
-								if (qVec.size() == rVec.size())
-								{	// if the sizes match
-									if (rVec[iQVec] == r)
-									{	// in case positions match
-										SFTA_LOGGER_INFO("Found two LHSs: " + Convert::ToString(qVec) +
-											", " + Convert::ToString(rVec));
-
-										bool doesVectorSimulationHold = true;
-										for (size_t iPosition = 0; iPosition < qVec.size(); ++iPosition)
-										{
-											SFTA_LOGGER_INFO("Checking whether simulation holds between the two vectors...");
-											// TODO: rewrite this to use equal_range
-											typename SimType::const_iterator lowerBound =
-												sim->lower_bound(qVec[iPosition]);
-											typename SimType::const_iterator upperBound =
-												sim->upper_bound(qVec[iPosition]);
-
-											bool found = false;
-											while (lowerBound != upperBound)
-											{
-												if (lowerBound->second == rVec[iPosition])
-												{
-													found = true;
-												}
-
-												++lowerBound;
-											}
-
-											if (!found)
-											{	// in case the two states are not in the simulation relation
-												doesVectorSimulationHold = false;
-											}
-										}
-
-										if (doesVectorSimulationHold)
-										{	// in case the vectors simulate each other
-											RootType tmpRoot = mtbdd->TernaryApply(autSym->getRoot(qVec),
-												autSym->getRoot(rVec), cnt.GetValue(qVec),
-												&simulationRefineFunc);
-
-											cnt.SetValue(qVec, tmpRoot);
-
-											//TODO: erase the old cnt counter
-										}
-									}
-								}
-							}
-						}
-					}
-				}
-
-
-
-
-
-
-
-
+				//TODO: erase the old cnt counter
 			}
 			 
 			// ********************************************************************
