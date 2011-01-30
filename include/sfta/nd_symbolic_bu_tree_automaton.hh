@@ -12,6 +12,7 @@
 #define _ND_SYMBOLIC_BU_TREE_AUTOMATON_HH_
 
 // SFTA headers
+#include <sfta/inflatable_vector.hh>
 #include <sfta/symbolic_bu_tree_automaton.hh>
 #include <sfta/nd_symbolic_td_tree_automaton.hh>
 
@@ -404,6 +405,12 @@ public:   // Public data types
 			typedef std::pair<StateVector, StateVector> StateVectorPair;
 			typedef VectorMap<StateType, RootType> CountersType;
 			typedef std::set<StateVectorPair> RemoveSetType;
+			typedef SFTA::InflatableVector<SFTA::Vector<StateVector> >
+				InflatableListOfVectorsType;
+			typedef SFTA::InflatableVector<InflatableListOfVectorsType>
+				InflatableListOfInflatableListsOfVectorsType;
+			typedef std::tr1::unordered_map<StateType,
+				InflatableListOfInflatableListsOfVectorsType> StateToLHSsType;
 
 			class SimulationCounterInitializationApplyFunctor
 				: public SharedMTBDDType::AbstractApplyFunctorType
@@ -506,27 +513,61 @@ public:   // Public data types
 			//                         INITIALIZATION
 			// ********************************************************************
 
+			// the simulation relation
 			SimType* sim = new SimType();
 
+			// corresponding TD automaton
 			std::auto_ptr<NDSymbolicTDTreeAutomatonType> topDown(
 				autSym->GetTopDownAutomaton());
 
+			// used MTBDD
 			SharedMTBDDType* mtbdd = autSym->GetTTWrapper()->GetMTBDD();
 
+			// set "remove"
 			RemoveSetType remove;
 
+			// initial value of counters
 			RootType initCnt = mtbdd->CreateRoot();
 
+			// array of states
 			std::vector<StateType> states = autSym->GetVectorOfStates();
 
-			// here should be filling of LHSs
-			assert(false);
+			// The map of all LHSs of the BU automaton
+			LHSRootContainerType buLHSs =	autSym->getRootMap();
+
+			// first we create a data structure that for each state holds all
+			// superstates where the state is
+			StateToLHSsType stateToLhss;
+			for (typename LHSRootContainerType::const_iterator itLhss = buLHSs.begin();
+				itLhss != buLHSs.end(); ++itLhss)
+			{	// for each LHS
+				const StateVector& vec = itLhss->first;
+
+				for (size_t iVec = 0; iVec < vec.size(); ++iVec)
+				{	// for each state in the LHS
+					const StateType& state = vec[iVec];
+
+					typename StateToLHSsType::iterator itState2LHSs;
+					if ((itState2LHSs = stateToLhss.find(state)) == stateToLhss.end())
+					{	// in case there is nothing for the state
+						itState2LHSs = (stateToLhss.insert(std::make_pair(state, 
+							InflatableListOfInflatableListsOfVectorsType()))).first;
+					}
+
+					InflatableListOfInflatableListsOfVectorsType& innerContainer = 
+						itState2LHSs->second;
+
+					innerContainer[vec.size()][iVec].push_back(vec);
+				}
+			}
 
 
+			// create necessary apply functors
 			SimulationCounterInitializationApplyFunctor simulationCounterInitializer;
 			SimulationDetectorApplyFunctor simulationDetector;
 			SimulationRefinementApplyFunctor simulationRefineFunc(&remove, sim);
 
+			// now we perform initial refinement
 			for (typename std::vector<StateType>::const_iterator itStates = states.begin();
 				itStates != states.end(); ++itStates)
 			{
@@ -572,8 +613,6 @@ public:   // Public data types
 					}
 				}
 			}
-
-			LHSRootContainerType buLHSs =	autSym->getRootMap();
 
 			CountersType cnt(autSym->getSinkSuperState());
 

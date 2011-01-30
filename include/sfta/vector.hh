@@ -53,6 +53,11 @@ private:   // Private data types
 
 	typedef SFTA::Private::Convert Convert;
 
+public:   // Public data types
+
+	typedef typename ParentClass::reference reference;
+	typedef typename ParentClass::const_reference const_reference;
+
 public:   // Public methods
 
 	Vector()
