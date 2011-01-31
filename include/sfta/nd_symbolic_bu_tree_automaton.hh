@@ -541,9 +541,23 @@ public:   // Public data types
 
 							if (newVec[1] == 0)
 							{	// in case we break the simulation relation
-								assert(false);
+								for (typename LeafType::const_iterator itPreQ = preQ.begin();
+									itPreQ != preQ.end(); ++itPreQ)
+								{	// for each element p of preQ
+									const StateType& p = *itPreQ;
 
-								assert(&preQ != static_cast<LeafType*>(0));
+									std::pair<typename SimType::const_iterator,
+										typename SimType::const_iterator> itSim = sim_->equal_range(p);
+									while (itSim.first != itSim.second)
+									{	// for all simulators of p
+										if (itSim.first->second == s)
+										{	// in case s simulates p
+											assert(false);
+										}
+
+										++(itSim.first);
+									}
+								}
 							}
 						}
 						else
