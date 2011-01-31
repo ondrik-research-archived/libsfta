@@ -432,14 +432,21 @@ public:   // Public data types
 
 				virtual LeafType operator()(const LeafType& lhs, const LeafType& rhs)
 				{
-					LeafType newRhs = rhs;
+					if (lhs.size() != 0)
+					{
+						LeafType newRhs = rhs;
 
-					SFTA::Vector<StateType> newVec;
-					newVec.push_back(state_);
-					newVec.push_back(lhs.size());
-					newRhs.insert(newVec);
+						SFTA::Vector<StateType> newVec;
+						newVec.push_back(state_);
+						newVec.push_back(lhs.size());
+						newRhs.insert(newVec);
 
-					return newRhs;
+						return newRhs;
+					}
+					else
+					{
+						return rhs;
+					}
 				}
 			};
 
@@ -535,6 +542,8 @@ public:   // Public data types
 							if (newVec[1] == 0)
 							{	// in case we break the simulation relation
 								assert(false);
+
+								assert(&preQ != static_cast<LeafType*>(0));
 							}
 						}
 						else
@@ -542,11 +551,6 @@ public:   // Public data types
 							newCntQ.insert(vec);
 						}
 					}
-
-					assert(&preQ != static_cast<LeafType*>(0));
-
-
-					assert(false);
 
 					return newCntQ;
 				}
