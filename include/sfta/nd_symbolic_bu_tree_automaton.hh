@@ -501,6 +501,81 @@ public:   // Public data types
 				SimulationRefinementApplyFunctor& operator=(
 					const SimulationRefinementApplyFunctor& rhs);
 
+
+				void addToRemoveCutPairsOfVector(const StateType& p, const StateType& s)
+				{
+					typename StateToLHSsType::iterator itState2LHSsP;
+					if ((itState2LHSsP = stateToLhss_->find(p)) != stateToLhss_->end())
+					{	// in case there is something for p
+						InflatableListOfInflatableListsOfVectorsType& innerContainerP = 
+							itState2LHSsP->second;
+
+						for (size_t iSize = 0; iSize < innerContainerP.size(); ++iSize)
+						{	// for all sizes of vector in which p is present
+							const InflatableListOfVectorsType& listOfPositions = innerContainerP[iSize];
+
+							for (size_t iPosition = 0; iPosition < listOfPositions.size(); ++iPosition)
+							{	// for all positions in vectors of given size
+								const SFTA::Vector<StateVector>& listOfStateVectorsP =
+									listOfPositions[iPosition];
+
+								for (typename SFTA::Vector<StateVector>::const_iterator itListP =
+									listOfStateVectorsP.begin(); itListP != listOfStateVectorsP.end(); ++itListP)
+								{	// for all vectors of given size that have p at the iPosition-th position
+									const StateVector& pVec = *itListP;
+
+									typename StateToLHSsType::iterator itState2LHSsS;
+									if ((itState2LHSsS = stateToLhss_->find(s)) != stateToLhss_->end())
+									{	// if there is something for s
+										InflatableListOfInflatableListsOfVectorsType& innerContainerS = 
+											itState2LHSsS->second;
+
+										const SFTA::Vector<StateVector>& listOfStateVectorsS =
+											innerContainerS[iSize][iPosition];
+
+										for (typename SFTA::Vector<StateVector>::const_iterator itListS =
+											listOfStateVectorsS.begin(); itListS != listOfStateVectorsS.end(); ++itListS)
+										{	// for all vectors of given size that have s at the iPosition-th position
+											const StateVector& sVec = *itListS;
+
+											bool vectorsSimulate = true;
+
+											for (size_t iVecPosition = 0; iVecPosition < iSize; ++iVecPosition)
+											{
+												bool isSimulatedBy = false;
+
+												std::pair<typename SimType::const_iterator,
+													typename SimType::const_iterator> itSim =
+													sim_->equal_range(pVec[iVecPosition]);
+												while (itSim.first != itSim.second)
+												{	// for all simulators of iVecPosition-th element of pVec
+													if (itSim.first->second == sVec[iVecPosition])
+													{	// in case s simulates p
+														isSimulatedBy = true;
+														break;
+													}
+
+													++(itSim.first);
+												}
+												
+												if (!isSimulatedBy)
+												{
+													vectorsSimulate = false;
+												}
+											}
+
+											if (vectorsSimulate)
+											{
+												remove_->insert(std::make_pair(pVec, sVec));
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+
 			public:
 
 				SimulationRefinementApplyFunctor(SimType* sim, RemoveSetType* remove,
@@ -546,13 +621,16 @@ public:   // Public data types
 								{	// for each element p of preQ
 									const StateType& p = *itPreQ;
 
-									std::pair<typename SimType::const_iterator,
-										typename SimType::const_iterator> itSim = sim_->equal_range(p);
+									std::pair<typename SimType::iterator, typename SimType::iterator>
+										itSim = sim_->equal_range(p);
 									while (itSim.first != itSim.second)
 									{	// for all simulators of p
 										if (itSim.first->second == s)
 										{	// in case s simulates p
-											assert(false);
+											addToRemoveCutPairsOfVector(p, s);
+											sim_->erase(itSim.first);
+
+											break;
 										}
 
 										++(itSim.first);
