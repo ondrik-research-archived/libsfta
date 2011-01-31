@@ -510,11 +510,41 @@ public:   // Public data types
 				virtual LeafType operator()(const LeafType& preR, const LeafType& preQ,
 					const LeafType& cntQ)
 				{
-					assert(&preR != static_cast<LeafType*>(0));
-					assert(&preQ != static_cast<LeafType*>(0));
-					assert(&cntQ != static_cast<LeafType*>(0));
+					LeafType newCntQ;
 
-					LeafType newCntQ = cntQ;
+					for (typename LeafType::const_iterator itCntQ = cntQ.begin();
+						itCntQ != cntQ.end(); ++itCntQ)
+					{
+						const SFTA::Vector<StateType>& vec = itCntQ->elemVector;
+
+						// we assert that the counters are in correct format
+						assert(vec.size() == 2);
+
+						const StateType& s = vec[0];
+
+						if (preR.find(s) != preR.end())
+						{	// in case the counter is to be decremented
+							SFTA::Vector<StateType> newVec(vec);
+
+							// we assert that we do not make mistakes in the algorithm :-)
+							assert(newVec[1] > 0);
+
+							--newVec[1];
+							newCntQ.insert(newVec);
+
+							if (newVec[1] == 0)
+							{	// in case we break the simulation relation
+								assert(false);
+							}
+						}
+						else
+						{	// the counter is to be copied only
+							newCntQ.insert(vec);
+						}
+					}
+
+					assert(&preQ != static_cast<LeafType*>(0));
+
 
 					assert(false);
 
