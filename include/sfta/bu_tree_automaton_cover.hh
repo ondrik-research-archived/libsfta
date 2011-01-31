@@ -224,7 +224,7 @@ private:  // Private methods
 	inline StateType translateInternalStateToState(
 		const InternalDualStateType& internalState) const
 	{
-		if (!internalState.isElem)
+		if (!internalState.IsElement())
 		{
 			throw std::runtime_error(__func__ +
 				std::string(": invalid state type"));

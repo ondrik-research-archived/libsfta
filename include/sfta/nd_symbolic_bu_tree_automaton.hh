@@ -515,7 +515,7 @@ public:   // Public data types
 					for (typename LeafType::const_iterator itCntQ = cntQ.begin();
 						itCntQ != cntQ.end(); ++itCntQ)
 					{
-						const SFTA::Vector<StateType>& vec = itCntQ->elemVector;
+						const SFTA::Vector<StateType>& vec = itCntQ->GetVector();
 
 						// we assert that the counters are in correct format
 						assert(vec.size() == 2);

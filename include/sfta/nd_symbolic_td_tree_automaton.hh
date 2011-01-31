@@ -46,15 +46,18 @@ namespace SFTA
 	namespace Private
 	{
 		template <typename T>
-		struct ElemOrVector
+		class ElemOrVector
 		{
+		public:
 			typedef T Type;
 			typedef SFTA::Vector<T> VectorType;
 
+		private:
 			bool isElem;               // if true, elem is valid, if false, elemVector is valid
 			Type elem;
 			VectorType elemVector;
 
+		public:
 			ElemOrVector()
 				: isElem(true), elem(), elemVector()
 			{	}
@@ -66,6 +69,32 @@ namespace SFTA
 			ElemOrVector(const VectorType& elVec)
 				: isElem(false), elem(), elemVector(elVec)
 			{ }
+
+			inline bool IsElement() const
+			{
+				return isElem;
+			}
+
+			const VectorType& GetElement() const
+			{
+				if (!isElem)
+				{
+					throw std::runtime_error(__func__ +
+						std::string(": an attempt to get an element from vector"));
+				}
+
+				return elem;
+			}
+
+			const VectorType& GetVector() const
+			{
+				if (isElem)
+				{
+					throw std::runtime_error(__func__ +
+						std::string(": an attempt to get a vector from element"));
+				}
+				return elemVector;
+			}
 
 			operator Type() const
 			{

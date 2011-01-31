@@ -416,12 +416,12 @@ public:   // Public methods
 				for (typename InternalRightHandSideType::const_iterator itRhs = rhs.begin();
 					 itRhs != rhs.end(); ++itRhs)
 				{
-					if (itRhs->isElem)
+					if (itRhs->IsElement())
 					{
 						throw std::runtime_error(__func__ + std::string(": invalid type"));
 
 					}
-	        const typename InternalDualStateType::VectorType& vecRhs = itRhs->elemVector;
+	        const typename InternalDualStateType::VectorType& vecRhs = itRhs->GetVector();
 					SFTA::Vector<StateType> outputRhs;
 					for (typename InternalDualStateType::VectorType::const_iterator itVecRhs = vecRhs.begin();
 						 itVecRhs != vecRhs.end(); ++itVecRhs)
