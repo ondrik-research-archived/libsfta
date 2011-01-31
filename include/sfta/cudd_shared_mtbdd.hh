@@ -931,8 +931,8 @@ public:   // Public methods
 	 *
 	 * @copydetails  SFTA::AbstractSharedMTBDD::TernaryApply()
 	 */
-	virtual RootType TernaryApply(const RootType& lhs, const RootType& rhs,
-		const RootType& mhs, AbstractTernaryApplyFunctorType* func)
+	virtual RootType TernaryApply(const RootType& lhs, const RootType& mhs,
+		const RootType& rhs, AbstractTernaryApplyFunctorType* func)
 	{
 		// Assertions
 		assert(func
