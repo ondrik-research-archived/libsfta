@@ -14,6 +14,7 @@
 // SFTA headers
 #include <sfta/base_transition_table_wrapper.hh>
 #include <sfta/convert.hh>
+#include <sfta/simulation_relation.hh>
 
 // Standard library headers
 #include <cassert>
@@ -91,7 +92,7 @@ public:   // Public data types
 	{
 	public:   // Public data types
 
-		typedef std::multimap<StateType, StateType> SimulationRelationType;
+		typedef SFTA::SimulationRelation<StateType> SimulationRelationType;
 
 
 	public:   // Public methods
