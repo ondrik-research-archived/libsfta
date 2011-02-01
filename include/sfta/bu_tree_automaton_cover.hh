@@ -192,11 +192,23 @@ public:   // Public data types
 			std::auto_ptr<InternalSimulationType> simulation(
 				oper->ComputeSimulationPreorder((aut->getAutomaton()).get()));
 
-			for (typename InternalSimulationType::const_iterator itSim = simulation->begin();
-				itSim != simulation->end(); ++itSim)
+
+			std::vector<InternalStateType> internalStates =
+				aut->getAutomaton()->GetVectorOfStates();
+
+			for (size_t iState = 0; iState < internalStates.size(); ++iState)
 			{
-				result.insert(std::make_pair(aut->translateInternalStateToState(itSim->first),
-					aut->translateInternalStateToState(itSim->second)));
+				for (size_t jState = 0; jState < internalStates.size(); ++jState)
+				{
+					const InternalStateType& lesserState = internalStates[iState];
+					const InternalStateType& biggerState = internalStates[jState];
+
+					if (simulation->is_in(std::make_pair(lesserState, biggerState)))
+					{	// in case the states are in the relation
+						result.insert(std::make_pair(aut->translateInternalStateToState(
+							lesserState), aut->translateInternalStateToState(biggerState)));
+					}
+				}
 			}
 
 			return result;

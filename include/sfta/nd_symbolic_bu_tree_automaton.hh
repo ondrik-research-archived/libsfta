@@ -542,23 +542,7 @@ public:   // Public data types
 
 											for (size_t iVecPosition = 0; iVecPosition < iSize; ++iVecPosition)
 											{
-												bool isSimulatedBy = false;
-
-												std::pair<typename SimType::const_iterator,
-													typename SimType::const_iterator> itSim =
-													sim_->equal_range(pVec[iVecPosition]);
-												while (itSim.first != itSim.second)
-												{	// for all simulators of iVecPosition-th element of pVec
-													if (itSim.first->second == sVec[iVecPosition])
-													{	// in case s simulates p
-														isSimulatedBy = true;
-														break;
-													}
-
-													++(itSim.first);
-												}
-												
-												if (!isSimulatedBy)
+												if (!sim_->is_in(std::make_pair(pVec[iVecPosition], sVec[iVecPosition])))
 												{
 													vectorsSimulate = false;
 												}
@@ -621,21 +605,10 @@ public:   // Public data types
 								{	// for each element p of preQ
 									const StateType& p = *itPreQ;
 
-									std::pair<typename SimType::iterator, typename SimType::iterator>
-										itSim = sim_->equal_range(p);
-									while (itSim.first != itSim.second)
-									{	// for all simulators of p
-										if (itSim.first->second == s)
-										{	// in case s simulates p
-											addToRemoveCutPairsOfVector(p, s);
-											sim_->erase(itSim.first);
-
-											SFTA_LOGGER_INFO("Breaking simulation pair (" + Convert::ToString(p) + ", " + Convert::ToString(s) + ")");
-
-											break;
-										}
-
-										++(itSim.first);
+									if (sim_->is_in(std::make_pair(p, s)))
+									{
+										addToRemoveCutPairsOfVector(p, s);
+										sim_->erase(std::make_pair(p, s));
 									}
 								}
 							}
