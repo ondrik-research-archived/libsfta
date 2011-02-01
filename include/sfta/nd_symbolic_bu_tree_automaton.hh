@@ -630,6 +630,8 @@ public:   // Public data types
 											addToRemoveCutPairsOfVector(p, s);
 											sim_->erase(itSim.first);
 
+											SFTA_LOGGER_INFO("Breaking simulation pair (" + Convert::ToString(p) + ", " + Convert::ToString(s) + ")");
+
 											break;
 										}
 
@@ -663,9 +665,13 @@ public:   // Public data types
 			// the simulation relation
 			SimType* sim = new SimType();
 
+			SFTA_LOGGER_INFO("Started computing top-down automaton");
+
 			// corresponding TD automaton
 			std::auto_ptr<NDSymbolicTDTreeAutomatonType> topDown(
 				autSym->GetTopDownAutomaton());
+
+			SFTA_LOGGER_INFO("Finished computing top-down automaton");
 
 			// used MTBDD
 			SharedMTBDDType* mtbdd = autSym->GetTTWrapper()->GetMTBDD();
@@ -713,6 +719,8 @@ public:   // Public data types
 			SimulationCounterInitializationApplyFunctor simulationCounterInitializer;
 			SimulationDetectorApplyFunctor simulationDetector;
 			SimulationRefinementApplyFunctor simulationRefineFunc(sim, &remove, &stateToLhss);
+
+			SFTA_LOGGER_INFO("Started computing initial refinement");
 
 			// now we perform initial refinement
 			for (typename std::vector<StateType>::const_iterator itStates = states.begin();
@@ -799,6 +807,8 @@ public:   // Public data types
 				}
 			}
 
+			SFTA_LOGGER_INFO("Finished computing initial refinement");
+
 			CountersType cnt(autSym->getSinkSuperState());
 
 			for (typename LHSRootContainerType::const_iterator itSuperStates =
@@ -815,10 +825,19 @@ public:   // Public data types
 			//                           COMPUTATION
 			// ********************************************************************
 
+			size_t loopCounter = 0;
+
+			SFTA_LOGGER_INFO("Started computation");
 			while (!remove.empty())
 			{	// while there is a need for backwards propagation of cut simulations
 				StateVectorPair cutRel = *(remove.begin());
 				remove.erase(remove.begin());
+
+				if (++loopCounter == 100)
+				{
+					loopCounter = 0;
+					SFTA_LOGGER_INFO("Size of remove set: " + Convert::ToString(remove.size()));
+				}
 
 				const StateVector& qVec = cutRel.first;
 				const StateVector& rVec = cutRel.second;
@@ -833,7 +852,9 @@ public:   // Public data types
 
 				//TODO: erase the old cnt counter
 			}
-			 
+
+			SFTA_LOGGER_INFO("Finished computation");
+
 			// ********************************************************************
 			//                           TIDYING UP
 			// ********************************************************************
