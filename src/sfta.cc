@@ -242,7 +242,7 @@ void performComputationOfSimulation(bool isTopDown, const std::string& file)
 
 		std::auto_ptr<BUTreeAutomaton::Operation> op(ta->GetOperation());
 
-		std::cout << ta.get()->ToString() << "\n";
+		//std::cout << ta.get()->ToString() << "\n";
 
 		std::cout << Convert::ToString(op->ComputeSimulationPreorder(ta.get())) << "\n";
 	}
