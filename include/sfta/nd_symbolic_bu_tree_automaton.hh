@@ -717,7 +717,8 @@ public:   // Public data types
 
 					bool simulationHolds = false;
 
-					if (!autSym->IsStateFinal(q) || autSym->IsStateFinal(r))
+					// NB: for downward simulation, the initial preorder is Q x Q
+					if (/*!autSym->IsStateFinal(q) || autSym->IsStateFinal(r)*/ true)
 					{	// in case the pair (itStates, itHigherStates) is in the initial preorder
 						RootType rRoot = topDown->getRoot(r);
 
