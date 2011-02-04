@@ -75,7 +75,7 @@ namespace SFTA
 				return isElem;
 			}
 
-			const VectorType& GetElement() const
+			const Type& GetElement() const
 			{
 				if (!isElem)
 				{
