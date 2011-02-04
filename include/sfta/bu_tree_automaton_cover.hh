@@ -222,6 +222,8 @@ private:  // Private data members
 
 	StateToInternalStateMap state2internalStateMap_;
 
+	bool areStatesFromOutside_;
+
 	SymbolDictionaryPtrType symbolDict_;
 
 	InternalSymbolType nextSymbol_;
@@ -241,7 +243,28 @@ private:  // Private methods
 			throw std::runtime_error(__func__ +
 				std::string(": invalid state type"));
 		}
-		return "q" + Convert::ToString(internalState);
+
+		const InternalStateType& state = internalState.GetElement();
+
+		if (areStatesFromOutside_)
+		{
+			for (typename StateToInternalStateMap::const_iterator itStates =
+				state2internalStateMap_.begin(); itStates != state2internalStateMap_.end();
+				++itStates)
+			{
+				if (itStates->second == state)
+				{
+					return itStates->first;
+				}
+			}
+
+			throw std::runtime_error(__func__ + std::string(": could not find state ") +
+				Convert::ToString(internalState));
+		}
+		else
+		{
+			return "q" + Convert::ToString(internalState);
+		}
 	}
 
 	std::vector<SymbolType> translateInternalSymbolToSymbols(
@@ -308,6 +331,7 @@ public:   // Public methods
 	BUTreeAutomatonCover()
 		: automaton_(new NDSymbolicBUTreeAutomaton()),
 			state2internalStateMap_(),
+			areStatesFromOutside_(true),
 			symbolDict_(),
 			nextSymbol_(0)
 	{ }
@@ -315,6 +339,7 @@ public:   // Public methods
 	BUTreeAutomatonCover(TTWrapperPtr wrapper, SymbolDictionaryPtrType symbolDict)
 		: automaton_(new NDSymbolicBUTreeAutomaton(wrapper)),
 			state2internalStateMap_(),
+			areStatesFromOutside_(true),
 			symbolDict_(symbolDict),
 			nextSymbol_(0)
 	{ }
@@ -322,6 +347,7 @@ public:   // Public methods
 	BUTreeAutomatonCover(NDSymbolicBUTreeAutomaton* automaton, SymbolDictionaryPtrType symbolDict)
 		: automaton_(automaton),
 			state2internalStateMap_(),
+			areStatesFromOutside_(false),
 			symbolDict_(symbolDict),
 			nextSymbol_(0)
 	{ }
