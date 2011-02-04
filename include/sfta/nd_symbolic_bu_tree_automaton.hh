@@ -475,7 +475,7 @@ public:   // Public data types
 
 				virtual LeafType operator()(const LeafType& lhs, const LeafType& rhs)
 				{
-					if (lhs.empty() && !rhs.empty())
+					if (!lhs.empty() && rhs.empty())
 					{
 						doesSimulationHold_ = false;
 					}
