@@ -818,8 +818,8 @@ public:   // Public data types
 
 				//SFTA_LOGGER_INFO("removed pair (" + Convert::ToString(qVec) + ", " + Convert::ToString(rVec) + ")");
 
-				RootType tmpRoot = mtbdd->TernaryApply(autSym->getRoot(qVec),
-					autSym->getRoot(rVec), cnt.GetValue(qVec),
+				RootType tmpRoot = mtbdd->TernaryApply(autSym->getRoot(rVec),
+					autSym->getRoot(qVec), cnt.GetValue(qVec),
 					&simulationRefineFunc);
 
 				cnt.SetValue(qVec, tmpRoot);
