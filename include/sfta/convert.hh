@@ -255,6 +255,27 @@ public:
 	}
 
 
+	/**
+	 * @brief  Converts an object to string (std::pair specialization)
+	 *
+	 * Static method for conversion of a pair of objects of any class with the
+	 * << output operator into a string
+	 *
+	 * @param[in]  pr  The pair for the conversion
+	 *
+	 * @returns  The string representation of the pair
+	 */
+	template <typename T, typename U>
+	static std::string ToString(const std::pair<T, U>& pr)
+	{
+		// the output stream for the string
+		std::ostringstream oss;
+
+		oss << "(" << ToString(pr.first) << ", " << ToString(pr.second) << ")";
+
+		// return the string
+		return oss.str();
+	}
 
 
 	/**
