@@ -185,11 +185,7 @@ void performIntersection(bool isTopDown, const std::string& lhsFile,
 
 		std::auto_ptr<TDTreeAutomaton::Operation> op(taLhs->GetOperation());
 
-
-		//clock_t start = clock();
 		std::auto_ptr<TDTreeAutomaton> taUnion(op->Intersection(taLhs.get(), taRhs.get()));
-		//clock_t finish = clock();
-		//SFTA_LOGGER_INFO("Duration: " + Convert::ToString(static_cast<double>(finish - start) / CLOCKS_PER_SEC) + " s");
 
 		std::cout << taUnion->ToString();
 	}
@@ -242,9 +238,13 @@ void performComputationOfSimulation(bool isTopDown, const std::string& file)
 
 		std::auto_ptr<BUTreeAutomaton::Operation> op(ta->GetOperation());
 
-		//std::cout << ta.get()->ToString() << "\n";
+		typedef BUTreeAutomaton::SimulationRelationType SimulationRelationType;
 
-		std::cout << Convert::ToString(op->ComputeSimulationPreorder(ta.get())) << "\n";
+		SimulationRelationType sim = op->ComputeSimulationPreorder(ta.get());
+
+		std::string resultString = Convert::ToString(sim);
+
+		std::cout << resultString << "\n";
 	}
 	else
 	{
