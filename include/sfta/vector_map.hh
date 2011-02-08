@@ -71,6 +71,8 @@ public:   // Public data types
 private:  // Private data types
 
 
+	typedef SFTA::Private::Convert Convert;
+
 	/**
 	 * @brief  Hasher structure for a single key
 	 *
@@ -481,7 +483,15 @@ private:  // Private methods
 		// Assertions
 		assert(lhs.size() == 1);
 
-		container1_.insert(std::make_pair(lhs[0], value));
+		typename HashTableUnary::iterator itHash;
+		if ((itHash = container1_.find(lhs[0])) == container1_.end())
+		{
+			container1_.insert(std::make_pair(lhs[0], value));
+		}
+		else
+		{
+			itHash->second = value;
+		}
 	}
 
 	void setValueForArity2(const IndexType& lhs, const ValueType& value)
@@ -489,7 +499,15 @@ private:  // Private methods
 		// Assertions
 		assert(lhs.size() == 2);
 
-		container2_.insert(std::make_pair(std::make_pair(lhs[0],lhs[1]), value));
+		typename HashTableBinary::iterator itHash;
+		if ((itHash = container2_.find(std::make_pair(lhs[0], lhs[1]))) == container2_.end())
+		{
+			container2_.insert(std::make_pair(std::make_pair(lhs[0], lhs[1]), value));
+		}
+		else
+		{
+			itHash->second = value;
+		}
 	}
 
 	void setValueForArityN(const IndexType& lhs, const ValueType& value)
@@ -497,7 +515,15 @@ private:  // Private methods
 		// Assertions
 		assert(lhs.size() > 2);
 
-		containerN_.insert(std::make_pair(lhs, value));
+		typename HashTableNnary::iterator itHash;
+		if ((itHash = containerN_.find(lhs)) == containerN_.end())
+		{
+			containerN_.insert(std::make_pair(lhs, value));
+		}
+		else
+		{
+			itHash->second = value;
+		}
 	}
 
 public:   // Public methods
