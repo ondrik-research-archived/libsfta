@@ -18,15 +18,6 @@
 
 #define SFTA_LOGGER_LOG_MESSAGE(severity, msg) (log4cpp::Category::getInstance(SFTA_LOG_CATEGORY_NAME).severity((SFTA_LOGGER_PREFIX) + (msg)))
 
-//#define SFTA_LOGGER_DEBUG(msg) (log4cpp::Category::getInstance(LOG_CATEGORY_NAME).debug((SFTA_LOGGER_PREFIX) + (msg)))
-//#define SFTA_LOGGER_INFO(msg) (log4cpp::Category::getInstance(LOG_CATEGORY_NAME).info((SFTA_LOGGER_PREFIX) + (msg)))
-//#define SFTA_LOGGER_NOTICE(msg) (log4cpp::Category::getInstance(LOG_CATEGORY_NAME).notice((SFTA_LOGGER_PREFIX) + (msg)))
-//#define SFTA_LOGGER_WARN(msg) (log4cpp::Category::getInstance(LOG_CATEGORY_NAME).warn((SFTA_LOGGER_PREFIX) + (msg)))
-//#define SFTA_LOGGER_ERROR(msg) (log4cpp::Category::getInstance(LOG_CATEGORY_NAME).error((SFTA_LOGGER_PREFIX) + (msg)))
-//#define SFTA_LOGGER_CRIT(msg) (log4cpp::Category::getInstance(LOG_CATEGORY_NAME).crit((SFTA_LOGGER_PREFIX) + (msg)))
-//#define SFTA_LOGGER_ALERT(msg) (log4cpp::Category::getInstance(LOG_CATEGORY_NAME).alert((SFTA_LOGGER_PREFIX) + (msg)))
-//#define SFTA_LOGGER_FATAL(msg) (log4cpp::Category::getInstance(LOG_CATEGORY_NAME).fatal((SFTA_LOGGER_PREFIX) + (msg)))
-
 #define SFTA_LOGGER_DEBUG(msg)  (SFTA_LOGGER_LOG_MESSAGE(debug, msg))
 #define SFTA_LOGGER_INFO(msg)   (SFTA_LOGGER_LOG_MESSAGE(info, msg))
 #define SFTA_LOGGER_NOTICE(msg) (SFTA_LOGGER_LOG_MESSAGE(notice, msg))
