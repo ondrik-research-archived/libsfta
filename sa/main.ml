@@ -36,6 +36,47 @@ let pop_time (x : unit) = (
 let print_bool_array = Array.iter (fun x -> if x then Printf.printf "1" else Printf.printf "0")
 let print_bool_matrix = Array.iter (fun a -> print_bool_array a; Printf.printf "\n")
 
+let find_state_name stateIndex (aut : automaton) =
+  Array.fold_left (fun from_ar (st :state) -> if st.s_index = stateIndex then st.s_name else from_ar) "error" aut.a_states
+;;
+
+let rec print_pretty_row index row (aut : automaton) putComma =
+  if (index < Array.length row) then (
+      if ((Array.get row index) == true) then (
+        if (putComma) then Printf.printf ";";
+        Printf.printf " ";
+        Printf.printf "%s" (find_state_name index aut);
+        print_pretty_row (index+1) row aut true;
+      )
+      else (
+        print_pretty_row (index+1) row aut putComma;
+      )
+    )
+;;
+
+let rec print_pretty_matrix index matrix (aut : automaton) =
+  if (index < Array.length matrix) then (
+      Printf.printf " %s -> [" (find_state_name index aut) ;
+      print_pretty_row 0 (Array.get matrix index) aut false;
+      Printf.printf "]";
+      if (index+1 == Array.length matrix) then (
+      )
+      else (
+        Printf.printf ",";
+        print_pretty_matrix (index+1) matrix aut;
+      )
+    )
+    else (
+      Printf.printf ""
+    )
+;;
+
+let print_pretty_simulation matrix aut =
+  Printf.printf "{";
+  print_pretty_matrix 0 matrix aut;
+  Printf.printf "}\n"
+;;
+
 let to_taml_str n a =
 	let str = Interim.to_string a
 	and alph = Interim.alphabet_to_string a.a_alphabet in
@@ -158,7 +199,7 @@ let upward a dwn_sim = (
 )
 ;;
 
-let process_auts al do_up = (
+let process_auts al do_up pretty_print = (
 (*  reset (); *)
 	List.iter (fun a ->
 (*		Printf.printf "ta: states: %d, symbols: %d, rank: %d, transitions: %d\n" (Array.length a.a_states) (Array.length a.a_alphabet) (Interim.rank a) (List.length a.a_rules);*)
@@ -169,7 +210,12 @@ let process_auts al do_up = (
 			  let pr = upward a !r in
 				  r := pr#get_sim (Array.length a.a_states)
 			);
-      print_bool_matrix !r
+      if pretty_print then (
+        print_pretty_simulation !r a
+      )
+      else (
+        print_bool_matrix !r
+      )
 		)
 	) al;
 (*  eval ()*)
@@ -214,6 +260,9 @@ let print_usage () =
 	Printf.printf "  lts\t\tcomputes simulation over given LTS\n";
 	Printf.printf "  ta-down\tcomputes downward simulation over given TA\n";
 	Printf.printf "  ta-up\t\tcomputes upward simulation over given TA\n";
+  Printf.printf "\n";
+	Printf.printf "  ta-down-pretty\tcomputes downward simulation over given TA and prints it in a pretty form\n";
+	Printf.printf "  ta-up-pretty\t\tcomputes upward simulation over given TA and prints it in a pretty form\n";
 ;;
 
 let _ =
@@ -221,10 +270,12 @@ let _ =
 	if Array.length Sys.argv = 3 then (
 		match Sys.argv.(1) with
 			| "lts" -> process_ltss (ltss_from_file Sys.argv.(2))
-			| "ta-down" -> process_auts (auts_from_file Sys.argv.(2)) false
-			| "ta-up" -> process_auts (auts_from_file Sys.argv.(2)) true
-			| _ -> (print_usage; exit (-1))
+			| "ta-down" -> process_auts (auts_from_file Sys.argv.(2)) false false
+			| "ta-up" -> process_auts (auts_from_file Sys.argv.(2)) true false
+			| "ta-down-pretty" -> process_auts (auts_from_file Sys.argv.(2)) false true
+			| "ta-up-pretty" -> process_auts (auts_from_file Sys.argv.(2)) true true
+			| _ -> (print_usage (); exit (-1))
 	) else (
-		print_usage; exit (-1)
+		print_usage (); exit (-1)
 	)
 ;;
