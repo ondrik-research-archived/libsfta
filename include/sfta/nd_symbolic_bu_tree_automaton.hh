@@ -816,8 +816,6 @@ public:   // Public data types
 				const StateVector& qVec = cutRel.first;
 				const StateVector& rVec = cutRel.second;
 
-				//SFTA_LOGGER_INFO("removed pair (" + Convert::ToString(qVec) + ", " + Convert::ToString(rVec) + ")");
-
 				RootType tmpRoot = mtbdd->TernaryApply(autSym->getRoot(rVec),
 					autSym->getRoot(qVec), cnt.GetValue(qVec),
 					&simulationRefineFunc);
