@@ -19,6 +19,7 @@
 #include <sfta/compact_variable_assignment.hh>
 #include <sfta/cudd_shared_mtbdd.hh>
 #include <sfta/dual_map_leaf_allocator.hh>
+#include <sfta/dual_hash_table_leaf_allocator.hh>
 #include <sfta/map_root_allocator.hh>
 #include <sfta/mtbdd_transition_table_wrapper.hh>
 #include <sfta/nd_symbolic_bu_tree_automaton.hh>
@@ -36,10 +37,67 @@ namespace SFTA
 {
 	template
 	<
-		size_t SymbolLength = 64
+		size_t SymbolLength = 8//64
 	>
 	class BUTreeAutomatonCover;
 }
+
+
+namespace boost
+{
+	template <class T>
+	std::size_t hash_value(const SFTA::Private::ElemOrVector<T>& v)
+	{
+		if (v.IsElement())
+		{
+			const T& ref = v.GetElement();
+			return boost::hash_value(ref);
+		}
+		else
+		{
+			const std::vector<T>& ref = v.GetVector();
+			return boost::hash_range(ref.begin(), ref.end());
+		}
+	}
+}
+
+
+namespace std
+{
+	namespace tr1
+	{
+		template <typename T>
+		struct hash<SFTA::OrderedVector<SFTA::Private::ElemOrVector<T> > >
+			: public std::unary_function<SFTA::OrderedVector<SFTA::Private::ElemOrVector<T> >, size_t>
+		{
+			std::size_t operator()(const SFTA::OrderedVector<SFTA::Private::ElemOrVector<T> >& val) const
+			{
+				//return boost::hash_range(val.begin(), val.end());
+				size_t seed = 0;
+
+				for (typename SFTA::OrderedVector<SFTA::Private::ElemOrVector<T> >::const_iterator first = val.begin(); first != val.end(); ++first)
+				{
+					size_t newHash;
+					if (first->IsElement())
+					{
+						const T& ref = first->GetElement();
+						newHash = boost::hash_value(ref);
+					}
+					else
+					{
+						const std::vector<T>& ref = first->GetVector();
+						newHash = boost::hash_range(ref.begin(), ref.end());
+					}
+
+					boost::hash_combine(seed, newHash);
+				}
+
+				return seed;
+			}
+		};
+	}
+}
+
 
 
 /**
@@ -88,7 +146,7 @@ private:  // Private data types
 		MTBDDRootType,
 		InternalRightHandSideType,
 		InternalSymbolType,
-		SFTA::Private::DualMapLeafAllocator,
+		SFTA::Private::DualHashTableLeafAllocator,
 		SFTA::Private::MapRootAllocator
 	> SharedMTBDD;
 
