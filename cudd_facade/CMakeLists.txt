@@ -12,7 +12,7 @@ add_definitions(-Wall)
 add_definitions(-Wfloat-equal)
 add_definitions(-Wctor-dtor-privacy)
 add_definitions(-Weffc++)
-add_definitions(-Wold-style-cast)        # dropped because some CUDD macros use C-style casting
+add_definitions(-Wold-style-cast)            # dropped because some CUDD macros use C-style casting
 add_definitions(-Woverloaded-virtual)
 add_definitions(-finline-functions)
 add_definitions(-fdiagnostics-show-option)
