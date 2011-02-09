@@ -263,7 +263,7 @@ public:   // Public data types
 						for (typename LeafType::const_iterator rhsIt = rhs.begin();
 							rhsIt != rhs.end(); ++rhsIt)
 						{
-							StatePair productState = std::make_pair(StateType(*lhsIt), StateType(*rhsIt));
+							StatePair productState = std::make_pair(lhsIt->GetElement(), rhsIt->GetElement());
 							StateType resultState;
 
 							typename StatePairToStateTable::const_iterator itPairs;
@@ -432,6 +432,8 @@ public:   // Public data types
 
 				virtual LeafType operator()(const LeafType& lhs, const LeafType& rhs)
 				{
+					//SFTA_LOGGER_INFO("Initializing simulation counter for state " + Convert::ToString(state_));
+
 					if (lhs.size() != 0)
 					{
 						LeafType newRhs = rhs;
@@ -475,6 +477,7 @@ public:   // Public data types
 
 				virtual LeafType operator()(const LeafType& lhs, const LeafType& rhs)
 				{
+					//SFTA_LOGGER_INFO("Detecting simulation...");
 					if (!lhs.empty() && rhs.empty())
 					{
 						doesSimulationHold_ = false;
@@ -494,7 +497,7 @@ public:   // Public data types
 				RemoveSetType* remove_;
 
 				StateToLHSsType* stateToLhss_;
-				
+
 			private:
 
 				SimulationRefinementApplyFunctor(const SimulationRefinementApplyFunctor& rhs);
@@ -507,7 +510,7 @@ public:   // Public data types
 					typename StateToLHSsType::iterator itState2LHSsP;
 					if ((itState2LHSsP = stateToLhss_->find(p)) != stateToLhss_->end())
 					{	// in case there is something for p
-						InflatableListOfInflatableListsOfVectorsType& innerContainerP = 
+						InflatableListOfInflatableListsOfVectorsType& innerContainerP =
 							itState2LHSsP->second;
 
 						for (size_t iSize = 0; iSize < innerContainerP.size(); ++iSize)
@@ -527,7 +530,7 @@ public:   // Public data types
 									typename StateToLHSsType::iterator itState2LHSsS;
 									if ((itState2LHSsS = stateToLhss_->find(s)) != stateToLhss_->end())
 									{	// if there is something for s
-										InflatableListOfInflatableListsOfVectorsType& innerContainerS = 
+										InflatableListOfInflatableListsOfVectorsType& innerContainerS =
 											itState2LHSsS->second;
 
 										const SFTA::Vector<StateVector>& listOfStateVectorsS =
@@ -576,6 +579,8 @@ public:   // Public data types
 				virtual LeafType operator()(const LeafType& preR, const LeafType& preQ,
 					const LeafType& cntQ)
 				{
+					//SFTA_LOGGER_INFO("Performing simulation refinement...");
+
 					LeafType newCntQ;
 
 					for (typename LeafType::const_iterator itCntQ = cntQ.begin();
@@ -603,7 +608,7 @@ public:   // Public data types
 								for (typename LeafType::const_iterator itPreQ = preQ.begin();
 									itPreQ != preQ.end(); ++itPreQ)
 								{	// for each element p of preQ
-									const StateType& p = *itPreQ;
+									const StateType& p = itPreQ->GetElement();
 
 									if (sim_->is_in(std::make_pair(p, s)))
 									{
@@ -646,6 +651,8 @@ public:   // Public data types
 
 			SFTA_LOGGER_INFO("Finished computing top-down automaton");
 
+			clock_t start = clock() / (CLOCKS_PER_SEC);
+
 			// used MTBDD
 			SharedMTBDDType* mtbdd = autSym->GetTTWrapper()->GetMTBDD();
 
@@ -676,11 +683,11 @@ public:   // Public data types
 					typename StateToLHSsType::iterator itState2LHSs;
 					if ((itState2LHSs = stateToLhss.find(state)) == stateToLhss.end())
 					{	// in case there is nothing for the state
-						itState2LHSs = (stateToLhss.insert(std::make_pair(state, 
+						itState2LHSs = (stateToLhss.insert(std::make_pair(state,
 							InflatableListOfInflatableListsOfVectorsType()))).first;
 					}
 
-					InflatableListOfInflatableListsOfVectorsType& innerContainer = 
+					InflatableListOfInflatableListsOfVectorsType& innerContainer =
 						itState2LHSs->second;
 
 					innerContainer[vec.size()][iVec].push_back(vec);
@@ -739,7 +746,7 @@ public:   // Public data types
 						typename StateToLHSsType::iterator itState2LHSsQ;
 						if ((itState2LHSsQ = stateToLhss.find(q)) != stateToLhss.end())
 						{	// in case there is something for q
-							InflatableListOfInflatableListsOfVectorsType& innerContainerQ = 
+							InflatableListOfInflatableListsOfVectorsType& innerContainerQ =
 								itState2LHSsQ->second;
 
 							for (size_t iSize = 0; iSize < innerContainerQ.size(); ++iSize)
@@ -759,7 +766,7 @@ public:   // Public data types
 										typename StateToLHSsType::iterator itState2LHSsR;
 										if ((itState2LHSsR = stateToLhss.find(r)) != stateToLhss.end())
 										{	// if there is something for r
-											InflatableListOfInflatableListsOfVectorsType& innerContainerR = 
+											InflatableListOfInflatableListsOfVectorsType& innerContainerR =
 												itState2LHSsR->second;
 
 											const SFTA::Vector<StateVector>& listOfStateVectorsR =
@@ -799,6 +806,7 @@ public:   // Public data types
 			//                           COMPUTATION
 			// ********************************************************************
 
+			SFTA_LOGGER_INFO("Size of remove set: " + Convert::ToString(remove.size()));
 			size_t loopCounter = 0;
 
 			SFTA_LOGGER_INFO("Started computation");
@@ -807,7 +815,9 @@ public:   // Public data types
 				StateVectorPair cutRel = *(remove.begin());
 				remove.erase(remove.begin());
 
-				if (++loopCounter == 100)
+//				SFTA_LOGGER_INFO("Size of remove set: " + Convert::ToString(remove.size()));
+
+				if (++loopCounter == 1000)
 				{
 					loopCounter = 0;
 					SFTA_LOGGER_INFO("Size of remove set: " + Convert::ToString(remove.size()));
@@ -827,10 +837,14 @@ public:   // Public data types
 
 			SFTA_LOGGER_INFO("Finished computation");
 
+			clock_t end = clock() / (CLOCKS_PER_SEC);
+
+			SFTA_LOGGER_INFO("Time spent: " + Convert::ToString(end - start));
+
 			// ********************************************************************
 			//                           TIDYING UP
 			// ********************************************************************
-			
+
 			// TODO: there should be something like erasing all counters, etc., but
 			// I guess that there currently no way how to do it nicely (it would
 			// mean doing something like CopyRoot that would increase the reference
