@@ -96,28 +96,6 @@ namespace SFTA
 				return elemVector;
 			}
 
-			operator Type() const
-			{
-				if (!isElem)
-				{
-					throw std::runtime_error(__func__ +
-						std::string(": an attempt to convert vector to element"));
-				}
-
-				return elem;
-			}
-
-			operator VectorType() const
-			{
-				if (isElem)
-				{
-					throw std::runtime_error(__func__ +
-						std::string(": an attempt to convert element to vector"));
-				}
-
-				return elemVector;
-			}
-
 			friend bool operator<(const ElemOrVector<T>& lhs, const ElemOrVector<T>& rhs)
 			{
 				if (lhs.isElem && !rhs.isElem)
