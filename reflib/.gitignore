@@ -4,3 +4,4 @@
 parsing/parser.output
 parsing/parser.ml
 parsing/scanner.ml
+main
