@@ -132,6 +132,12 @@ public:   // Public methods
 		size_t first = 0;
 		size_t last = vec_.size();
 
+		if ((last != 0) && (vec_[last-1] < x))
+		{	// for the case which would be prevalent
+			vec_.push_back(x);
+			return;
+		}
+
 		while (first < last)
 		{	// while the pointers do not overlap
 			size_t middle = first + (last - first) / 2;
