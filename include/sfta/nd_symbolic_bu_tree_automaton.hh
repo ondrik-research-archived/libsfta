@@ -792,14 +792,28 @@ public:   // Public data types
 
 			CountersType cnt(autSym->getSinkSuperState());
 
+			class CopierMonadicApplyFunctor
+				: public SharedMTBDDType::AbstractMonadicApplyFunctorType
+			{
+			public:
+
+				virtual LeafType operator()(const LeafType& val)
+				{
+					return val;
+				}
+			};
+
+			CopierMonadicApplyFunctor copierFunc;
+
 			for (typename LHSRootContainerType::const_iterator itSuperStates =
 				buLHSs.begin(); itSuperStates != buLHSs.end(); ++itSuperStates)
 			{	// fill the counters
-				cnt.SetValue(itSuperStates->first, initCnt);
+				RootType copiedCnt = mtbdd->MonadicApply(initCnt, &copierFunc);
+				cnt.SetValue(itSuperStates->first, copiedCnt);
 			}
 
 			// TODO: prepare for erasing
-//			mtbdd->EraseRoot(initCnt);
+			mtbdd->EraseRoot(initCnt);
 
 
 			// ********************************************************************
@@ -815,8 +829,6 @@ public:   // Public data types
 				StateVectorPair cutRel = *(remove.begin());
 				remove.erase(remove.begin());
 
-//				SFTA_LOGGER_INFO("Size of remove set: " + Convert::ToString(remove.size()));
-
 				if (++loopCounter == 1000)
 				{
 					loopCounter = 0;
@@ -830,9 +842,10 @@ public:   // Public data types
 					autSym->getRoot(qVec), cnt.GetValue(qVec),
 					&simulationRefineFunc);
 
-				cnt.SetValue(qVec, tmpRoot);
+				// Erase the following line for better performance ;-)
+				mtbdd->EraseRoot(cnt.GetValue(qVec));
 
-				//TODO: erase the old cnt counter
+				cnt.SetValue(qVec, tmpRoot);
 			}
 
 			SFTA_LOGGER_INFO("Finished computation");
