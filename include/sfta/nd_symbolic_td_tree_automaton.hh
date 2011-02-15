@@ -299,6 +299,34 @@ public:   // Public data types
 
 			throw std::runtime_error(__func__ + std::string(": not implemented"));
 		}
+
+
+		virtual bool CheckLanguageInclusion(const HierarchyRoot* a1,
+			const HierarchyRoot* a2) const
+		{
+			const Type* a1Sym = static_cast<Type*>(0);
+			const Type* a2Sym = static_cast<Type*>(0);
+
+			if ((a1Sym = dynamic_cast<const Type*>(a1)) ==
+				static_cast<const Type*>(0))
+			{	// in case the type is not OK
+				throw std::runtime_error(__func__ + std::string(": Invalid type"));
+			}
+
+			if ((a2Sym = dynamic_cast<const Type*>(a2)) ==
+				static_cast<const Type*>(0))
+			{	// in case the type is not OK
+				throw std::runtime_error(__func__ + std::string(": Invalid type"));
+			}
+
+			// array of states
+			std::vector<StateType> a1InitStates = a1Sym->GetVectorOfInitialStates();
+
+
+
+			assert(false);
+			return true;
+		}
 	};
 
 protected:// Protected methods

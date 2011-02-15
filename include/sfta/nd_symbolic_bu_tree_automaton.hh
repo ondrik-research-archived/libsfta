@@ -843,7 +843,7 @@ public:   // Public data types
 					&simulationRefineFunc);
 
 				// Erase the following line for better performance ;-)
-				mtbdd->EraseRoot(cnt.GetValue(qVec));
+				//mtbdd->EraseRoot(cnt.GetValue(qVec));
 
 				cnt.SetValue(qVec, tmpRoot);
 			}
@@ -871,6 +871,14 @@ public:   // Public data types
 
 			return sim;
 		}
+
+		virtual bool CheckLanguageInclusion(const HierarchyRoot* a1,
+			const HierarchyRoot* a2) const
+		{
+			assert(false);
+			return true;
+		}
+
 	};
 
 

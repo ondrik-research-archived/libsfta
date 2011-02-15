@@ -131,11 +131,26 @@ public:   // Public data types
 		 *
 		 * This method returns the simulation relation on states of the automaton.
 		 *
-		 * @param[in]  a1  Input automaton
+		 * @param[in]  aut  Input automaton
 		 *
 		 * @returns  Simulation relation on states of the input automaton
 		 */
 		virtual SimulationRelationType* ComputeSimulationPreorder(const Type* aut) const = 0;
+
+
+		/**
+		 * @brief  Determination of language inclusion of two automata
+		 *
+		 * This method determines whether the language of a1 is the subset of the
+		 * language of a2.
+		 *
+		 * @param[in]  a1  First (smaller) input automaton
+		 * @param[in]  a2  Second (bigger) input automaton
+		 *
+		 * @returns  True if the languge of a1 is subset of the language of a2,
+		 *           false otherwise.
+		 */
+		virtual bool CheckLanguageInclusion(const Type* a1, const Type* a2) const = 0;
 
 
 		/**

@@ -201,6 +201,10 @@ public:   // Public data types
 
 		Type* Union(Type* lhs, Type* rhs) const
 		{
+			// Assertions
+			assert(lhs != static_cast<Type*>(0));
+			assert(rhs != static_cast<Type*>(0));
+
 			typedef typename NDSymbolicBUTreeAutomaton::HierarchyRoot AbstractAutomaton;
 			std::auto_ptr<typename AbstractAutomaton::Operation> oper(
 				lhs->getAutomaton()->GetOperation());
@@ -220,6 +224,10 @@ public:   // Public data types
 
 		Type* Intersection(Type* lhs, Type* rhs) const
 		{
+			// Assertions
+			assert(lhs != static_cast<Type*>(0));
+			assert(rhs != static_cast<Type*>(0));
+
 			typedef typename NDSymbolicBUTreeAutomaton::HierarchyRoot AbstractAutomaton;
 			std::auto_ptr<typename AbstractAutomaton::Operation> oper(
 				lhs->getAutomaton()->GetOperation());
@@ -239,6 +247,9 @@ public:   // Public data types
 
 		SimulationRelationType ComputeSimulationPreorder(const Type* aut) const
 		{
+			// Assertions
+			assert(aut != static_cast<Type*>(0));
+
 			SimulationRelationType result;
 
 			typedef typename NDSymbolicBUTreeAutomaton::HierarchyRoot AbstractAutomaton;
@@ -270,6 +281,23 @@ public:   // Public data types
 			}
 
 			return result;
+		}
+
+		bool DoesLanguageInclusionHold(const Type* lhs, const Type* rhs) const
+		{
+			// Assertions
+			assert(lhs != static_cast<Type*>(0));
+			assert(rhs != static_cast<Type*>(0));
+
+			std::auto_ptr<typename NDSymbolicBUTreeAutomaton::NDSymbolicTDTreeAutomatonType>
+				lhsTD(lhs->getAutomaton()->GetTopDownAutomaton());
+			std::auto_ptr<typename NDSymbolicBUTreeAutomaton::NDSymbolicTDTreeAutomatonType>
+				rhsTD(rhs->getAutomaton()->GetTopDownAutomaton());
+
+			typedef typename NDSymbolicBUTreeAutomaton::HierarchyRoot AbstractAutomaton;
+			std::auto_ptr<typename AbstractAutomaton::Operation> oper(
+				lhsTD->GetOperation());
+			return oper->CheckLanguageInclusion(lhsTD.get(), rhsTD.get());
 		}
 	};
 

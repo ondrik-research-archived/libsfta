@@ -12,8 +12,8 @@
 // Log4cpp headers
 #include <log4cpp/Category.hh>
 
-#define DEBUG 0
-#define NDEBUG
+//#define DEBUG 0
+//#define NDEBUG
 
 #define SFTA_LOG_CATEGORY_NAME "SFTA"
 

@@ -52,6 +52,7 @@ enum OperationType
 	OPERATION_INTERSECTION,
 	OPERATION_LOAD,
 	OPERATION_SIMULATION,
+	OPERATION_INCLUSION,
 
 	OPERATION_HELP,
 
@@ -253,6 +254,41 @@ void performComputationOfSimulation(bool isTopDown, const std::string& file)
 }
 
 
+void performCheckingInclusion(bool isTopDown, const std::string& lhsFile,
+	const std::string& rhsFile)
+{
+	std::ifstream ifsLhs(lhsFile.c_str());
+	if (ifsLhs.fail())
+	{
+		throw std::runtime_error("Could not open file " + lhsFile);
+	}
+
+	std::ifstream ifsRhs(rhsFile.c_str());
+	if (ifsRhs.fail())
+	{
+		throw std::runtime_error("Could not open file " + rhsFile);
+	}
+
+	if (!isTopDown)
+	{
+		std::auto_ptr<AbstractBUTABuilder> builder(new TimbukBUTABuilder());
+		BUTABuildingDirector director(builder.get());
+
+		std::auto_ptr<BUTreeAutomaton> taLhs(director.Construct(ifsLhs));
+		std::auto_ptr<BUTreeAutomaton> taRhs(director.Construct(ifsRhs));
+
+		std::auto_ptr<BUTreeAutomaton::Operation> op(taLhs->GetOperation());
+
+		std::cout << (op->DoesLanguageInclusionHold(taLhs.get(), taRhs.get())? "true"
+			: "false")  << "\n";
+	}
+	else
+	{
+		assert(false);
+	}
+}
+
+
 void startLogger()
 {
 	// create the appender
@@ -277,7 +313,7 @@ int main(int argc, char* argv[])
 	{
 		startLogger();
 
-		const char* getoptString = "uihlbts";
+		const char* getoptString = "uihlbtsn";
 		option longOptions[] = {
 			{"union",                      0, static_cast<int*>(0), 'u'},
 			{"intersection",               0, static_cast<int*>(0), 'i'},
@@ -286,6 +322,7 @@ int main(int argc, char* argv[])
 			{"bottom-up",                  0, static_cast<int*>(0), 'b'},
 			{"top-down",                   0, static_cast<int*>(0), 't'},
 			{"simulation",                 0, static_cast<int*>(0), 's'},
+			{"inclusion",                  0, static_cast<int*>(0), 'n'},
 
 			{static_cast<const char*>(0),  0, static_cast<int*>(0), 0}
 		};
@@ -304,6 +341,7 @@ int main(int argc, char* argv[])
 				case 'h': specifyOperation(operation, OPERATION_HELP); break;
 				case 'l': specifyOperation(operation, OPERATION_LOAD); break;
 				case 's': specifyOperation(operation, OPERATION_SIMULATION); break;
+				case 'n': specifyOperation(operation, OPERATION_INCLUSION); break;
 				case 'b': isTopDown = false; break;
 				case 't': isTopDown = true; break;
 				default: throw std::runtime_error("Invalid command line parameter."); break;
@@ -350,6 +388,11 @@ int main(int argc, char* argv[])
 			case OPERATION_SIMULATION:
 				needsArguments(inputs.size(), 1);
 				performComputationOfSimulation(isTopDown, inputs[0]);
+				break;
+
+			case OPERATION_INCLUSION:
+				needsArguments(inputs.size(), 2);
+				performCheckingInclusion(isTopDown, inputs[0], inputs[1]);
 				break;
 
 			default: throw std::runtime_error("Invalid operation type.");break;
