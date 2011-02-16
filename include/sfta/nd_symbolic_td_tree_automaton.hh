@@ -15,6 +15,9 @@
 #include <sfta/symbolic_td_tree_automaton.hh>
 #include <sfta/vector.hh>
 
+// Standard library headers
+#include <queue>
+
 
 // insert the class into proper namespace
 namespace SFTA
@@ -216,6 +219,11 @@ public:   // Public data types
 	typedef typename MTBDDTTWrapperType::SharedMTBDDType SharedMTBDDType;
 	typedef typename ParentClass::TTWrapperPtrType TTWrapperPtrType;
 
+private:  // Private data types
+
+	typedef SFTA::Private::Convert Convert;
+
+public:   // Public data types
 
 	/**
 	 * @brief  @copybrief SFTA::SymbolicTDTreeAutomaton::Operation
@@ -231,6 +239,454 @@ public:   // Public data types
 		typedef typename SharedMTBDDType::LeafType LeafType;
 
 		typedef Type* (Operation::*BinaryOperation)(const Type&, const Type&) const;
+
+		class InclusionCheckingFunctor
+		{
+		private:  // Private data types
+
+			typedef std::vector<StateType> StateVector;
+
+			//typedef std::vector<StateType> StateSetType;
+			typedef OrderedVector<StateType> StateSetType;
+			typedef std::list<StateSetType> StateSetListType;
+			typedef std::pair<StateType, StateSetType> DisjunctType;
+			typedef std::queue<DisjunctType> DisjunctQueueType;
+			typedef std::list<DisjunctType> DisjunctListType;
+			typedef std::vector<DisjunctType> SetOfDisjunctsType;
+			typedef std::queue<SetOfDisjunctsType> SetOfDisjunctsQueueType;
+			typedef std::tr1::unordered_map<StateType, StateSetListType>
+				StateToStateSetListHashTableType;
+
+		private:  // Private data members
+
+			const Type* smallerAut_;
+			const Type* biggerAut_;
+
+
+			StateToStateSetListHashTableType workset_;
+			StateToStateSetListHashTableType includedNodes_;
+			StateToStateSetListHashTableType nonincludedNodes_;
+
+
+		private:  // Private methods
+
+			bool isInclusionCached(const DisjunctType& disjunct) const
+			{
+				// TODO: search for smaller sets
+				typename StateToStateSetListHashTableType::const_iterator itHashTable;
+				if ((itHashTable = includedNodes_.find(disjunct.first)) != includedNodes_.end())
+				{
+					const StateSetListType& listOfStateSets = itHashTable->second;
+
+					return (std::find(listOfStateSets.begin(), listOfStateSets.end(), disjunct.second)
+						!= listOfStateSets.end());
+				}
+				else
+				{
+					return false;
+				}
+			}
+
+			bool isNoninclusionCached(const DisjunctType& disjunct) const
+			{
+				// TODO: search for bigger sets
+				typename StateToStateSetListHashTableType::const_iterator itHashTable;
+				if ((itHashTable = nonincludedNodes_.find(disjunct.first)) != nonincludedNodes_.end())
+				{
+					const StateSetListType& listOfStateSets = itHashTable->second;
+
+					return (std::find(listOfStateSets.begin(), listOfStateSets.end(), disjunct.second)
+						!= listOfStateSets.end());
+				}
+				else
+				{
+					return false;
+				}
+			}
+
+			bool isImpliedByWorkset(const DisjunctType& disjunct) const
+			{
+				// TODO: search for smaller sets
+				typename StateToStateSetListHashTableType::const_iterator itHashTable;
+				if ((itHashTable = workset_.find(disjunct.first)) != workset_.end())
+				{
+					const StateSetListType& listOfStateSets = itHashTable->second;
+
+					return (std::find(listOfStateSets.begin(), listOfStateSets.end(), disjunct.second)
+						!= listOfStateSets.end());
+				}
+				else
+				{
+					return false;
+				}
+
+				return false;
+			}
+
+			bool isImpliedByChildren(const DisjunctListType& children,
+				const DisjunctType& disjunct) const
+			{
+				// TODO: search for bigger children
+				for (typename DisjunctListType::const_iterator itChildren = children.begin();
+					itChildren != children.end(); ++itChildren)
+				{
+					if (itChildren->first == disjunct.first)
+					{	// in case the ``smaller'' state matches
+						if (itChildren->second == disjunct.second)
+						{	// in case the ``bigger'' state also matches
+							return true;
+						}
+					}
+				}
+
+				return false;
+			}
+
+			void addToWorkset(const DisjunctType& disjunct)
+			{
+				typename StateToStateSetListHashTableType::iterator itHashTable;
+				if ((itHashTable = workset_.find(disjunct.first)) == workset_.end())
+				{
+					StateSetListType newList;
+					itHashTable = workset_.insert(workset_.end(),
+						std::make_pair(disjunct.first, newList));
+				}
+
+				itHashTable->second.push_back(disjunct.second);
+			}
+
+			void removeFromWorkset(const DisjunctType& disjunct)
+			{
+				typename StateToStateSetListHashTableType::iterator itHashTable;
+				if ((itHashTable = workset_.find(disjunct.first)) == workset_.end())
+				{
+					throw std::runtime_error(__func__ +
+						std::string(": an attempt to remove non-existing state"));
+				}
+
+				StateSetListType& stateSetList = itHashTable->second;
+				typename StateSetListType::iterator itStateSetList;
+				if ((itStateSetList = std::find(stateSetList.begin(), stateSetList.end(),
+					disjunct.second)) == stateSetList.end())
+				{
+					throw std::runtime_error(__func__ +
+						std::string(": an attempt to remove non-existing state set"));
+				}
+
+				stateSetList.erase(itStateSetList);
+			}
+
+			void addToChildren(DisjunctListType& children,
+				const DisjunctType& disjunct)
+			{
+				// TODO: remove smaller children
+				children.push_back(disjunct);
+			}
+
+			void cacheInclusion(const DisjunctType& disjunct)
+			{
+				// TODO: remove bigger sets??
+				typename StateToStateSetListHashTableType::iterator itHashTable;
+				if ((itHashTable = includedNodes_.find(disjunct.first)) == includedNodes_.end())
+				{
+					StateSetListType newList;
+					itHashTable = includedNodes_.insert(includedNodes_.end(),
+						std::make_pair(disjunct.first, newList));
+				}
+
+				itHashTable->second.push_back(disjunct.second);
+			}
+
+			void cacheNoninclusion(const DisjunctType& disjunct)
+			{
+				// TODO: remove smaller sets??
+				typename StateToStateSetListHashTableType::iterator itHashTable;
+				if ((itHashTable = nonincludedNodes_.find(disjunct.first)) == nonincludedNodes_.end())
+				{
+					StateSetListType newList;
+					itHashTable = nonincludedNodes_.insert(nonincludedNodes_.end(),
+						std::make_pair(disjunct.first, newList));
+				}
+
+				itHashTable->second.push_back(disjunct.second);
+			}
+
+			bool expandDisjunction(const SetOfDisjunctsType& disjunction)
+			{
+				SFTA_LOGGER_INFO("Expanding disjunction: " + Convert::ToString(disjunction));
+				DisjunctListType children;
+
+				for (typename SetOfDisjunctsType::const_iterator itDisjunction =
+					disjunction.begin(); itDisjunction != disjunction.end(); ++itDisjunction)
+				{
+					SFTA_LOGGER_INFO("Checking disjunct: " + Convert::ToString(*itDisjunction));
+
+					if (isInclusionCached(*itDisjunction))
+					{
+						SFTA_LOGGER_INFO("Disjunct inclusion cached");
+						return true;
+					}
+					if (isNoninclusionCached(*itDisjunction))
+					{
+						SFTA_LOGGER_INFO("Disjunct noninclusion cached");
+						continue;
+					}
+					if (isImpliedByWorkset(*itDisjunction))
+					{
+						SFTA_LOGGER_INFO("Disjunct implied by workset");
+						return true;
+					}
+					if (isImpliedByChildren(children, *itDisjunction))
+					{
+						SFTA_LOGGER_INFO("Disjunct implied by children");
+						continue;
+					}
+
+					addToChildren(children, *itDisjunction);
+				}
+
+				while (!children.empty())
+				{
+					const DisjunctType& newPair = children.front();
+
+					if (expandSubset(newPair))
+					{
+						cacheInclusion(newPair);
+						return true;
+					}
+					else
+					{
+						cacheNoninclusion(newPair);
+					}
+
+					children.pop_front();
+				}
+
+				return false;
+			}
+
+			bool expandSubset(const DisjunctType& disjunct)
+			{
+				class UnionApplyFunctor
+					: public SharedMTBDDType::AbstractApplyFunctorType
+				{
+				public:
+
+					virtual LeafType operator()(const LeafType& lhs, const LeafType& rhs)
+					{
+						LeafType result = lhs;
+						result.insert(rhs);
+
+						return result;
+					}
+				};
+
+				class ChildrenCollectorFunctor
+					: public SharedMTBDDType::AbstractApplyFunctorType
+				{
+				private:
+
+					SetOfDisjunctsQueueType* childrenQueue_;
+					bool doesInclusionHold_;
+
+				public:
+
+					ChildrenCollectorFunctor(SetOfDisjunctsQueueType* childrenQueue)
+						: childrenQueue_(childrenQueue),
+							doesInclusionHold_(true)
+					{
+						// Assertions
+						assert(childrenQueue_ != static_cast<SetOfDisjunctsQueueType*>(0));
+					}
+
+					inline bool DoesInclusionHold()
+					{
+						return doesInclusionHold_;
+					}
+
+					virtual LeafType operator()(const LeafType& lhs, const LeafType& rhs)
+					{
+						LeafType result;
+
+						if (!doesInclusionHold_ || lhs.empty())
+						{	// in case it is pointless to compute anything
+							return result;				// don't waste time
+						}
+
+						unsigned arity = lhs.begin()->GetVector().size();
+
+						SFTA_LOGGER_INFO("checking LHS: " + Convert::ToString(lhs) +
+							" and RHS: " + Convert::ToString(rhs));
+
+						if (arity == 0)
+						{	// the ``smaller'' state can make a nullary transition
+							if (rhs.find(typename SFTA::Private::ElemOrVector<StateType>::VectorType())
+								== rhs.end())
+							{	// in case the ``bigger'' state cannot make such a transition
+								doesInclusionHold_ = false;
+								SFTA_LOGGER_INFO("Could not find nullary RHS!");
+								return result;
+							}
+							else
+							{
+								return result;
+							}
+						}
+
+						const std::vector<SFTA::Private::ElemOrVector<StateType> >& rhsVector =
+							rhs.ToVector();
+
+						SFTA_LOGGER_INFO("Arity: " + Convert::ToString(arity));
+						SFTA_LOGGER_INFO("RHS size: " + Convert::ToString(rhsVector.size()));
+
+						// TODO: this whole business could probably be optimized (by
+						// getting rid of the whole choice function business)!!!!
+						std::vector<unsigned> choiceFunction(rhsVector.size(), 0);
+						bool allChoiceFunctionsGenerated = false;
+						while (!allChoiceFunctionsGenerated)
+						{	// we loop for each choice function
+							SFTA_LOGGER_INFO("Processing choice function " +
+								Convert::ToString(choiceFunction));
+							SetOfDisjunctsType disjunction;
+
+							for (size_t i = 0; i < arity; ++i)
+							{	// for each position of the n-tuple
+								StateSetType rhsPart;
+								for (size_t j = 0; j < choiceFunction.size(); ++j)
+								{
+									if (choiceFunction[j] == i)
+									{	// in case the choice function for given vector is i
+										rhsPart.insert(rhsVector[j].GetVector()[i]);
+									}
+								}
+
+								for (typename LeafType::const_iterator itLhs = lhs.begin();
+									itLhs != lhs.end(); ++itLhs)
+								{
+									disjunction.push_back(std::make_pair(itLhs->GetVector()[i], rhsPart));
+								}
+							}
+
+							SFTA_LOGGER_INFO("Generated disjunction: " +
+								Convert::ToString(disjunction));
+
+							childrenQueue_->push(disjunction);
+
+							if (choiceFunction.size() == 0)
+							{
+								allChoiceFunctionsGenerated = true;
+								continue;
+							}
+
+							// move to the next choice function
+							size_t index = 0;
+							while (++choiceFunction[index] == arity)
+							{
+								choiceFunction[index] = 0; // reset this counter
+								++index;                   // move to the next counter
+
+								if (index == choiceFunction.size())
+								{	// if we drop out from the n-tuple
+									allChoiceFunctionsGenerated = true;
+									break;
+								}
+							}
+						}
+
+						return result;
+					}
+				};
+
+				SFTA_LOGGER_INFO("Expanding subset: " + Convert::ToString(disjunct));
+
+				const StateType& smallerState = disjunct.first;
+				const StateSetType& biggerSetOfStates = disjunct.second;
+
+				SharedMTBDDType* mtbdd = smallerAut_->GetTTWrapper()->GetMTBDD();
+
+				RootType unionBigger = mtbdd->CreateRoot();
+				UnionApplyFunctor unionFunc;
+
+				for (typename StateVector::const_iterator itBiggerStates =
+					biggerSetOfStates.begin(); itBiggerStates != biggerSetOfStates.end();
+					++itBiggerStates)
+				{
+					RootType biggerRoot = biggerAut_->getRoot(*itBiggerStates);
+					RootType tmp = mtbdd->Apply(unionBigger,
+						biggerRoot, &unionFunc);
+
+					// Erase the following line for better performance ;-)
+					mtbdd->EraseRoot(unionBigger);
+
+					unionBigger = tmp;
+				}
+
+				SetOfDisjunctsQueueType childrenQueue;
+
+				ChildrenCollectorFunctor childColFunc(&childrenQueue);
+
+				RootType tmp = mtbdd->Apply(smallerAut_->getRoot(smallerState),
+					unionBigger, &childColFunc);
+				mtbdd->EraseRoot(tmp);
+
+				if (!childColFunc.DoesInclusionHold())
+				{
+					return false;
+				}
+
+				addToWorkset(disjunct);
+
+				while (!childrenQueue.empty())
+				{
+					SetOfDisjunctsType& disjunction = childrenQueue.front();
+
+					if (!expandDisjunction(disjunction))
+					{
+						removeFromWorkset(disjunct);
+						return false;
+					}
+
+					childrenQueue.pop();
+				}
+
+				removeFromWorkset(disjunct);
+
+				return true;
+			}
+
+		public:   // Public methods
+
+			InclusionCheckingFunctor(const Type* smallerAut, const Type* biggerAut)
+				: smallerAut_(smallerAut),
+					biggerAut_(biggerAut),
+					workset_(),
+					includedNodes_(),
+					nonincludedNodes_()
+			{
+				// Assertions
+				assert(smallerAut_ != static_cast<const Type*>(0));
+				assert(biggerAut_ != static_cast<const Type*>(0));
+			}
+
+			bool operator ()()
+			{
+				// array of states
+				StateVector smallerInitStates = smallerAut_->GetVectorOfInitialStates();
+				StateVector biggerInitStates = biggerAut_->GetVectorOfInitialStates();
+
+				for (typename StateVector::const_iterator itSmallerInitStates =
+					smallerInitStates.begin(); itSmallerInitStates != smallerInitStates.end();
+					++itSmallerInitStates)
+				{
+					if (!expandSubset(std::make_pair(*itSmallerInitStates, biggerInitStates)))
+					{
+						return false;
+					}
+				}
+
+				return true;
+			}
+		};
 
 	private:  // Private methods
 
@@ -279,7 +735,6 @@ public:   // Public data types
 			assert(false);
 		}
 
-
 	public:   // Public methods
 
 		virtual Type* Union(const HierarchyRoot* a1, const HierarchyRoot* a2) const
@@ -300,7 +755,6 @@ public:   // Public data types
 			throw std::runtime_error(__func__ + std::string(": not implemented"));
 		}
 
-
 		virtual bool CheckLanguageInclusion(const HierarchyRoot* a1,
 			const HierarchyRoot* a2) const
 		{
@@ -319,13 +773,8 @@ public:   // Public data types
 				throw std::runtime_error(__func__ + std::string(": Invalid type"));
 			}
 
-			// array of states
-			std::vector<StateType> a1InitStates = a1Sym->GetVectorOfInitialStates();
-
-
-
-			assert(false);
-			return true;
+			InclusionCheckingFunctor inclFunc(a1Sym, a2Sym);
+			return inclFunc();
 		}
 	};
 
