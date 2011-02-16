@@ -349,6 +349,11 @@ public:   // Public methods
 		return std::lexicographical_compare(vec_.begin(), vec_.end(),
 			rhs.vec_.begin(), rhs.vec_.end());
 	}
+
+	const std::vector<Key>& ToVector() const
+	{
+		return vec_;
+	}
 };
 
 #endif
