@@ -153,18 +153,18 @@ private:  // Private data members
 
 protected:// Protected methods
 
-	inline RootType getRoot(const LeftHandSideType& lhs)
+	inline RootType getRoot(const LeftHandSideType& lhs) const
 	{
 		// Assertions
 		assert(isStateLocal(lhs));
 
-		RootType root = sinkState_;
+		RootType root;
 
 		typename LHSRootContainerType::const_iterator it;
 		if ((it = rootMap_.find(lhs)) == rootMap_.end())
 		{	// in case the value is not in the hash table
 			root = GetTTWrapper()->GetMTBDD()->CreateRoot();
-			rootMap_.insert(std::make_pair(lhs, root));
+			const_cast<Type*>(this)->rootMap_.insert(std::make_pair(lhs, root));
 		}
 		else
 		{
