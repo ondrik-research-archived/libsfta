@@ -150,7 +150,8 @@ public:   // Public data types
 		 * @returns  True if the languge of a1 is subset of the language of a2,
 		 *           false otherwise.
 		 */
-		virtual bool CheckLanguageInclusion(const Type* a1, const Type* a2) const = 0;
+		virtual bool CheckLanguageInclusion(const Type* a1, const Type* a2,
+			const SimulationRelationType& simA1, const SimulationRelationType& simA2) const = 0;
 
 
 		/**

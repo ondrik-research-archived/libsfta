@@ -222,6 +222,9 @@ public:   // Public data types
 private:  // Private data types
 
 	typedef SFTA::Private::Convert Convert;
+	
+	typedef typename HierarchyRoot::Operation::SimulationRelationType
+		SimulationRelationType;
 
 public:   // Public data types
 
@@ -547,30 +550,28 @@ public:   // Public data types
 						{	// we loop for each choice function
 							SFTA_LOGGER_INFO("Processing choice function " +
 								Convert::ToString(choiceFunction));
-							SetOfDisjunctsType disjunction;
 
-							for (size_t i = 0; i < arity; ++i)
-							{	// for each position of the n-tuple
-								StateSetType rhsPart;
-								for (size_t j = 0; j < choiceFunction.size(); ++j)
-								{
-									if (choiceFunction[j] == i)
-									{	// in case the choice function for given vector is i
-										rhsPart.insert(rhsVector[j].GetVector()[i]);
+							for (typename LeafType::const_iterator itLhs = lhs.begin();
+								itLhs != lhs.end(); ++itLhs)
+							{
+								SetOfDisjunctsType disjunction;
+
+								for (size_t i = 0; i < arity; ++i)
+								{	// for each position of the n-tuple
+									StateSetType rhsPart;
+									for (size_t j = 0; j < choiceFunction.size(); ++j)
+									{
+										if (choiceFunction[j] == i)
+										{	// in case the choice function for given vector is i
+											rhsPart.insert(rhsVector[j].GetVector()[i]);
+										}
 									}
-								}
 
-								for (typename LeafType::const_iterator itLhs = lhs.begin();
-									itLhs != lhs.end(); ++itLhs)
-								{
 									disjunction.push_back(std::make_pair(itLhs->GetVector()[i], rhsPart));
 								}
+
+								childrenQueue_->push(disjunction);
 							}
-
-							SFTA_LOGGER_INFO("Generated disjunction: " +
-								Convert::ToString(disjunction));
-
-							childrenQueue_->push(disjunction);
 
 							if (choiceFunction.size() == 0)
 							{
@@ -747,8 +748,8 @@ public:   // Public data types
 			return safelyPerformOperation(&Operation::langIntersection, a1, a2);
 		}
 
-		virtual typename HierarchyRoot::Operation::SimulationRelationType*
-			ComputeSimulationPreorder(const HierarchyRoot* aut) const
+		virtual SimulationRelationType* ComputeSimulationPreorder(
+			const HierarchyRoot* aut) const
 		{
 			assert(aut != static_cast<const HierarchyRoot*>(0));
 
@@ -756,7 +757,8 @@ public:   // Public data types
 		}
 
 		virtual bool CheckLanguageInclusion(const HierarchyRoot* a1,
-			const HierarchyRoot* a2) const
+			const HierarchyRoot* a2, const SimulationRelationType& simA1,
+			const SimulationRelationType& simA2) const
 		{
 			const Type* a1Sym = static_cast<Type*>(0);
 			const Type* a2Sym = static_cast<Type*>(0);

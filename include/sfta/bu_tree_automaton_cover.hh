@@ -289,15 +289,28 @@ public:   // Public data types
 			assert(lhs != static_cast<Type*>(0));
 			assert(rhs != static_cast<Type*>(0));
 
+			typedef typename NDSymbolicBUTreeAutomaton::HierarchyRoot AbstractAutomaton;
+			typedef typename AbstractAutomaton::Operation InternalOperationType;
+			typedef typename InternalOperationType::SimulationRelationType
+				InternalSimulationType;
+
+			// compute simulations
+			std::auto_ptr<InternalOperationType> oper(lhs->getAutomaton()->GetOperation());
+			std::auto_ptr<InternalSimulationType> lhsSim(
+				oper->ComputeSimulationPreorder((lhs->getAutomaton()).get()));
+			std::auto_ptr<InternalSimulationType> rhsSim(
+				oper->ComputeSimulationPreorder((rhs->getAutomaton()).get()));
+
+			// convert automata to top-down
 			std::auto_ptr<typename NDSymbolicBUTreeAutomaton::NDSymbolicTDTreeAutomatonType>
 				lhsTD(lhs->getAutomaton()->GetTopDownAutomaton());
 			std::auto_ptr<typename NDSymbolicBUTreeAutomaton::NDSymbolicTDTreeAutomatonType>
 				rhsTD(rhs->getAutomaton()->GetTopDownAutomaton());
 
-			typedef typename NDSymbolicBUTreeAutomaton::HierarchyRoot AbstractAutomaton;
-			std::auto_ptr<typename AbstractAutomaton::Operation> oper(
-				lhsTD->GetOperation());
-			return oper->CheckLanguageInclusion(lhsTD.get(), rhsTD.get());
+			// check language inclusion
+			std::auto_ptr<InternalOperationType> tdOper(lhsTD.get()->GetOperation());
+			return tdOper->CheckLanguageInclusion(lhsTD.get(), rhsTD.get(), *(lhsSim.get()),
+				*(rhsSim.get()));
 		}
 	};
 
