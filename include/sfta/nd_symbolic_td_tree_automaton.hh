@@ -567,7 +567,10 @@ public:   // Public data types
 										}
 									}
 
-									disjunction.push_back(std::make_pair(itLhs->GetVector()[i], rhsPart));
+									if (!rhsPart.empty())
+									{
+										disjunction.push_back(std::make_pair(itLhs->GetVector()[i], rhsPart));
+									}
 								}
 
 								childrenQueue_->push(disjunction);
