@@ -281,13 +281,18 @@ public:   // Public data types
 				{
 					const StateSetListType& listOfStateSets = itHashTable->second;
 
-					return (std::find(listOfStateSets.begin(), listOfStateSets.end(), disjunct.second)
-						!= listOfStateSets.end());
+					for (typename StateSetListType::const_iterator itInclNodes = listOfStateSets.begin();
+						itInclNodes != listOfStateSets.end(); ++itInclNodes)
+					{
+						if (std::includes(disjunct.second.begin(), disjunct.second.end(),
+							itInclNodes->begin(), itInclNodes->end()))
+						{
+							return true;
+						}
+					}
 				}
-				else
-				{
-					return false;
-				}
+
+				return false;
 			}
 
 			bool isNoninclusionCached(const DisjunctType& disjunct) const
@@ -298,13 +303,20 @@ public:   // Public data types
 				{
 					const StateSetListType& listOfStateSets = itHashTable->second;
 
-					return (std::find(listOfStateSets.begin(), listOfStateSets.end(), disjunct.second)
-						!= listOfStateSets.end());
+//					return (std::find(listOfStateSets.begin(), listOfStateSets.end(), disjunct.second)
+//						!= listOfStateSets.end());
+					for (typename StateSetListType::const_iterator itNoninclNodes = listOfStateSets.begin();
+						itNoninclNodes != listOfStateSets.end(); ++itNoninclNodes)
+					{
+						if (std::includes(itNoninclNodes->begin(), itNoninclNodes->end(),
+							disjunct.second.begin(), disjunct.second.end()))
+						{
+							return true;
+						}
+					}
 				}
-				else
-				{
-					return false;
-				}
+
+				return false;
 			}
 
 			bool isImpliedByWorkset(const DisjunctType& disjunct) const
@@ -315,12 +327,15 @@ public:   // Public data types
 				{
 					const StateSetListType& listOfStateSets = itHashTable->second;
 
-					return (std::find(listOfStateSets.begin(), listOfStateSets.end(), disjunct.second)
-						!= listOfStateSets.end());
-				}
-				else
-				{
-					return false;
+					for (typename StateSetListType::const_iterator itWorkset = listOfStateSets.begin();
+						itWorkset != listOfStateSets.end(); ++itWorkset)
+					{
+						if (std::includes(disjunct.second.begin(), disjunct.second.end(),
+							itWorkset->begin(), itWorkset->end()))
+						{
+							return true;
+						}
+					}
 				}
 
 				return false;
@@ -335,8 +350,9 @@ public:   // Public data types
 				{
 					if (itChildren->first == disjunct.first)
 					{	// in case the ``smaller'' state matches
-						if (itChildren->second == disjunct.second)
-						{	// in case the ``bigger'' state also matches
+						if (std::includes(itChildren->second.begin(), itChildren->second.end(),
+							disjunct.second.begin(), disjunct.second.end()))
+						{
 							return true;
 						}
 					}
