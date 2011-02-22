@@ -874,11 +874,13 @@ public:   // Public data types
 
 		virtual bool CheckLanguageInclusion(const HierarchyRoot* a1,
 			const HierarchyRoot* a2,
-			const typename HierarchyRoot::Operation::SimulationRelationType& simA1,
-			const typename HierarchyRoot::Operation::SimulationRelationType& simA2) const
+			const typename HierarchyRoot::Operation::SimulationRelationType* simA1,
+			const typename HierarchyRoot::Operation::SimulationRelationType* simA2) const
 		{
 			assert(a1 != static_cast<HierarchyRoot*>(0));
 			assert(a2 != static_cast<HierarchyRoot*>(0));
+			assert(simA1 != static_cast<typename HierarchyRoot::Operation::SimulationRelationType*>(0));
+			assert(simA2 != static_cast<typename HierarchyRoot::Operation::SimulationRelationType*>(0));
 
 			assert(false);
 			return true;

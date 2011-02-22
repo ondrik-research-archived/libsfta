@@ -309,8 +309,8 @@ public:   // Public data types
 
 			// check language inclusion
 			std::auto_ptr<InternalOperationType> tdOper(lhsTD.get()->GetOperation());
-			return tdOper->CheckLanguageInclusion(lhsTD.get(), rhsTD.get(), *(lhsSim.get()),
-				*(rhsSim.get()));
+			return tdOper->CheckLanguageInclusion(lhsTD.get(), rhsTD.get(), lhsSim.get(),
+				rhsSim.get());
 		}
 	};
 

@@ -265,13 +265,56 @@ public:   // Public data types
 			const Type* smallerAut_;
 			const Type* biggerAut_;
 
-
 			StateToStateSetListHashTableType workset_;
 			StateToStateSetListHashTableType includedNodes_;
 			StateToStateSetListHashTableType nonincludedNodes_;
 
+			const SimulationRelationType* simSmaller_;
+			const SimulationRelationType* simBigger_;
 
 		private:  // Private methods
+
+			template <class T>
+			bool forallExists(const T& smaller, const T& bigger,
+				const SimulationRelationType& sim) const
+			{
+				// ASSUME that elements of smaller and bigger are sorted
+
+				// pro kazdy prvek ze smaller si nactu sim(smaller) a divam se, jestli
+				// prunik s bigger je neprazdny
+
+				for (typename T::const_iterator itSmaller = smaller.begin();
+					itSmaller != smaller.end(); ++itSmaller)
+				{
+					const std::set<StateType>& smallerSims = sim.GetSimulators(*itSmaller);
+
+					typename std::set<StateType>::const_iterator itSmallerSim = smallerSims.begin();
+					typename T::const_iterator itBigger = bigger.begin();
+
+					while (true)
+					{
+						if ((itBigger == bigger.end()) || itSmallerSim == smallerSims.end())
+						{
+							return false;
+						}
+						else if (*itSmallerSim == *itBigger)
+						{
+							break;
+						}
+						else if (*itSmallerSim < *itBigger)
+						{
+							++itSmallerSim;
+						}
+						else
+						{
+							++itBigger;
+						}
+					}
+				}
+
+				return true;
+			}
+
 
 			bool isInclusionCached(const DisjunctType& disjunct) const
 			{
@@ -284,8 +327,7 @@ public:   // Public data types
 					for (typename StateSetListType::const_iterator itInclNodes = listOfStateSets.begin();
 						itInclNodes != listOfStateSets.end(); ++itInclNodes)
 					{
-						if (std::includes(disjunct.second.begin(), disjunct.second.end(),
-							itInclNodes->begin(), itInclNodes->end()))
+						if (forallExists(*itInclNodes, disjunct.second, *simBigger_))
 						{
 							return true;
 						}
@@ -303,13 +345,10 @@ public:   // Public data types
 				{
 					const StateSetListType& listOfStateSets = itHashTable->second;
 
-//					return (std::find(listOfStateSets.begin(), listOfStateSets.end(), disjunct.second)
-//						!= listOfStateSets.end());
 					for (typename StateSetListType::const_iterator itNoninclNodes = listOfStateSets.begin();
 						itNoninclNodes != listOfStateSets.end(); ++itNoninclNodes)
 					{
-						if (std::includes(itNoninclNodes->begin(), itNoninclNodes->end(),
-							disjunct.second.begin(), disjunct.second.end()))
+						if (forallExists(disjunct.second, *itNoninclNodes, *simBigger_))
 						{
 							return true;
 						}
@@ -330,8 +369,7 @@ public:   // Public data types
 					for (typename StateSetListType::const_iterator itWorkset = listOfStateSets.begin();
 						itWorkset != listOfStateSets.end(); ++itWorkset)
 					{
-						if (std::includes(disjunct.second.begin(), disjunct.second.end(),
-							itWorkset->begin(), itWorkset->end()))
+						if (forallExists(*itWorkset, disjunct.second, *simBigger_))
 						{
 							return true;
 						}
@@ -350,8 +388,7 @@ public:   // Public data types
 				{
 					if (itChildren->first == disjunct.first)
 					{	// in case the ``smaller'' state matches
-						if (std::includes(itChildren->second.begin(), itChildren->second.end(),
-							disjunct.second.begin(), disjunct.second.end()))
+						if (forallExists(disjunct.second, itChildren->second, *simBigger_))
 						{
 							return true;
 						}
@@ -676,16 +713,20 @@ public:   // Public data types
 
 		public:   // Public methods
 
-			InclusionCheckingFunctor(const Type* smallerAut, const Type* biggerAut)
+			InclusionCheckingFunctor(const Type* smallerAut, const Type* biggerAut, const SimulationRelationType* simSmaller, const SimulationRelationType* simBigger)
 				: smallerAut_(smallerAut),
 					biggerAut_(biggerAut),
 					workset_(),
 					includedNodes_(),
-					nonincludedNodes_()
+					nonincludedNodes_(),
+					simSmaller_(simSmaller),
+					simBigger_(simBigger)
 			{
 				// Assertions
-				assert(smallerAut_ != static_cast<const Type*>(0));
-				assert(biggerAut_ != static_cast<const Type*>(0));
+				assert(smallerAut_ != static_cast<Type*>(0));
+				assert(biggerAut_ != static_cast<Type*>(0));
+				assert(simSmaller_ != static_cast<SimulationRelationType*>(0));
+				assert(simBigger_ != static_cast<SimulationRelationType*>(0));
 			}
 
 			bool operator ()()
@@ -776,8 +817,8 @@ public:   // Public data types
 		}
 
 		virtual bool CheckLanguageInclusion(const HierarchyRoot* a1,
-			const HierarchyRoot* a2, const SimulationRelationType& simA1,
-			const SimulationRelationType& simA2) const
+			const HierarchyRoot* a2, const SimulationRelationType* simA1,
+			const SimulationRelationType* simA2) const
 		{
 			const Type* a1Sym = static_cast<Type*>(0);
 			const Type* a2Sym = static_cast<Type*>(0);
@@ -794,7 +835,7 @@ public:   // Public data types
 				throw std::runtime_error(__func__ + std::string(": Invalid type"));
 			}
 
-			InclusionCheckingFunctor inclFunc(a1Sym, a2Sym);
+			InclusionCheckingFunctor inclFunc(a1Sym, a2Sym, simA1, simA2);
 			return inclFunc();
 		}
 	};

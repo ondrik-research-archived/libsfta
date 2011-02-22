@@ -151,7 +151,7 @@ public:   // Public data types
 		 *           false otherwise.
 		 */
 		virtual bool CheckLanguageInclusion(const Type* a1, const Type* a2,
-			const SimulationRelationType& simA1, const SimulationRelationType& simA2) const = 0;
+			const SimulationRelationType* simA1, const SimulationRelationType* simA2) const = 0;
 
 
 		/**

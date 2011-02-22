@@ -57,6 +57,8 @@ private:  // Private data types
 
 public:   // Public data types
 
+	typedef SimulationRelation<StateType> Type;
+
 	typedef std::pair<const StateType, StateType> value_type;
 
 
@@ -101,6 +103,11 @@ public:   // Public methods
 		}
 
 		return (itMatrix->second).find(value.second) != (itMatrix->second).end();
+	}
+
+	const std::set<StateType>& GetSimulators(const StateType& state) const
+	{
+		return const_cast<Type*>(this)->getRow(state);
 	}
 };
 
