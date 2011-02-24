@@ -581,46 +581,45 @@ public:   // Public data types
 						SFTA_LOGGER_INFO("Arity: " + Convert::ToString(arity));
 						SFTA_LOGGER_INFO("RHS size: " + Convert::ToString(rhsVector.size()));
 
-//						for (typename LeafType::iterator itLhs = lhsVector.begin();
-//							itLhs != lhsVector.end();)
-//						{
-//							bool existsCoveringRhs = false;
-//							for (typename LeafType::const_iterator itRhs = rhs.begin();
-//								itRhs != rhs.end(); ++itRhs)
-//							{
-//								bool allAritiesMatch = true;
-//								for (size_t i = 0; i < arity; ++i)
-//								{	// for each position of the n-tuple
-//									StateSetType stateSet;
-//									stateSet.insert(itRhs->GetVector()[i]);
-//									if (!inclFunc_->expandDisjunct(
-//										std::make_pair(itLhs->GetVector()[i], stateSet)))
-//									{
-//										allAritiesMatch = false;
-//										break;
-//									}
-//								}
-//
-//								if (allAritiesMatch)
-//								{
-//									existsCoveringRhs = true;
-//									itLhs = lhsVector.erase(itLhs);
-//									break;
-//								}
-//							}
-//
-//							if (!existsCoveringRhs)
-//							{
-//								++itLhs;
-//							}
-//						}
-//
-//						if (lhsVector.empty())
-//						{
-//							doesInclusionHold_ = true;
-//							return result;
-//						}
+						for (typename LeafType::iterator itLhs = lhsVector.begin();
+							itLhs != lhsVector.end();)
+						{
+							bool existsCoveringRhs = false;
+							for (typename LeafType::const_iterator itRhs = rhs.begin();
+								itRhs != rhs.end(); ++itRhs)
+							{
+								bool allAritiesMatch = true;
+								for (size_t i = 0; i < arity; ++i)
+								{	// for each position of the n-tuple
+									StateSetType stateSet;
+									stateSet.insert(itRhs->GetVector()[i]);
+									if (!inclFunc_->expandDisjunct(
+										std::make_pair(itLhs->GetVector()[i], stateSet)))
+									{
+										allAritiesMatch = false;
+										break;
+									}
+								}
 
+								if (allAritiesMatch)
+								{
+									existsCoveringRhs = true;
+									itLhs = lhsVector.erase(itLhs);
+									break;
+								}
+							}
+
+							if (!existsCoveringRhs)
+							{
+								++itLhs;
+							}
+						}
+
+						if (lhsVector.empty())
+						{
+							doesInclusionHold_ = true;
+							return result;
+						}
 
 
 						// TODO: this whole business could probably be optimized (by
