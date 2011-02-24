@@ -84,6 +84,10 @@ private:  // Private methods
 
 public:   // Public methods
 
+	SimulationRelation()
+		: matrix_()
+	{ }
+
 	inline void insert(const value_type& value)
 	{
 		getRow(value.first).insert(value.second);

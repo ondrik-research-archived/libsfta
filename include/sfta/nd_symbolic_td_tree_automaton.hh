@@ -274,6 +274,9 @@ public:   // Public data types
 
 		private:  // Private methods
 
+			InclusionCheckingFunctor(const InclusionCheckingFunctor&);
+			InclusionCheckingFunctor& operator=(const InclusionCheckingFunctor&);
+
 			template <class T>
 			bool forallExists(const T& smaller, const T& bigger,
 				const SimulationRelationType& sim) const
@@ -467,58 +470,35 @@ public:   // Public data types
 				itHashTable->second.push_back(disjunct.second);
 			}
 
-			bool expandDisjunction(const SetOfDisjunctsType& disjunction)
+			bool expandDisjunct(const DisjunctType& disjunct)
 			{
-				SFTA_LOGGER_INFO("Expanding disjunction: " + Convert::ToString(disjunction));
-				DisjunctListType children;
+				SFTA_LOGGER_INFO("Checking disjunct: " + Convert::ToString(disjunct));
 
-				for (typename SetOfDisjunctsType::const_iterator itDisjunction =
-					disjunction.begin(); itDisjunction != disjunction.end(); ++itDisjunction)
+				if (isInclusionCached(disjunct))
 				{
-					SFTA_LOGGER_INFO("Checking disjunct: " + Convert::ToString(*itDisjunction));
-
-					if (isInclusionCached(*itDisjunction))
-					{
-						SFTA_LOGGER_INFO("Disjunct inclusion cached");
-						return true;
-					}
-					if (isNoninclusionCached(*itDisjunction))
-					{
-						SFTA_LOGGER_INFO("Disjunct noninclusion cached");
-						continue;
-					}
-					if (isImpliedByWorkset(*itDisjunction))
-					{
-						SFTA_LOGGER_INFO("Disjunct implied by workset");
-						return true;
-					}
-					if (isImpliedByChildren(children, *itDisjunction))
-					{
-						SFTA_LOGGER_INFO("Disjunct implied by children");
-						continue;
-					}
-
-					addToChildren(children, *itDisjunction);
+					SFTA_LOGGER_INFO("Disjunct inclusion cached");
+					return true;
 				}
-
-				while (!children.empty())
+				else if (isNoninclusionCached(disjunct))
 				{
-					const DisjunctType& newPair = children.front();
-
-					if (expandSubset(newPair))
-					{
-						cacheInclusion(newPair);
-						return true;
-					}
-					else
-					{
-						cacheNoninclusion(newPair);
-					}
-
-					children.pop_front();
+					SFTA_LOGGER_INFO("Disjunct noninclusion cached");
+					return false;
 				}
-
-				return false;
+				else if (isImpliedByWorkset(disjunct))
+				{
+					SFTA_LOGGER_INFO("Disjunct implied by workset");
+					return true;
+				}
+				else if (expandSubset(disjunct))
+				{
+					cacheInclusion(disjunct);
+					return true;
+				}
+				else
+				{
+					cacheNoninclusion(disjunct);
+					return false;
+				}
 			}
 
 			bool expandSubset(const DisjunctType& disjunct)
@@ -542,18 +522,21 @@ public:   // Public data types
 				{
 				private:
 
-					SetOfDisjunctsQueueType* childrenQueue_;
 					bool doesInclusionHold_;
+
+					InclusionCheckingFunctor* inclFunc_;
+
+				private:
+
+					ChildrenCollectorFunctor(const ChildrenCollectorFunctor&);
+					ChildrenCollectorFunctor& operator=(const ChildrenCollectorFunctor&);
 
 				public:
 
-					ChildrenCollectorFunctor(SetOfDisjunctsQueueType* childrenQueue)
-						: childrenQueue_(childrenQueue),
-							doesInclusionHold_(true)
-					{
-						// Assertions
-						assert(childrenQueue_ != static_cast<SetOfDisjunctsQueueType*>(0));
-					}
+					ChildrenCollectorFunctor(InclusionCheckingFunctor* inclFunc)
+						: doesInclusionHold_(true),
+							inclFunc_(inclFunc)
+					{ }
 
 					inline bool DoesInclusionHold()
 					{
@@ -592,8 +575,53 @@ public:   // Public data types
 						const std::vector<SFTA::Private::ElemOrVector<StateType> >& rhsVector =
 							rhs.ToVector();
 
+						std::vector<SFTA::Private::ElemOrVector<StateType> > lhsVector =
+							lhs.ToVector();
+
 						SFTA_LOGGER_INFO("Arity: " + Convert::ToString(arity));
 						SFTA_LOGGER_INFO("RHS size: " + Convert::ToString(rhsVector.size()));
+
+//						for (typename LeafType::iterator itLhs = lhsVector.begin();
+//							itLhs != lhsVector.end();)
+//						{
+//							bool existsCoveringRhs = false;
+//							for (typename LeafType::const_iterator itRhs = rhs.begin();
+//								itRhs != rhs.end(); ++itRhs)
+//							{
+//								bool allAritiesMatch = true;
+//								for (size_t i = 0; i < arity; ++i)
+//								{	// for each position of the n-tuple
+//									StateSetType stateSet;
+//									stateSet.insert(itRhs->GetVector()[i]);
+//									if (!inclFunc_->expandDisjunct(
+//										std::make_pair(itLhs->GetVector()[i], stateSet)))
+//									{
+//										allAritiesMatch = false;
+//										break;
+//									}
+//								}
+//
+//								if (allAritiesMatch)
+//								{
+//									existsCoveringRhs = true;
+//									itLhs = lhsVector.erase(itLhs);
+//									break;
+//								}
+//							}
+//
+//							if (!existsCoveringRhs)
+//							{
+//								++itLhs;
+//							}
+//						}
+//
+//						if (lhsVector.empty())
+//						{
+//							doesInclusionHold_ = true;
+//							return result;
+//						}
+
+
 
 						// TODO: this whole business could probably be optimized (by
 						// getting rid of the whole choice function business)!!!!
@@ -604,11 +632,10 @@ public:   // Public data types
 							SFTA_LOGGER_INFO("Processing choice function " +
 								Convert::ToString(choiceFunction));
 
-							for (typename LeafType::const_iterator itLhs = lhs.begin();
-								itLhs != lhs.end(); ++itLhs)
+							for (typename LeafType::const_iterator itLhs = lhsVector.begin();
+								itLhs != lhsVector.end(); ++itLhs)
 							{
-								SetOfDisjunctsType disjunction;
-
+								bool disjunctionOK = false;
 								for (size_t i = 0; i < arity; ++i)
 								{	// for each position of the n-tuple
 									StateSetType rhsPart;
@@ -622,11 +649,21 @@ public:   // Public data types
 
 									if (!rhsPart.empty())
 									{
-										disjunction.push_back(std::make_pair(itLhs->GetVector()[i], rhsPart));
+										if (inclFunc_->expandDisjunct(
+											std::make_pair(itLhs->GetVector()[i], rhsPart)))
+										{
+											disjunctionOK = true;
+											break;
+										}
 									}
 								}
 
-								childrenQueue_->push(disjunction);
+								if (!disjunctionOK)
+								{
+									doesInclusionHold_ = false;
+									return result;
+								}
+
 							}
 
 							if (choiceFunction.size() == 0)
@@ -673,42 +710,22 @@ public:   // Public data types
 						biggerRoot, &unionFunc);
 
 					// Erase the following line for better performance ;-)
-					mtbdd->EraseRoot(unionBigger);
+					//mtbdd->EraseRoot(unionBigger);
 
 					unionBigger = tmp;
 				}
 
 				SetOfDisjunctsQueueType childrenQueue;
 
-				ChildrenCollectorFunctor childColFunc(&childrenQueue);
+				addToWorkset(disjunct);
+				ChildrenCollectorFunctor childColFunc(this);
 
 				RootType tmp = mtbdd->Apply(smallerAut_->getRoot(smallerState),
 					unionBigger, &childColFunc);
 				mtbdd->EraseRoot(tmp);
-
-				if (!childColFunc.DoesInclusionHold())
-				{
-					return false;
-				}
-
-				addToWorkset(disjunct);
-
-				while (!childrenQueue.empty())
-				{
-					SetOfDisjunctsType& disjunction = childrenQueue.front();
-
-					if (!expandDisjunction(disjunction))
-					{
-						removeFromWorkset(disjunct);
-						return false;
-					}
-
-					childrenQueue.pop();
-				}
-
 				removeFromWorkset(disjunct);
 
-				return true;
+				return childColFunc.DoesInclusionHold();
 			}
 
 		public:   // Public methods
