@@ -806,7 +806,7 @@ let load_two_automata file1 file2 =
 
 let tree_equivalence file1 file2 =
   let (l1, l2) = (load_two_automata file1 file2) in
-	let result = (UI_incl.is_language_included l1 l2) && (UI_incl.is_language_included l1 l2) in
+	let result = (UI_incl.is_language_included l1 l2) && (UI_incl.is_language_included l2 l1) in
 	Printf.printf "%B\n" result;
 ;;
 
