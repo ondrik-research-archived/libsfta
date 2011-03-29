@@ -652,8 +652,14 @@ public:   // Public data types
 						OrNode* root = new OrNode(static_cast<AndNode*>(0));
 						root->disjuncts_.push_back(new AndNode(root, arity, bigger.size()));
 
-						// TODO: remove
+						// TEST CODE
+//						// TODO: remove
 						root->needsProcessing_ = false;
+//						OrNode* child = new OrNode(root->disjuncts_[0]);
+//						child->needsProcessing_ = false;
+//						root->disjuncts_[0]->choiceFunctions_[0].second = child;
+//						child->disjuncts_.push_back(new AndNode(child, arity, bigger.size()));
+//						nodeQueue.push(child);
 
 						nodeQueue.push(root);
 
@@ -666,43 +672,68 @@ public:   // Public data types
 
 							if (!orNode->needsProcessing_)
 							{	// in case the Or node does not need processing
-
-
-
-								for (typename std::vector<AndNode*>::iterator itDisjuncts
-									= orNode->disjuncts_.begin();
-									itDisjuncts != orNode->disjuncts_.end(); ++itDisjuncts)
+								while (true)
 								{
-									AndNode* andNode = *itDisjuncts;
+									for (typename std::vector<AndNode*>::iterator itDisjuncts
+										= orNode->disjuncts_.begin();
+										itDisjuncts != orNode->disjuncts_.end(); ++itDisjuncts)
+									{
+										AndNode* andNode = *itDisjuncts;
+										assert(andNode != static_cast<AndNode*>(0));
 
-									// Assertions
-									assert(andNode != static_cast<AndNode*>(0));
+										for (typename std::vector<ChoiceFunctionNodeType>::iterator itCfs
+											= andNode->choiceFunctions_.begin();
+											itCfs != andNode->choiceFunctions_.end(); ++itCfs)
+										{
+											OrNode* tmpOrNode = itCfs->second;
+											if (tmpOrNode != static_cast<OrNode*>(0))
+											{
+												assert(!tmpOrNode->needsProcessing_);
+												tmpOrNode->parent_ = static_cast<AndNode*>(0);
+											}
+										}
 
+										*itDisjuncts = static_cast<AndNode*>(0);
+										SFTA_LOGGER_INFO("Deleting AndNode " + Convert::ToString((size_t)andNode));
+										delete andNode;
+									}
+
+									if (orNode->parent_ == static_cast<AndNode*>(0))
+									{
+										delete orNode;
+										break;
+									}
+
+									AndNode* higherAndNode = orNode->parent_;
+									assert(higherAndNode != static_cast<AndNode*>(0));
+									OrNode* higherOrNode = higherAndNode->parent_;
+									assert(higherOrNode != static_cast<OrNode*>(0));
+
+									bool found = false;
 									for (typename std::vector<ChoiceFunctionNodeType>::iterator itCfs
-										= andNode->choiceFunctions_.begin();
-										itCfs != andNode->choiceFunctions_.end(); ++itCfs)
+										= higherAndNode->choiceFunctions_.begin();
+										itCfs != higherAndNode->choiceFunctions_.end(); ++itCfs)
 									{
 										OrNode* tmpOrNode = itCfs->second;
-										if (tmpOrNode != static_cast<OrNode*>(0))
+										if (tmpOrNode == orNode)
 										{
-											// Assertions
-											assert(!tmpOrNode->needsProcessing_);
-
-											tmpOrNode->parent_ = static_cast<AndNode*>(0);
+											found = true;
+											higherAndNode->choiceFunctions_.erase(itCfs);
+											break;
 										}
 									}
 
-									*itDisjuncts = static_cast<AndNode*>(0);
-									delete andNode;
+									assert(found);
+									delete orNode;
+									orNode = higherOrNode;
 								}
-
-								delete orNode;
-
-								continue;
 							}
+							else
+							{	// in case the Or node needs processing
 
-							delete orNode->disjuncts_[0];
-							delete orNode;
+								// TODO: do something normal, like generate subtree of orNode
+
+							}
 						}
 
 						return false;
