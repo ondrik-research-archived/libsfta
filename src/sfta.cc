@@ -64,6 +64,7 @@ void printHelp(const std::string& programName)
 	std::cout << "usage: " << programName << " (-l|--load)         <file1>\n";
 	std::cout << "   or: " << programName << " (-u|--union)        <file1> <file2>\n";
 	std::cout << "   or: " << programName << " (-i|--intersection) <file1> <file2>\n";
+	std::cout << "   or: " << programName << " (-n|--inclusion)    <file1> <file2>\n";
 	std::cout << "\n";
 	std::cout << "    -l, --load             load an automaton from <file1>.\n";
 	std::cout << "    -u, --union            create an automaton with language that is the union\n";
@@ -71,6 +72,9 @@ void printHelp(const std::string& programName)
 	std::cout << "    -i, --intersection     create an automaton with language that is the\n";
 	std::cout << "                           intersection of languages of automata from <file1>\n";
 	std::cout << "                           and <file2>.\n";
+	std::cout << "    -n, --inclusion        check whether the language of the automaton from\n";
+	std::cout << "                           <file1> is a subset of the language of the automaton\n";
+	std::cout << "                           from <file2>.\n";
 }
 
 void needsArguments(size_t value, size_t needsToBe)
@@ -402,6 +406,12 @@ int main(int argc, char* argv[])
 	{
 		std::cerr << "An error occured: " << ex.what() << "\n";
 		std::cerr << "Run " << argv[0] << " -h   for detailed help.\n";
+
+		return EXIT_FAILURE;
+	}
+	catch (...)
+	{
+		std::cerr << "Cought an unknown exception\n";
 
 		return EXIT_FAILURE;
 	}
