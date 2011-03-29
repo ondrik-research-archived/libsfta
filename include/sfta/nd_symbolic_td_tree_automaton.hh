@@ -260,6 +260,81 @@ public:   // Public data types
 			typedef std::tr1::unordered_map<StateType, StateSetListType>
 				StateToStateSetListHashTableType;
 
+		private:  // Private data types
+
+				struct AndNode;
+
+				struct OrNode
+				{
+					AndNode* parent_;
+					std::vector<AndNode*> disjuncts_;
+					bool needsProcessing_;
+
+					OrNode(AndNode* parent)
+						: parent_(parent),
+							disjuncts_(),
+							needsProcessing_(true)
+					{ }
+
+					friend std::ostream& operator<<(std::ostream& os, const OrNode& node)
+					{
+						os << "(Or";
+
+						for (typename std::vector<AndNode*>::const_iterator itDisjuncts
+							= node.disjuncts_.begin(); itDisjuncts != node.disjuncts_.end();
+							++itDisjuncts)
+						{
+							os << " " << Convert::ToString(*itDisjuncts);
+						}
+
+						os << ")";
+
+						return os;
+					}
+				};
+
+				typedef unsigned char ArityType;
+
+				typedef std::vector<ArityType> ChoiceFunctionType; // serves as choiceFunction: rhs -> {1...arity}
+																													 // a |-> 0 means that a is not assigned position
+
+				typedef std::pair<ChoiceFunctionType, OrNode*> ChoiceFunctionNodeType;
+
+				struct AndNode
+				{
+					OrNode* parent_;
+					std::vector<ChoiceFunctionNodeType> choiceFunctions_;
+
+					AndNode(OrNode* parent, ArityType arity, size_t size)
+						: parent_(parent),
+							choiceFunctions_(arity, ChoiceFunctionNodeType(ChoiceFunctionType(size, 0), static_cast<OrNode*>(0)))
+					{ }
+
+					AndNode(OrNode* parent, ArityType arity, const ChoiceFunctionType& cf)
+						: parent_(parent),
+							choiceFunctions_(arity, ChoiceFunctionNodeType(cf, static_cast<OrNode*>(0)))
+					{ }
+
+					friend std::ostream& operator<<(std::ostream& os, const AndNode& node)
+					{
+						os << "(And";
+
+						for (typename std::vector<ChoiceFunctionNodeType>::const_iterator itCfs
+							= node.choiceFunctions_.begin(); itCfs != node.choiceFunctions_.end();
+							++itCfs)
+						{
+							os << " " << ((itCfs->second == static_cast<OrNode*>(0))? "_|_" : Convert::ToString(itCfs->second));
+						}
+
+						os << ")";
+
+						os << ")";
+
+						return os;
+					}
+				};
+
+
 		private:  // Private data members
 
 			const Type* smallerAut_;
@@ -543,6 +618,96 @@ public:   // Public data types
 						return doesInclusionHold_;
 					}
 
+					void setSubtreeForNonProcessing(OrNode* orNode)
+					{
+						orNode->needsProcessing_ = false;
+
+						for (typename std::vector<AndNode*>::iterator itDisjuncts
+							= orNode->disjuncts_.begin();
+							itDisjuncts != orNode->disjuncts_.end(); ++itDisjuncts)
+						{
+							AndNode* andNode = *itDisjuncts;
+
+							for (typename std::vector<ChoiceFunctionNodeType>::iterator itCf
+								= andNode->choiceFunctions_.begin();
+								itCf != andNode->choiceFunctions_.end(); ++itCf)
+							{
+								if (itCf->second != static_cast<OrNode*>(0))
+								{
+									setSubtreeForNonProcessing(itCf->second);
+								}
+							}
+						}
+					}
+
+					bool checkInclusion(const std::vector<StateType>& sm,
+						const std::vector<SFTA::Private::ElemOrVector<StateType> >& bigger)
+					{
+						unsigned arity = sm.size();
+
+						// the workqueue
+						std::queue<OrNode*> nodeQueue;
+
+						// create the root nodes
+						OrNode* root = new OrNode(static_cast<AndNode*>(0));
+						root->disjuncts_.push_back(new AndNode(root, arity, bigger.size()));
+
+						// TODO: remove
+						root->needsProcessing_ = false;
+
+						nodeQueue.push(root);
+
+						while (!nodeQueue.empty())
+						{
+							SFTA_LOGGER_INFO("node queue size: " + Convert::ToString(nodeQueue.size()));
+
+							OrNode* orNode = nodeQueue.front();
+							nodeQueue.pop();
+
+							if (!orNode->needsProcessing_)
+							{	// in case the Or node does not need processing
+
+
+
+								for (typename std::vector<AndNode*>::iterator itDisjuncts
+									= orNode->disjuncts_.begin();
+									itDisjuncts != orNode->disjuncts_.end(); ++itDisjuncts)
+								{
+									AndNode* andNode = *itDisjuncts;
+
+									// Assertions
+									assert(andNode != static_cast<AndNode*>(0));
+
+									for (typename std::vector<ChoiceFunctionNodeType>::iterator itCfs
+										= andNode->choiceFunctions_.begin();
+										itCfs != andNode->choiceFunctions_.end(); ++itCfs)
+									{
+										OrNode* tmpOrNode = itCfs->second;
+										if (tmpOrNode != static_cast<OrNode*>(0))
+										{
+											// Assertions
+											assert(!tmpOrNode->needsProcessing_);
+
+											tmpOrNode->parent_ = static_cast<AndNode*>(0);
+										}
+									}
+
+									*itDisjuncts = static_cast<AndNode*>(0);
+									delete andNode;
+								}
+
+								delete orNode;
+
+								continue;
+							}
+
+							delete orNode->disjuncts_[0];
+							delete orNode;
+						}
+
+						return false;
+					}
+
 					virtual LeafType operator()(const LeafType& lhs, const LeafType& rhs)
 					{
 						LeafType result;
@@ -575,117 +740,18 @@ public:   // Public data types
 						const std::vector<SFTA::Private::ElemOrVector<StateType> >& rhsVector =
 							rhs.ToVector();
 
-						std::vector<SFTA::Private::ElemOrVector<StateType> > lhsVector =
-							lhs.ToVector();
-
 						SFTA_LOGGER_INFO("Arity: " + Convert::ToString(arity));
 						SFTA_LOGGER_INFO("RHS size: " + Convert::ToString(rhsVector.size()));
 
-						for (typename LeafType::iterator itLhs = lhsVector.begin();
-							itLhs != lhsVector.end();)
+						for (typename LeafType::const_iterator itLhs = lhs.begin();
+							itLhs != lhs.end(); ++itLhs)
 						{
-							bool existsCoveringRhs = false;
-							for (typename LeafType::const_iterator itRhs = rhs.begin();
-								itRhs != rhs.end(); ++itRhs)
+							if (!checkInclusion(itLhs->GetVector(), rhsVector))
 							{
-								bool allAritiesMatch = true;
-								for (size_t i = 0; i < arity; ++i)
-								{	// for each position of the n-tuple
-									StateSetType stateSet;
-									stateSet.insert(itRhs->GetVector()[i]);
-									if (!inclFunc_->expandDisjunct(
-										std::make_pair(itLhs->GetVector()[i], stateSet)))
-									{
-										allAritiesMatch = false;
-										break;
-									}
-								}
-
-								if (allAritiesMatch)
-								{
-									existsCoveringRhs = true;
-									itLhs = lhsVector.erase(itLhs);
-									break;
-								}
-							}
-
-							if (!existsCoveringRhs)
-							{
-								++itLhs;
+								doesInclusionHold_ = false;
+								break;
 							}
 						}
-
-						if (lhsVector.empty())
-						{
-							doesInclusionHold_ = true;
-							return result;
-						}
-
-
-						// TODO: this whole business could probably be optimized (by
-						// getting rid of the whole choice function business)!!!!
-						std::vector<unsigned> choiceFunction(rhsVector.size(), 0);
-						bool allChoiceFunctionsGenerated = false;
-						while (!allChoiceFunctionsGenerated)
-						{	// we loop for each choice function
-							SFTA_LOGGER_INFO("Processing choice function " +
-								Convert::ToString(choiceFunction));
-
-							for (typename LeafType::const_iterator itLhs = lhsVector.begin();
-								itLhs != lhsVector.end(); ++itLhs)
-							{
-								bool disjunctionOK = false;
-								for (size_t i = 0; i < arity; ++i)
-								{	// for each position of the n-tuple
-									StateSetType rhsPart;
-									for (size_t j = 0; j < choiceFunction.size(); ++j)
-									{
-										if (choiceFunction[j] == i)
-										{	// in case the choice function for given vector is i
-											rhsPart.insert(rhsVector[j].GetVector()[i]);
-										}
-									}
-
-									if (!rhsPart.empty())
-									{
-										if (inclFunc_->expandDisjunct(
-											std::make_pair(itLhs->GetVector()[i], rhsPart)))
-										{
-											disjunctionOK = true;
-											break;
-										}
-									}
-								}
-
-								if (!disjunctionOK)
-								{
-									doesInclusionHold_ = false;
-									return result;
-								}
-
-							}
-
-							if (choiceFunction.size() == 0)
-							{
-								allChoiceFunctionsGenerated = true;
-								continue;
-							}
-
-							// move to the next choice function
-							size_t index = 0;
-							while (++choiceFunction[index] == arity)
-							{
-								choiceFunction[index] = 0; // reset this counter
-								++index;                   // move to the next counter
-
-								if (index == choiceFunction.size())
-								{	// if we drop out from the n-tuple
-									allChoiceFunctionsGenerated = true;
-									break;
-								}
-							}
-						}
-
 						return result;
 					}
 				};
