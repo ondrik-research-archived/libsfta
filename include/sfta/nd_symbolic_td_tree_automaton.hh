@@ -654,7 +654,7 @@ public:   // Public data types
 
 						// TEST CODE
 //						// TODO: remove
-						root->needsProcessing_ = false;
+//						root->needsProcessing_ = false;
 //						OrNode* child = new OrNode(root->disjuncts_[0]);
 //						child->needsProcessing_ = false;
 //						root->disjuncts_[0]->choiceFunctions_[0].second = child;
@@ -663,11 +663,14 @@ public:   // Public data types
 
 						nodeQueue.push(root);
 
+						bool inclusionHolds = false;
 						while (!nodeQueue.empty())
 						{
 							SFTA_LOGGER_INFO("node queue size: " + Convert::ToString(nodeQueue.size()));
+							SFTA_LOGGER_INFO("Inclusion status: " + Convert::ToString(inclusionHolds));
 
 							OrNode* orNode = nodeQueue.front();
+							assert(orNode != static_cast<OrNode*>(0));
 							nodeQueue.pop();
 
 							if (!orNode->needsProcessing_)
@@ -694,12 +697,13 @@ public:   // Public data types
 										}
 
 										*itDisjuncts = static_cast<AndNode*>(0);
-										SFTA_LOGGER_INFO("Deleting AndNode " + Convert::ToString((size_t)andNode));
+										SFTA_LOGGER_INFO("Deleting not needed AndNode " + Convert::ToString((size_t)andNode));
 										delete andNode;
 									}
 
 									if (orNode->parent_ == static_cast<AndNode*>(0))
 									{
+										SFTA_LOGGER_INFO("Deleting not needed top OrNode " + Convert::ToString((size_t)orNode));
 										delete orNode;
 										break;
 									}
@@ -717,6 +721,7 @@ public:   // Public data types
 										OrNode* tmpOrNode = itCfs->second;
 										if (tmpOrNode == orNode)
 										{
+											SFTA_LOGGER_INFO("Deleting from its parent not needed OrNode " + Convert::ToString((size_t)orNode));
 											found = true;
 											higherAndNode->choiceFunctions_.erase(itCfs);
 											break;
@@ -724,19 +729,152 @@ public:   // Public data types
 									}
 
 									assert(found);
+									SFTA_LOGGER_INFO("Deleting not needed top OrNode " + Convert::ToString((size_t)orNode));
 									delete orNode;
 									orNode = higherOrNode;
 								}
 							}
 							else
 							{	// in case the Or node needs processing
+								for (typename std::vector<AndNode*>::const_iterator itDisjuncts
+									= orNode->disjuncts_.begin(); itDisjuncts != orNode->disjuncts_.end();
+									++itDisjuncts)
+								{	// for each disjunct in the Or
+									SFTA_LOGGER_INFO("Offset: " + Convert::ToString(itDisjuncts - orNode->disjuncts_.begin()) + ", Size: " + Convert::ToString(orNode->disjuncts_.size()));
+									AndNode* andNode = *itDisjuncts;
+									assert(andNode != static_cast<AndNode*>(0));
+									assert(andNode->choiceFunctions_.size() > 0);
 
-								// TODO: do something normal, like generate subtree of orNode
+									bool incrementIndex = true;
+									for (size_t index = 0, realPosition = 0;
+										index < andNode->choiceFunctions_.size();
+										index = incrementIndex? index+1 : index, ++realPosition)
+									{ // Note: 'index' is the pointer into the array
+										// andNode->choiceFunctions_ and 'realPosition' is the
+										// absolute position of the AndNode
+										incrementIndex = true;
 
+										const ChoiceFunctionType& cf = andNode->choiceFunctions_[index].first;
+										assert(andNode->choiceFunctions_[index].second == static_cast<OrNode*>(0));
+
+										StateSetType subset;
+										for (size_t i = 0; i < cf.size(); ++i)
+										{	// collect items in the choice function assigned to 'index'-th position
+											if (cf[i] == realPosition + 1)
+											{
+												// TODO: check this
+												subset.insert(bigger[i].GetVector()[realPosition]);
+											}
+										}
+
+										if (inclFunc_->expandDisjunct(std::make_pair(sm[realPosition], subset)))
+										{	// in case the inclusion holds
+											SFTA_LOGGER_INFO("Disjunct satisfied");
+										
+											incrementIndex = false;
+											andNode->choiceFunctions_.erase(andNode->choiceFunctions_.begin() + index);
+										}
+										else
+										{	// in case the inclusion doesn't hold
+											SFTA_LOGGER_INFO("Disjunct unsatisfied");
+
+											OrNode* newOrNode = new OrNode(andNode);
+											andNode->choiceFunctions_[index].second = newOrNode;
+
+											for (size_t i = 0; i < cf.size(); ++i)
+											{
+												if (cf[i] == 0)
+												{
+													AndNode* newAnd = new AndNode(newOrNode, arity, cf);
+													for (size_t ind = 0; ind < arity; ++ind)
+													{
+														newAnd->choiceFunctions_[ind].first[i] = ind + 1;
+													}
+
+													assert(!newAnd->choiceFunctions_.empty());
+													newOrNode->disjuncts_.push_back(newAnd);
+												}
+											}
+
+											nodeQueue.push(newOrNode);
+										}
+									}
+
+									if (andNode->choiceFunctions_.empty())
+									{
+										while (andNode->choiceFunctions_.empty())
+										{
+											OrNode* tmpOrNode = andNode->parent_;
+											assert(tmpOrNode != static_cast<OrNode*>(0));
+
+											bool incrementIndex = true;
+											for (size_t index = 0; index < tmpOrNode->disjuncts_.size();
+												index = incrementIndex? index+1 : index)
+											{
+												incrementIndex = true;
+												AndNode* otherAndNode = tmpOrNode->disjuncts_[index];
+												assert(otherAndNode != static_cast<AndNode*>(0));
+												if (otherAndNode == andNode)
+												{
+													incrementIndex = false;
+													tmpOrNode->disjuncts_.erase(tmpOrNode->disjuncts_.begin() + index);
+												}
+												else
+												{
+													for (typename std::vector<ChoiceFunctionNodeType>::iterator itCfs
+														= otherAndNode->choiceFunctions_.begin();
+														itCfs != otherAndNode->choiceFunctions_.end(); ++itCfs)
+													{
+														OrNode* otherOrNode = itCfs->second;
+														if (otherOrNode != static_cast<OrNode*>(0))
+														{
+															otherOrNode->parent_ = static_cast<AndNode*>(0);
+															setSubtreeForNonProcessing(otherOrNode);
+														}
+													}
+												}
+
+												delete otherAndNode;
+											}
+
+											AndNode* parentAndNode = tmpOrNode->parent_;
+											if (parentAndNode == static_cast<AndNode*>(0))
+											{	// in case we are at the root
+												SFTA_LOGGER_INFO("Top level satisfied");
+												assert(tmpOrNode == root);
+												inclusionHolds = true;
+												delete tmpOrNode;
+												break;
+											}
+											else
+											{
+												// remove orNode from parentAndNode
+												for (typename std::vector<ChoiceFunctionNodeType>::iterator itCfs
+													= parentAndNode->choiceFunctions_.begin();
+													itCfs != parentAndNode->choiceFunctions_.end();
+													++itCfs, assert(itCfs != parentAndNode->choiceFunctions_.end()))
+												{
+													OrNode* otherOrNode = itCfs->second;
+													if (otherOrNode == tmpOrNode)
+													{
+														parentAndNode->choiceFunctions_.erase(itCfs);
+														break;
+													}
+												}
+											}
+
+											delete tmpOrNode;
+
+											andNode = parentAndNode;
+										}
+
+										break;
+									}
+								}
 							}
 						}
 
-						return false;
+						return inclusionHolds;
 					}
 
 					virtual LeafType operator()(const LeafType& lhs, const LeafType& rhs)
