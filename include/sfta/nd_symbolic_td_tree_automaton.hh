@@ -640,6 +640,33 @@ public:   // Public data types
 						}
 					}
 
+
+					void recursivelyDeallocate(OrNode* orNode)
+					{
+						if (orNode != static_cast<OrNode*>(0))
+						{
+							for (typename std::vector<AndNode*>::iterator itDis
+								= orNode->disjuncts_.begin();
+								itDis != orNode->disjuncts_.end(); ++itDis)
+							{
+								AndNode* andNode = *itDis;
+								assert(andNode != static_cast<AndNode*>(0));
+
+								for (typename std::vector<ChoiceFunctionNodeType>::iterator itCfs
+									= andNode->choiceFunctions_.begin();
+									itCfs != andNode->choiceFunctions_.end(); ++itCfs)
+								{
+									recursivelyDeallocate(itCfs->second);
+								}
+
+								delete andNode;
+							}
+
+							delete orNode;
+						}
+					}
+
+
 					bool checkInclusion(const std::vector<StateType>& sm,
 						const std::vector<SFTA::Private::ElemOrVector<StateType> >& bigger)
 					{
@@ -651,6 +678,10 @@ public:   // Public data types
 						// create the root nodes
 						OrNode* root = new OrNode(static_cast<AndNode*>(0));
 						root->disjuncts_.push_back(new AndNode(root, arity, bigger.size()));
+
+						SFTA_LOGGER_INFO("");
+						SFTA_LOGGER_INFO("ROOT = " + Convert::ToString((size_t)root) + " for " + Convert::ToString((size_t)&arity));
+						SFTA_LOGGER_INFO("AndNode below root  = " + Convert::ToString((size_t)root->disjuncts_[0]));
 
 						// TEST CODE
 //						// TODO: remove
@@ -672,6 +703,8 @@ public:   // Public data types
 							OrNode* orNode = nodeQueue.front();
 							assert(orNode != static_cast<OrNode*>(0));
 							nodeQueue.pop();
+
+							SFTA_LOGGER_INFO("Checking OrNode " + Convert::ToString((size_t)orNode));
 
 							if (!orNode->needsProcessing_)
 							{	// in case the Or node does not need processing
@@ -762,7 +795,6 @@ public:   // Public data types
 										{	// collect items in the choice function assigned to 'index'-th position
 											if (cf[i] == realPosition + 1)
 											{
-												// TODO: check this
 												subset.insert(bigger[i].GetVector()[realPosition]);
 											}
 										}
@@ -781,10 +813,12 @@ public:   // Public data types
 											OrNode* newOrNode = new OrNode(andNode);
 											andNode->choiceFunctions_[index].second = newOrNode;
 
+											bool foundNew = false;
 											for (size_t i = 0; i < cf.size(); ++i)
 											{
 												if (cf[i] == 0)
 												{
+													foundNew = true;
 													AndNode* newAnd = new AndNode(newOrNode, arity, cf);
 													for (size_t ind = 0; ind < arity; ++ind)
 													{
@@ -796,12 +830,23 @@ public:   // Public data types
 												}
 											}
 
-											nodeQueue.push(newOrNode);
+											if (foundNew)
+											{
+												assert(!newOrNode->disjuncts_.empty());
+												nodeQueue.push(newOrNode);
+											}
+											else
+											{
+												assert(newOrNode->disjuncts_.empty());
+												delete newOrNode;
+												andNode->choiceFunctions_[index].second = static_cast<OrNode*>(0);
+											}
 										}
 									}
 
 									if (andNode->choiceFunctions_.empty())
 									{
+										SFTA_LOGGER_INFO("AndNode empty " + Convert::ToString((size_t)andNode));
 										while (andNode->choiceFunctions_.empty())
 										{
 											OrNode* tmpOrNode = andNode->parent_;
@@ -834,6 +879,8 @@ public:   // Public data types
 													}
 												}
 
+												SFTA_LOGGER_INFO("Deleting not needed AndNode " + Convert::ToString((size_t)otherAndNode));
+
 												delete otherAndNode;
 											}
 
@@ -843,7 +890,10 @@ public:   // Public data types
 												SFTA_LOGGER_INFO("Top level satisfied");
 												assert(tmpOrNode == root);
 												inclusionHolds = true;
+												SFTA_LOGGER_INFO("Deleting OrNode " + Convert::ToString((size_t)tmpOrNode));
 												delete tmpOrNode;
+
+												root = static_cast<OrNode*>(0);
 												break;
 											}
 											else
@@ -863,6 +913,7 @@ public:   // Public data types
 												}
 											}
 
+											SFTA_LOGGER_INFO("Deleting OrNode " + Convert::ToString((size_t)tmpOrNode));
 											delete tmpOrNode;
 
 											andNode = parentAndNode;
@@ -874,6 +925,10 @@ public:   // Public data types
 							}
 						}
 
+						recursivelyDeallocate(root);
+
+						SFTA_LOGGER_INFO("Returning with value: " + Convert::ToString(inclusionHolds) + " from " + Convert::ToString((size_t)&arity));
+						SFTA_LOGGER_INFO("");
 						return inclusionHolds;
 					}
 
