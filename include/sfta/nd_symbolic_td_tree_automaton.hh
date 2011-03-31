@@ -827,6 +827,11 @@ public:   // Public data types
 
 													assert(!newAnd->choiceFunctions_.empty());
 													newOrNode->disjuncts_.push_back(newAnd);
+													// TODO: this hack (break) makes the algorithm
+													// generate single AndNode below the OrNode and thus
+													// reduces the explosion yielded by trying to find
+													// the lowest tree for which the inclusion holds
+													//break;
 												}
 											}
 
