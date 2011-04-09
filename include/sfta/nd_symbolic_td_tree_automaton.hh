@@ -17,6 +17,7 @@
 
 // Standard library headers
 #include <queue>
+#include <tr1/unordered_set>
 
 
 // insert the class into proper namespace
@@ -266,12 +267,18 @@ public:   // Public data types
 
 				struct OrNode
 				{
-					AndNode* parent_;
+					std::vector<AndNode*> parents_;
 					std::vector<AndNode*> disjuncts_;
 					bool needsProcessing_;
 
+					OrNode()
+						: parents_(),
+							disjuncts_(),
+							needsProcessing_(true)
+					{ }
+
 					OrNode(AndNode* parent)
-						: parent_(parent),
+						: parents_(1, parent),
 							disjuncts_(),
 							needsProcessing_(true)
 					{ }
@@ -334,6 +341,13 @@ public:   // Public data types
 					}
 				};
 
+				struct HasherNnary
+				{
+					size_t operator()(const ChoiceFunctionType& key) const
+					{
+						return boost::hash_range(key.begin(), key.end());
+					}
+				};
 
 		private:  // Private data members
 
@@ -641,10 +655,53 @@ public:   // Public data types
 					}
 
 
-					void recursivelyDeallocate(OrNode* orNode)
+					/**
+					 * removes 'orNode', 'callerParent' is the parent AndNode that
+					 * deallocates 'orNode'
+					 */
+					void recursivelyDeallocate(OrNode* orNode/*, AndNode* callerParent*/)
 					{
 						if (orNode != static_cast<OrNode*>(0))
 						{
+//							if (callerParent != static_cast<AndNode*>(0))
+//							{	// in case 'orNode' is not the root, remove 'orNode' reference from
+//								// all its parents other than 'callerParent'
+//								assert(!callerParent->choiceFunctions_.empty());
+//
+//								bool found = false;
+//								for (typename std::vector<AndNode*>::iterator itPar
+//									= orNode->parents_.begin();
+//									itPar != orNode->parents_.end(); ++itPar)
+//								{
+//									AndNode* parentAnd = *itPar;
+//									assert(parentAnde != static_cast<AndNode*>(0));
+//
+//									if (parentAnd == callerParent)
+//									{	// do not remove from this one
+//										found = true;
+//									}
+//									else
+//									{
+//										for (typename std::vector<ChoiceFunctionNodeType>::iterator itCf
+//											= parentAnd->choiceFunctions_.begin();
+//											itCf != parentAnd->choiceFunctions_.end(); ++itCf)
+//										{
+//											OrNode* tmpOrNode = itCf->second;
+//											assert(tmpOrNode != static_cast<OrNode*>(0));
+//
+//											if (orNode == tmpOrNode)
+//											{
+//												// TODO:
+//												assert(false);
+//											}
+//
+//										}
+//									}
+//								}
+//
+//								assert(found);
+//							}
+
 							for (typename std::vector<AndNode*>::iterator itDis
 								= orNode->disjuncts_.begin();
 								itDis != orNode->disjuncts_.end(); ++itDis)
@@ -652,18 +709,197 @@ public:   // Public data types
 								AndNode* andNode = *itDis;
 								assert(andNode != static_cast<AndNode*>(0));
 
+
 								for (typename std::vector<ChoiceFunctionNodeType>::iterator itCfs
 									= andNode->choiceFunctions_.begin();
 									itCfs != andNode->choiceFunctions_.end(); ++itCfs)
-								{
+								{	// deallocate children of the AndNode
+									SFTA_LOGGER_INFO("Descending recursively");
 									recursivelyDeallocate(itCfs->second);
+									SFTA_LOGGER_INFO("Ascending recursively");
 								}
 
+								SFTA_LOGGER_INFO("Deallocating AndNode " + Convert::ToString((size_t)andNode));
 								delete andNode;
 							}
 
+							SFTA_LOGGER_INFO("Deallocating OrNode " + Convert::ToString((size_t)orNode));
 							delete orNode;
 						}
+					}
+
+					bool isOrNodeLeaf(const OrNode* orNode)
+					{
+						assert(orNode != static_cast<OrNode*>(0));
+
+						if (!orNode->disjuncts_.empty())
+						{
+							assert(orNode->disjuncts_[0] != static_cast<AndNode*>(0));
+							assert(!orNode->disjuncts_[0]->choiceFunctions_.empty());
+
+							return (orNode->disjuncts_[0]->choiceFunctions_[0].second
+								== static_cast<OrNode*>(0));
+						}
+						else
+						{
+							return true;
+						}
+					}
+
+					void markForNotProcessing(OrNode* orNode)
+					{
+						assert(orNode != static_cast<OrNode*>(0));
+						if (orNode->parents_.empty())
+						{
+							if (isOrNodeLeaf(orNode))
+							{	// leaf nodes cannot be deleted (as they are in the queue),
+								// so just mark them
+								orNode->needsProcessing_ = false;
+							}
+							else
+							{
+								for (typename std::vector<AndNode*>::iterator itDis
+									= orNode->disjuncts_.begin();
+									itDis != orNode->disjuncts_.end(); ++itDis)
+								{
+									AndNode* andNode = *itDis;
+									assert(andNode != static_cast<AndNode*>(0));
+
+									for (typename std::vector<ChoiceFunctionNodeType>::iterator itCf
+										= andNode->choiceFunctions_.begin();
+										itCf != andNode->choiceFunctions_.end(); ++itCf)
+									{
+										OrNode* lowerOrNode = itCf->second;
+										assert(lowerOrNode != static_cast<OrNode*>(0));
+
+										// remove 'andNode' from parents of 'lowerOrNode'
+										bool found = false;
+										for (typename std::vector<AndNode*>::iterator itPar
+											= lowerOrNode->parents_.begin();
+											itPar != lowerOrNode->parents_.end(); ++itPar)
+										{
+											assert(*itPar != static_cast<AndNode*>(0));
+											if (*itPar == andNode)
+											{
+												found = true;
+												lowerOrNode->parents_.erase(itPar);
+												break;
+											}
+										}
+
+										assert(found);
+
+										markForNotProcessing(lowerOrNode);
+									}
+
+									SFTA_LOGGER_INFO("Removing for processing AndNode: " + Convert::ToString((size_t)andNode));
+									delete andNode;
+								}
+
+								SFTA_LOGGER_INFO("Removing for processing OrNode: " + Convert::ToString((size_t)orNode));
+								delete orNode;
+							}
+						}
+					}
+
+					
+					/**
+					 *
+					 * @return  True if the root was satisfied, false otherwise
+					 */
+					bool satisfyNode(OrNode* orNode)
+					{
+						// Assertions
+						assert(orNode != static_cast<OrNode*>(0));
+
+						bool result = false;
+
+						//
+						// downwards processing 
+						//
+						for (typename std::vector<AndNode*>::iterator itDis
+							= orNode->disjuncts_.begin(); itDis != orNode->disjuncts_.end();
+							++itDis)
+						{	// for every child AndNode 'andNode'
+							AndNode* andNode = *itDis;
+							assert(andNode != static_cast<AndNode*>(0));
+
+							for (typename std::vector<ChoiceFunctionNodeType>::iterator itCf
+								= andNode->choiceFunctions_.begin();
+								itCf != andNode->choiceFunctions_.end(); ++itCf)
+							{
+								// for every child OrNode 'tmpOrNode' of 'andNode'
+								OrNode* tmpOrNode = itCf->second;
+
+								if (tmpOrNode != static_cast<OrNode*>(0))
+								{
+									// remove 'andNode' from parents of 'tmpOrNode'
+									bool found = false;
+									for (typename std::vector<AndNode*>::iterator itPar
+										= tmpOrNode->parents_.begin();
+										itPar != tmpOrNode->parents_.end(); ++itPar)
+									{
+										if (*itPar == andNode)
+										{
+											found = true;
+											tmpOrNode->parents_.erase(itPar);
+											break;
+										}
+									}
+
+									assert(found);
+									markForNotProcessing(tmpOrNode);
+								}
+							}
+
+							SFTA_LOGGER_INFO("Removing ordinary AndNode: " + Convert::ToString((size_t)andNode));
+							delete andNode;
+						}
+
+						//
+						// upwards processing 
+						//
+						if (orNode->parents_.empty())
+						{	// this should be the root node
+							SFTA_LOGGER_INFO("Removing root OrNode: " + Convert::ToString((size_t)orNode));
+							delete orNode;
+							return true;
+						}
+
+						for (typename std::vector<AndNode*>::iterator itParAnds
+							= orNode->parents_.begin(); itParAnds != orNode->parents_.end();
+							++itParAnds)
+						{	// traverse the set of parents 'parAndNode' of 'orNode'
+							AndNode* parAndNode = *itParAnds;
+							assert(parAndNode != static_cast<AndNode*>(0));
+							assert(parAndNode->parent_ != static_cast<OrNode*>(0));
+
+							// remove 'orNode' from children of 'parAndNode'
+							bool found = false;
+							for (typename std::vector<ChoiceFunctionNodeType>::iterator itParChild
+								= parAndNode->choiceFunctions_.begin();
+								itParChild != parAndNode->choiceFunctions_.end(); ++itParChild)
+							{
+								if (itParChild->second == orNode)
+								{
+									found = true;
+									parAndNode->choiceFunctions_.erase(itParChild);
+									break;
+								}
+							}
+
+							assert(found);
+
+							if (parAndNode->choiceFunctions_.empty())
+							{	// in case we also satisfied the abovelying layer
+								result = satisfyNode(parAndNode->parent_);
+							}
+						}
+
+						SFTA_LOGGER_INFO("Removing ordinary OrNode: " + Convert::ToString((size_t)orNode));
+						delete orNode;
+
+						return result;
 					}
 
 
@@ -676,8 +912,8 @@ public:   // Public data types
 						std::queue<OrNode*> nodeQueue;
 
 						// create the root nodes
-						OrNode* root = new OrNode(static_cast<AndNode*>(0));
-						root->disjuncts_.push_back(new AndNode(root, arity, bigger.size()));
+						OrNode* root = new OrNode();
+						root->disjuncts_.push_back(new AndNode(root, 1, bigger.size()));
 
 						SFTA_LOGGER_INFO("");
 						SFTA_LOGGER_INFO("ROOT = " + Convert::ToString((size_t)root) + " for " + Convert::ToString((size_t)&arity));
@@ -691,6 +927,11 @@ public:   // Public data types
 //						root->disjuncts_[0]->choiceFunctions_[0].second = child;
 //						child->disjuncts_.push_back(new AndNode(child, arity, bigger.size()));
 //						nodeQueue.push(child);
+
+						typedef std::tr1::unordered_map<ChoiceFunctionType, OrNode*, HasherNnary>
+						 	CFOrHashTableType;
+						CFOrHashTableType orNodeCache;
+						size_t statCachedElements = 0;
 
 						nodeQueue.push(root);
 
@@ -708,73 +949,32 @@ public:   // Public data types
 
 							if (!orNode->needsProcessing_)
 							{	// in case the Or node does not need processing
-								while (true)
+								assert(isOrNodeLeaf(orNode));
+								for (typename std::vector<AndNode*>::iterator itDis
+									= orNode->disjuncts_.begin(); itDis != orNode->disjuncts_.end();
+									++itDis)
 								{
-									for (typename std::vector<AndNode*>::iterator itDisjuncts
-										= orNode->disjuncts_.begin();
-										itDisjuncts != orNode->disjuncts_.end(); ++itDisjuncts)
-									{
-										AndNode* andNode = *itDisjuncts;
-										assert(andNode != static_cast<AndNode*>(0));
+									AndNode* andNode = *itDis;
+									assert(andNode != static_cast<AndNode*>(0));
 
-										for (typename std::vector<ChoiceFunctionNodeType>::iterator itCfs
-											= andNode->choiceFunctions_.begin();
-											itCfs != andNode->choiceFunctions_.end(); ++itCfs)
-										{
-											OrNode* tmpOrNode = itCfs->second;
-											if (tmpOrNode != static_cast<OrNode*>(0))
-											{
-												assert(!tmpOrNode->needsProcessing_);
-												tmpOrNode->parent_ = static_cast<AndNode*>(0);
-											}
-										}
-
-										*itDisjuncts = static_cast<AndNode*>(0);
-										SFTA_LOGGER_INFO("Deleting not needed AndNode " + Convert::ToString((size_t)andNode));
-										delete andNode;
-									}
-
-									if (orNode->parent_ == static_cast<AndNode*>(0))
-									{
-										SFTA_LOGGER_INFO("Deleting not needed top OrNode " + Convert::ToString((size_t)orNode));
-										delete orNode;
-										break;
-									}
-
-									AndNode* higherAndNode = orNode->parent_;
-									assert(higherAndNode != static_cast<AndNode*>(0));
-									OrNode* higherOrNode = higherAndNode->parent_;
-									assert(higherOrNode != static_cast<OrNode*>(0));
-
-									bool found = false;
-									for (typename std::vector<ChoiceFunctionNodeType>::iterator itCfs
-										= higherAndNode->choiceFunctions_.begin();
-										itCfs != higherAndNode->choiceFunctions_.end(); ++itCfs)
-									{
-										OrNode* tmpOrNode = itCfs->second;
-										if (tmpOrNode == orNode)
-										{
-											SFTA_LOGGER_INFO("Deleting from its parent not needed OrNode " + Convert::ToString((size_t)orNode));
-											found = true;
-											higherAndNode->choiceFunctions_.erase(itCfs);
-											break;
-										}
-									}
-
-									assert(found);
-									SFTA_LOGGER_INFO("Deleting not needed top OrNode " + Convert::ToString((size_t)orNode));
-									delete orNode;
-									orNode = higherOrNode;
+									SFTA_LOGGER_INFO("Deleting unnecessary AndNode " + Convert::ToString((size_t)andNode));
+									delete andNode;
 								}
+
+								SFTA_LOGGER_INFO("Deleting unnecessary OrNode " + Convert::ToString((size_t)orNode));
+								delete orNode;
 							}
 							else
 							{	// in case the Or node needs processing
+								assert(!inclusionHolds);
+
 								for (typename std::vector<AndNode*>::const_iterator itDisjuncts
 									= orNode->disjuncts_.begin(); itDisjuncts != orNode->disjuncts_.end();
 									++itDisjuncts)
 								{	// for each disjunct in the Or
 									SFTA_LOGGER_INFO("Offset: " + Convert::ToString(itDisjuncts - orNode->disjuncts_.begin()) + ", Size: " + Convert::ToString(orNode->disjuncts_.size()));
 									AndNode* andNode = *itDisjuncts;
+									SFTA_LOGGER_INFO("Checking AndNode " + Convert::ToString((size_t)andNode));
 									assert(andNode != static_cast<AndNode*>(0));
 									assert(andNode->choiceFunctions_.size() > 0);
 
@@ -810,118 +1010,73 @@ public:   // Public data types
 										{	// in case the inclusion doesn't hold
 											SFTA_LOGGER_INFO("Disjunct unsatisfied");
 
-											OrNode* newOrNode = new OrNode(andNode);
-											andNode->choiceFunctions_[index].second = newOrNode;
+											typename CFOrHashTableType::const_iterator itCache;
+											if ((itCache = orNodeCache.find(andNode->choiceFunctions_[index].first))
+												!= orNodeCache.end())
+											{	// in case the OrNode is already cached
+												OrNode* cachedOrNode = itCache->second;
 
-											bool foundNew = false;
-											for (size_t i = 0; i < cf.size(); ++i)
-											{
-												if (cf[i] == 0)
-												{
-													foundNew = true;
-													AndNode* newAnd = new AndNode(newOrNode, arity, cf);
-													for (size_t ind = 0; ind < arity; ++ind)
-													{
-														newAnd->choiceFunctions_[ind].first[i] = ind + 1;
-													}
-
-													assert(!newAnd->choiceFunctions_.empty());
-													newOrNode->disjuncts_.push_back(newAnd);
-													// TODO: this hack (break) makes the algorithm
-													// generate single AndNode below the OrNode and thus
-													// reduces the explosion yielded by trying to find
-													// the lowest tree for which the inclusion holds
-													//break;
+												if (cachedOrNode != static_cast<OrNode*>(0))
+												{	// in case we are not at leaves
+													andNode->choiceFunctions_[index].second = cachedOrNode;
+													cachedOrNode->parents_.push_back(andNode);
 												}
-											}
 
-											if (foundNew)
-											{
-												assert(!newOrNode->disjuncts_.empty());
-												nodeQueue.push(newOrNode);
+												SFTA_LOGGER_INFO("Cached elements = " + Convert::ToString(++statCachedElements));
 											}
 											else
-											{
-												assert(newOrNode->disjuncts_.empty());
-												delete newOrNode;
-												andNode->choiceFunctions_[index].second = static_cast<OrNode*>(0);
+											{	// in case we haven't seen the OrNode yet
+												OrNode* newOrNode = new OrNode(andNode);
+												SFTA_LOGGER_INFO("Creating new OrNode: " + Convert::ToString((size_t)newOrNode));
+												andNode->choiceFunctions_[index].second = newOrNode;
+
+												bool foundNew = false;
+												for (size_t i = 0; i < cf.size(); ++i)
+												{
+													if (cf[i] == 0)
+													{
+														foundNew = true;
+														AndNode* newAnd = new AndNode(newOrNode, arity, cf);
+														SFTA_LOGGER_INFO("Creating new AndNode: " + Convert::ToString((size_t)newAnd));
+														for (size_t ind = 0; ind < arity; ++ind)
+														{
+															newAnd->choiceFunctions_[ind].first[i] = ind + 1;
+														}
+
+														assert(!newAnd->choiceFunctions_.empty());
+														newOrNode->disjuncts_.push_back(newAnd);
+													}
+												}
+
+												if (foundNew)
+												{
+													assert(!newOrNode->disjuncts_.empty());
+													nodeQueue.push(newOrNode);
+												}
+												else
+												{
+													assert(newOrNode->disjuncts_.empty());
+													SFTA_LOGGER_INFO("Deleting unused OrNode: " + Convert::ToString((size_t)newOrNode));
+													delete newOrNode;
+													newOrNode = static_cast<OrNode*>(0);
+													andNode->choiceFunctions_[index].second = newOrNode;
+												}
+
+												orNodeCache.insert(std::make_pair(andNode->choiceFunctions_[index].first, newOrNode));
 											}
 										}
 									}
 
 									if (andNode->choiceFunctions_.empty())
-									{
+									{	// in case the OrNode 'orNode' is satisfied by one AndNode
+										// (in this case 'andNode')
 										SFTA_LOGGER_INFO("AndNode empty " + Convert::ToString((size_t)andNode));
-										while (andNode->choiceFunctions_.empty())
+
+										if (satisfyNode(orNode))
 										{
-											OrNode* tmpOrNode = andNode->parent_;
-											assert(tmpOrNode != static_cast<OrNode*>(0));
-
-											bool incrementIndex = true;
-											for (size_t index = 0; index < tmpOrNode->disjuncts_.size();
-												index = incrementIndex? index+1 : index)
-											{
-												incrementIndex = true;
-												AndNode* otherAndNode = tmpOrNode->disjuncts_[index];
-												assert(otherAndNode != static_cast<AndNode*>(0));
-												if (otherAndNode == andNode)
-												{
-													incrementIndex = false;
-													tmpOrNode->disjuncts_.erase(tmpOrNode->disjuncts_.begin() + index);
-												}
-												else
-												{
-													for (typename std::vector<ChoiceFunctionNodeType>::iterator itCfs
-														= otherAndNode->choiceFunctions_.begin();
-														itCfs != otherAndNode->choiceFunctions_.end(); ++itCfs)
-													{
-														OrNode* otherOrNode = itCfs->second;
-														if (otherOrNode != static_cast<OrNode*>(0))
-														{
-															otherOrNode->parent_ = static_cast<AndNode*>(0);
-															setSubtreeForNonProcessing(otherOrNode);
-														}
-													}
-												}
-
-												SFTA_LOGGER_INFO("Deleting not needed AndNode " + Convert::ToString((size_t)otherAndNode));
-
-												delete otherAndNode;
-											}
-
-											AndNode* parentAndNode = tmpOrNode->parent_;
-											if (parentAndNode == static_cast<AndNode*>(0))
-											{	// in case we are at the root
-												SFTA_LOGGER_INFO("Top level satisfied");
-												assert(tmpOrNode == root);
-												inclusionHolds = true;
-												SFTA_LOGGER_INFO("Deleting OrNode " + Convert::ToString((size_t)tmpOrNode));
-												delete tmpOrNode;
-
-												root = static_cast<OrNode*>(0);
-												break;
-											}
-											else
-											{
-												// remove orNode from parentAndNode
-												for (typename std::vector<ChoiceFunctionNodeType>::iterator itCfs
-													= parentAndNode->choiceFunctions_.begin();
-													itCfs != parentAndNode->choiceFunctions_.end();
-													++itCfs, assert(itCfs != parentAndNode->choiceFunctions_.end()))
-												{
-													OrNode* otherOrNode = itCfs->second;
-													if (otherOrNode == tmpOrNode)
-													{
-														parentAndNode->choiceFunctions_.erase(itCfs);
-														break;
-													}
-												}
-											}
-
-											SFTA_LOGGER_INFO("Deleting OrNode " + Convert::ToString((size_t)tmpOrNode));
-											delete tmpOrNode;
-
-											andNode = parentAndNode;
+											SFTA_LOGGER_INFO("Inclusion holds!!!!!!!!!!!!!!!!!!!!!!!!");
+											inclusionHolds = true;
+											root = static_cast<OrNode*>(0);
 										}
 
 										break;
@@ -930,8 +1085,11 @@ public:   // Public data types
 							}
 						}
 
+						SFTA_LOGGER_INFO("Going to deallocate the decision tree");
 						recursivelyDeallocate(root);
+						SFTA_LOGGER_INFO("Finished deallocating the decision tree");
 
+						SFTA_LOGGER_INFO("Checked sm: " + Convert::ToString(sm) + " and bigger: " + Convert::ToString(bigger));
 						SFTA_LOGGER_INFO("Returning with value: " + Convert::ToString(inclusionHolds) + " from " + Convert::ToString((size_t)&arity));
 						SFTA_LOGGER_INFO("");
 						return inclusionHolds;
