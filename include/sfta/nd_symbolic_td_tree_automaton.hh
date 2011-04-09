@@ -659,48 +659,52 @@ public:   // Public data types
 					 * removes 'orNode', 'callerParent' is the parent AndNode that
 					 * deallocates 'orNode'
 					 */
-					void recursivelyDeallocate(OrNode* orNode/*, AndNode* callerParent*/)
+					void recursivelyDeallocate(OrNode* orNode, AndNode* callerParent)
 					{
 						if (orNode != static_cast<OrNode*>(0))
 						{
-//							if (callerParent != static_cast<AndNode*>(0))
-//							{	// in case 'orNode' is not the root, remove 'orNode' reference from
-//								// all its parents other than 'callerParent'
-//								assert(!callerParent->choiceFunctions_.empty());
-//
-//								bool found = false;
-//								for (typename std::vector<AndNode*>::iterator itPar
-//									= orNode->parents_.begin();
-//									itPar != orNode->parents_.end(); ++itPar)
-//								{
-//									AndNode* parentAnd = *itPar;
-//									assert(parentAnde != static_cast<AndNode*>(0));
-//
-//									if (parentAnd == callerParent)
-//									{	// do not remove from this one
-//										found = true;
-//									}
-//									else
-//									{
-//										for (typename std::vector<ChoiceFunctionNodeType>::iterator itCf
-//											= parentAnd->choiceFunctions_.begin();
-//											itCf != parentAnd->choiceFunctions_.end(); ++itCf)
-//										{
-//											OrNode* tmpOrNode = itCf->second;
-//											assert(tmpOrNode != static_cast<OrNode*>(0));
-//
-//											if (orNode == tmpOrNode)
-//											{
-//												// TODO:
-//												assert(false);
-//											}
-//
-//										}
-//									}
-//								}
-//
-//								assert(found);
-//							}
+							SFTA_LOGGER_INFO("Deallocating OrNode " + Convert::ToString((size_t)orNode));
+							if (callerParent != static_cast<AndNode*>(0))
+							{	// in case 'orNode' is not the root, remove 'orNode' reference from
+								// all its parents other than 'callerParent'
+								assert(!callerParent->choiceFunctions_.empty());
+
+								bool foundParent = false;
+								for (typename std::vector<AndNode*>::iterator itPar
+									= orNode->parents_.begin();
+									itPar != orNode->parents_.end(); ++itPar)
+								{
+									AndNode* parentAnd = *itPar;
+									assert(parentAnd != static_cast<AndNode*>(0));
+
+									if (parentAnd == callerParent)
+									{	// do not remove from this one
+										foundParent = true;
+									}
+									else
+									{
+										bool foundOrNode = false;
+										for (typename std::vector<ChoiceFunctionNodeType>::iterator itCf
+											= parentAnd->choiceFunctions_.begin();
+											itCf != parentAnd->choiceFunctions_.end(); ++itCf)
+										{
+											OrNode* tmpOrNode = itCf->second;
+											assert(tmpOrNode != static_cast<OrNode*>(0));
+
+											if (orNode == tmpOrNode)
+											{
+												foundOrNode = true;
+												parentAnd->choiceFunctions_.erase(itCf);
+												break;
+											}
+										}
+
+										assert(foundOrNode);
+									}
+								}
+
+								assert(foundParent);
+							}
 
 							for (typename std::vector<AndNode*>::iterator itDis
 								= orNode->disjuncts_.begin();
@@ -708,22 +712,22 @@ public:   // Public data types
 							{
 								AndNode* andNode = *itDis;
 								assert(andNode != static_cast<AndNode*>(0));
-
+								SFTA_LOGGER_INFO("Deallocating AndNode " + Convert::ToString((size_t)andNode));
 
 								for (typename std::vector<ChoiceFunctionNodeType>::iterator itCfs
 									= andNode->choiceFunctions_.begin();
 									itCfs != andNode->choiceFunctions_.end(); ++itCfs)
 								{	// deallocate children of the AndNode
 									SFTA_LOGGER_INFO("Descending recursively");
-									recursivelyDeallocate(itCfs->second);
+									recursivelyDeallocate(itCfs->second, andNode);
 									SFTA_LOGGER_INFO("Ascending recursively");
 								}
 
-								SFTA_LOGGER_INFO("Deallocating AndNode " + Convert::ToString((size_t)andNode));
+								SFTA_LOGGER_INFO("Deallocated AndNode " + Convert::ToString((size_t)andNode));
 								delete andNode;
 							}
 
-							SFTA_LOGGER_INFO("Deallocating OrNode " + Convert::ToString((size_t)orNode));
+							SFTA_LOGGER_INFO("Deallocated OrNode " + Convert::ToString((size_t)orNode));
 							delete orNode;
 						}
 					}
@@ -1022,6 +1026,7 @@ public:   // Public data types
 													cachedOrNode->parents_.push_back(andNode);
 												}
 
+												SFTA_LOGGER_INFO("Cached element = " + Convert::ToString((size_t)cachedOrNode));
 												SFTA_LOGGER_INFO("Cached elements = " + Convert::ToString(++statCachedElements));
 											}
 											else
@@ -1086,7 +1091,7 @@ public:   // Public data types
 						}
 
 						SFTA_LOGGER_INFO("Going to deallocate the decision tree");
-						recursivelyDeallocate(root);
+						recursivelyDeallocate(root, static_cast<AndNode*>(0));
 						SFTA_LOGGER_INFO("Finished deallocating the decision tree");
 
 						SFTA_LOGGER_INFO("Checked sm: " + Convert::ToString(sm) + " and bigger: " + Convert::ToString(bigger));
