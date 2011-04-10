@@ -17,7 +17,7 @@
 
 // Standard library headers
 #include <queue>
-#include <tr1/unordered_set>
+#include <tr1/unordered_map>
 
 
 // insert the class into proper namespace
@@ -561,21 +561,16 @@ public:   // Public data types
 
 			bool expandDisjunct(const DisjunctType& disjunct)
 			{
-				SFTA_LOGGER_INFO("Checking disjunct: " + Convert::ToString(disjunct));
-
 				if (isInclusionCached(disjunct))
 				{
-					SFTA_LOGGER_INFO("Disjunct inclusion cached");
 					return true;
 				}
 				else if (isNoninclusionCached(disjunct))
 				{
-					SFTA_LOGGER_INFO("Disjunct noninclusion cached");
 					return false;
 				}
 				else if (isImpliedByWorkset(disjunct))
 				{
-					SFTA_LOGGER_INFO("Disjunct implied by workset");
 					return true;
 				}
 				else if (expandSubset(disjunct))
@@ -632,28 +627,6 @@ public:   // Public data types
 						return doesInclusionHold_;
 					}
 
-					void setSubtreeForNonProcessing(OrNode* orNode)
-					{
-						orNode->needsProcessing_ = false;
-
-						for (typename std::vector<AndNode*>::iterator itDisjuncts
-							= orNode->disjuncts_.begin();
-							itDisjuncts != orNode->disjuncts_.end(); ++itDisjuncts)
-						{
-							AndNode* andNode = *itDisjuncts;
-
-							for (typename std::vector<ChoiceFunctionNodeType>::iterator itCf
-								= andNode->choiceFunctions_.begin();
-								itCf != andNode->choiceFunctions_.end(); ++itCf)
-							{
-								if (itCf->second != static_cast<OrNode*>(0))
-								{
-									setSubtreeForNonProcessing(itCf->second);
-								}
-							}
-						}
-					}
-
 
 					/**
 					 * removes 'orNode', 'callerParent' is the parent AndNode that
@@ -663,7 +636,6 @@ public:   // Public data types
 					{
 						if (orNode != static_cast<OrNode*>(0))
 						{
-							SFTA_LOGGER_INFO("Deallocating OrNode " + Convert::ToString((size_t)orNode));
 							if (callerParent != static_cast<AndNode*>(0))
 							{	// in case 'orNode' is not the root, remove 'orNode' reference from
 								// all its parents other than 'callerParent'
@@ -712,22 +684,17 @@ public:   // Public data types
 							{
 								AndNode* andNode = *itDis;
 								assert(andNode != static_cast<AndNode*>(0));
-								SFTA_LOGGER_INFO("Deallocating AndNode " + Convert::ToString((size_t)andNode));
 
 								for (typename std::vector<ChoiceFunctionNodeType>::iterator itCfs
 									= andNode->choiceFunctions_.begin();
 									itCfs != andNode->choiceFunctions_.end(); ++itCfs)
 								{	// deallocate children of the AndNode
-									SFTA_LOGGER_INFO("Descending recursively");
 									recursivelyDeallocate(itCfs->second, andNode);
-									SFTA_LOGGER_INFO("Ascending recursively");
 								}
 
-								SFTA_LOGGER_INFO("Deallocated AndNode " + Convert::ToString((size_t)andNode));
 								delete andNode;
 							}
 
-							SFTA_LOGGER_INFO("Deallocated OrNode " + Convert::ToString((size_t)orNode));
 							delete orNode;
 						}
 					}
@@ -796,11 +763,9 @@ public:   // Public data types
 										markForNotProcessing(lowerOrNode);
 									}
 
-									SFTA_LOGGER_INFO("Removing for processing AndNode: " + Convert::ToString((size_t)andNode));
 									delete andNode;
 								}
 
-								SFTA_LOGGER_INFO("Removing for processing OrNode: " + Convert::ToString((size_t)orNode));
 								delete orNode;
 							}
 						}
@@ -856,7 +821,6 @@ public:   // Public data types
 								}
 							}
 
-							SFTA_LOGGER_INFO("Removing ordinary AndNode: " + Convert::ToString((size_t)andNode));
 							delete andNode;
 						}
 
@@ -865,7 +829,6 @@ public:   // Public data types
 						//
 						if (orNode->parents_.empty())
 						{	// this should be the root node
-							SFTA_LOGGER_INFO("Removing root OrNode: " + Convert::ToString((size_t)orNode));
 							delete orNode;
 							return true;
 						}
@@ -900,7 +863,6 @@ public:   // Public data types
 							}
 						}
 
-						SFTA_LOGGER_INFO("Removing ordinary OrNode: " + Convert::ToString((size_t)orNode));
 						delete orNode;
 
 						return result;
@@ -919,19 +881,6 @@ public:   // Public data types
 						OrNode* root = new OrNode();
 						root->disjuncts_.push_back(new AndNode(root, 1, bigger.size()));
 
-						SFTA_LOGGER_INFO("");
-						SFTA_LOGGER_INFO("ROOT = " + Convert::ToString((size_t)root) + " for " + Convert::ToString((size_t)&arity));
-						SFTA_LOGGER_INFO("AndNode below root  = " + Convert::ToString((size_t)root->disjuncts_[0]));
-
-						// TEST CODE
-//						// TODO: remove
-//						root->needsProcessing_ = false;
-//						OrNode* child = new OrNode(root->disjuncts_[0]);
-//						child->needsProcessing_ = false;
-//						root->disjuncts_[0]->choiceFunctions_[0].second = child;
-//						child->disjuncts_.push_back(new AndNode(child, arity, bigger.size()));
-//						nodeQueue.push(child);
-
 						typedef std::tr1::unordered_map<ChoiceFunctionType, OrNode*, HasherNnary>
 						 	CFOrHashTableType;
 						CFOrHashTableType orNodeCache;
@@ -942,14 +891,9 @@ public:   // Public data types
 						bool inclusionHolds = false;
 						while (!nodeQueue.empty())
 						{
-							SFTA_LOGGER_INFO("node queue size: " + Convert::ToString(nodeQueue.size()));
-							SFTA_LOGGER_INFO("Inclusion status: " + Convert::ToString(inclusionHolds));
-
 							OrNode* orNode = nodeQueue.front();
 							assert(orNode != static_cast<OrNode*>(0));
 							nodeQueue.pop();
-
-							SFTA_LOGGER_INFO("Checking OrNode " + Convert::ToString((size_t)orNode));
 
 							if (!orNode->needsProcessing_)
 							{	// in case the Or node does not need processing
@@ -961,11 +905,9 @@ public:   // Public data types
 									AndNode* andNode = *itDis;
 									assert(andNode != static_cast<AndNode*>(0));
 
-									SFTA_LOGGER_INFO("Deleting unnecessary AndNode " + Convert::ToString((size_t)andNode));
 									delete andNode;
 								}
 
-								SFTA_LOGGER_INFO("Deleting unnecessary OrNode " + Convert::ToString((size_t)orNode));
 								delete orNode;
 							}
 							else
@@ -976,9 +918,7 @@ public:   // Public data types
 									= orNode->disjuncts_.begin(); itDisjuncts != orNode->disjuncts_.end();
 									++itDisjuncts)
 								{	// for each disjunct in the Or
-									SFTA_LOGGER_INFO("Offset: " + Convert::ToString(itDisjuncts - orNode->disjuncts_.begin()) + ", Size: " + Convert::ToString(orNode->disjuncts_.size()));
 									AndNode* andNode = *itDisjuncts;
-									SFTA_LOGGER_INFO("Checking AndNode " + Convert::ToString((size_t)andNode));
 									assert(andNode != static_cast<AndNode*>(0));
 									assert(andNode->choiceFunctions_.size() > 0);
 
@@ -1005,15 +945,11 @@ public:   // Public data types
 
 										if (inclFunc_->expandDisjunct(std::make_pair(sm[realPosition], subset)))
 										{	// in case the inclusion holds
-											SFTA_LOGGER_INFO("Disjunct satisfied");
-										
 											incrementIndex = false;
 											andNode->choiceFunctions_.erase(andNode->choiceFunctions_.begin() + index);
 										}
 										else
 										{	// in case the inclusion doesn't hold
-											SFTA_LOGGER_INFO("Disjunct unsatisfied");
-
 											typename CFOrHashTableType::const_iterator itCache;
 											if ((itCache = orNodeCache.find(andNode->choiceFunctions_[index].first))
 												!= orNodeCache.end())
@@ -1025,14 +961,10 @@ public:   // Public data types
 													andNode->choiceFunctions_[index].second = cachedOrNode;
 													cachedOrNode->parents_.push_back(andNode);
 												}
-
-												SFTA_LOGGER_INFO("Cached element = " + Convert::ToString((size_t)cachedOrNode));
-												SFTA_LOGGER_INFO("Cached elements = " + Convert::ToString(++statCachedElements));
 											}
 											else
 											{	// in case we haven't seen the OrNode yet
 												OrNode* newOrNode = new OrNode(andNode);
-												SFTA_LOGGER_INFO("Creating new OrNode: " + Convert::ToString((size_t)newOrNode));
 												andNode->choiceFunctions_[index].second = newOrNode;
 
 												bool foundNew = false;
@@ -1042,7 +974,6 @@ public:   // Public data types
 													{
 														foundNew = true;
 														AndNode* newAnd = new AndNode(newOrNode, arity, cf);
-														SFTA_LOGGER_INFO("Creating new AndNode: " + Convert::ToString((size_t)newAnd));
 														for (size_t ind = 0; ind < arity; ++ind)
 														{
 															newAnd->choiceFunctions_[ind].first[i] = ind + 1;
@@ -1061,7 +992,6 @@ public:   // Public data types
 												else
 												{
 													assert(newOrNode->disjuncts_.empty());
-													SFTA_LOGGER_INFO("Deleting unused OrNode: " + Convert::ToString((size_t)newOrNode));
 													delete newOrNode;
 													newOrNode = static_cast<OrNode*>(0);
 													andNode->choiceFunctions_[index].second = newOrNode;
@@ -1075,11 +1005,8 @@ public:   // Public data types
 									if (andNode->choiceFunctions_.empty())
 									{	// in case the OrNode 'orNode' is satisfied by one AndNode
 										// (in this case 'andNode')
-										SFTA_LOGGER_INFO("AndNode empty " + Convert::ToString((size_t)andNode));
-
 										if (satisfyNode(orNode))
 										{
-											SFTA_LOGGER_INFO("Inclusion holds!!!!!!!!!!!!!!!!!!!!!!!!");
 											inclusionHolds = true;
 											root = static_cast<OrNode*>(0);
 										}
@@ -1090,13 +1017,7 @@ public:   // Public data types
 							}
 						}
 
-						SFTA_LOGGER_INFO("Going to deallocate the decision tree");
 						recursivelyDeallocate(root, static_cast<AndNode*>(0));
-						SFTA_LOGGER_INFO("Finished deallocating the decision tree");
-
-						SFTA_LOGGER_INFO("Checked sm: " + Convert::ToString(sm) + " and bigger: " + Convert::ToString(bigger));
-						SFTA_LOGGER_INFO("Returning with value: " + Convert::ToString(inclusionHolds) + " from " + Convert::ToString((size_t)&arity));
-						SFTA_LOGGER_INFO("");
 						return inclusionHolds;
 					}
 
@@ -1111,16 +1032,12 @@ public:   // Public data types
 
 						unsigned arity = lhs.begin()->GetVector().size();
 
-						SFTA_LOGGER_INFO("checking LHS: " + Convert::ToString(lhs) +
-							" and RHS: " + Convert::ToString(rhs));
-
 						if (arity == 0)
 						{	// the ``smaller'' state can make a nullary transition
 							if (rhs.find(typename SFTA::Private::ElemOrVector<StateType>::VectorType())
 								== rhs.end())
 							{	// in case the ``bigger'' state cannot make such a transition
 								doesInclusionHold_ = false;
-								SFTA_LOGGER_INFO("Could not find nullary RHS!");
 								return result;
 							}
 							else
@@ -1131,9 +1048,6 @@ public:   // Public data types
 
 						const std::vector<SFTA::Private::ElemOrVector<StateType> >& rhsVector =
 							rhs.ToVector();
-
-						SFTA_LOGGER_INFO("Arity: " + Convert::ToString(arity));
-						SFTA_LOGGER_INFO("RHS size: " + Convert::ToString(rhsVector.size()));
 
 						for (typename LeafType::const_iterator itLhs = lhs.begin();
 							itLhs != lhs.end(); ++itLhs)
@@ -1147,8 +1061,6 @@ public:   // Public data types
 						return result;
 					}
 				};
-
-				SFTA_LOGGER_INFO("Expanding subset: " + Convert::ToString(disjunct));
 
 				const StateType& smallerState = disjunct.first;
 				const StateSetType& biggerSetOfStates = disjunct.second;
