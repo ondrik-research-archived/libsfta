@@ -309,6 +309,12 @@ public:   // Public data types
 
 				struct AndNode
 				{
+				private:
+
+					AndNode(const AndNode&);
+					AndNode& operator=(const AndNode&);
+
+				public:
 					OrNode* parent_;
 					std::vector<ChoiceFunctionNodeType> choiceFunctions_;
 
@@ -884,7 +890,6 @@ public:   // Public data types
 						typedef std::tr1::unordered_map<ChoiceFunctionType, OrNode*, HasherNnary>
 						 	CFOrHashTableType;
 						CFOrHashTableType orNodeCache;
-						size_t statCachedElements = 0;
 
 						nodeQueue.push(root);
 
