@@ -147,6 +147,306 @@ public:   // Public data types
 			}
 		};
 
+
+		class InclusionCheckingFunctor
+		{
+		private:  // Private data members
+
+			typedef OrderedVector<StateType> StateSetType;
+			typedef std::pair<size_t, StateSetType> NumberSetType;
+			typedef std::list<NumberSetType> StateSetListType;
+			typedef std::tr1::unordered_map<StateType, StateSetListType>
+				StateToStateSetListHashTableType;
+			typedef std::pair<StateType, NumberSetType> AntichainPairType;
+			typedef std::queue<AntichainPairType> PairQueueType;
+			typedef std::set<size_t> RevokedSetType;
+
+		private:  // Private data members
+
+			const Type* smallerAut_;
+			const Type* biggerAut_;
+
+		private:  // Private methods
+
+			InclusionCheckingFunctor(const InclusionCheckingFunctor&);
+			InclusionCheckingFunctor& operator=(const InclusionCheckingFunctor&);
+
+		public:   // Public methods
+
+			InclusionCheckingFunctor(const Type* smallerAut, const Type* biggerAut)
+				: smallerAut_(smallerAut),
+					biggerAut_(biggerAut)
+			{
+				assert(smallerAut_ != static_cast<Type*>(0));
+				assert(biggerAut_ != static_cast<Type*>(0));
+			}
+
+			bool operator()()
+			{
+				class CollectorApplyFunctor
+					: public SharedMTBDDType::AbstractApplyFunctorType
+				{
+				private:  // Private data members
+
+					const Type* smallerAut_;
+					const Type* biggerAut_;
+					StateToStateSetListHashTableType* antichain_;
+					PairQueueType* pairQueue_;
+					bool failed_;
+					size_t counter_;
+					RevokedSetType* revokedNumbers_;
+
+				private:  // Private methods
+
+					CollectorApplyFunctor(const CollectorApplyFunctor&);
+					CollectorApplyFunctor& operator=(const CollectorApplyFunctor&);
+
+				public:   // Public data members
+
+					CollectorApplyFunctor(const Type* smallerAut, const Type* biggerAut,
+						StateToStateSetListHashTableType* antichain, PairQueueType* pairQueue,
+						RevokedSetType* revokedNumbers)
+						: smallerAut_(smallerAut),
+							biggerAut_(biggerAut),
+							antichain_(antichain),
+							pairQueue_(pairQueue),
+							failed_(false),
+							counter_(),
+							revokedNumbers_(revokedNumbers)
+					{
+						assert(smallerAut_ != static_cast<Type*>(0));
+						assert(biggerAut_ != static_cast<Type*>(0));
+						assert(antichain_ != static_cast<StateToStateSetListHashTableType*>(0));
+						assert(pairQueue_ != static_cast<PairQueueType*>(0));
+						assert(revokedNumbers_ != static_cast<RevokedSetType*>(0));
+					}
+
+					virtual LeafType operator()(const LeafType& lhs, const LeafType& rhs)
+					{
+						if (!failed_)
+						{	// in case there is some sense in doing the following
+							for (typename LeafType::const_iterator itLhs = lhs.begin();
+								itLhs != lhs.end() && !(failed_); ++itLhs)
+							{
+								const StateType& smallerState = itLhs->GetElement();
+
+								bool addSet = false;         // flag that indicates that the following
+								                             // variable should be checked for finality
+								StateSetType biggerStates;   // contains newly added set to antichain
+								                             // (if such exists)
+
+								typename StateToStateSetListHashTableType::iterator itHT;
+								if ((itHT = antichain_->find(smallerState)) != antichain_->end())
+								{	// if there is already some list for the smallerState
+									StateSetListType& biggerSetList = itHT->second;
+
+									// try to find some smaller set in the antichain
+									bool isSubset = true;
+									typename StateSetListType::const_iterator itList;
+									for (itList = biggerSetList.begin();
+										itList != biggerSetList.end(); ++itList)
+									{
+										const StateSetType& listItem = itList->second;
+
+										// check if 'listItem' is a subset of 'rhs'
+										typename LeafType::const_iterator itRhs = rhs.begin();
+										for (typename StateSetType::const_iterator itAntichainSet
+											= listItem.begin(); itAntichainSet != listItem.end();
+											++itAntichainSet)
+										{
+											while ((itRhs != rhs.end()) &&
+												(itRhs->GetElement() < *itAntichainSet))
+											{
+												++itRhs;
+											}
+
+											if ((itRhs == rhs.end()) || (itRhs->GetElement() != *itAntichainSet))
+											{	// in case the 'listItem' is not a subset of 'rhs'
+												isSubset = false;
+												break;
+											}
+										}
+
+										assert(!isSubset || (itRhs != rhs.end()));
+
+										if (isSubset)
+										{	// in case we found some subset
+											break;
+										}
+									}
+
+									if (!isSubset)
+									{	// in case there is no smaller set in the antichain
+										addSet = true;
+
+										// remove all bigger sets from the antichain
+										typename StateSetListType::iterator itList;
+										bool incrementIterator = true;
+										for (itList = biggerSetList.begin();
+											itList != biggerSetList.end();
+											itList = incrementIterator? ++itList : itList)
+										{
+											const StateSetType& listItem = itList->second;
+
+											// check if 'rhs' is a subset of 'listItem'
+											bool rhsIsSubset = true;
+											typename StateSetType::const_iterator itAntichainSet = listItem.begin();
+											for (typename LeafType::const_iterator itRhs = rhs.begin();
+												itRhs != rhs.end(); ++itRhs)
+											{
+												while ((itAntichainSet != listItem.end()) &&
+													(*itAntichainSet < itRhs->GetElement()))
+												{
+													++itAntichainSet;
+												}
+
+												if ((itAntichainSet == listItem.end()) ||
+													(*itAntichainSet != itRhs->GetElement()))
+												{	// in case the 'rhs' is not a subset of 'listItem'
+													rhsIsSubset = false;
+													break;
+												}
+											}
+
+											assert(!rhsIsSubset || (itAntichainSet != listItem.end()));
+
+											if (rhsIsSubset)
+											{	// in case 'rhs' is smaller, remove 'listItem' from antichain
+												itList = biggerSetList.erase(itList);
+												revokedNumbers_->insert(itList->first);
+												incrementIterator = false;
+											}
+										}
+									}
+								}
+								else
+								{	// if there isn't any list for smallerState
+									addSet = true;
+									itHT = antichain_->insert(std::make_pair(smallerState, StateSetListType())).first;
+								}
+
+								if (addSet)
+								{
+									for (typename LeafType::const_iterator itRhs = rhs.begin();
+										itRhs != rhs.end(); ++itRhs)
+									{
+										biggerStates.insert(itRhs->GetElement());
+									}
+
+									AntichainPairType newPair = std::make_pair(smallerState,
+										std::make_pair(getNewNumber(), biggerStates));
+									itHT->second.push_back(newPair.second);
+									pairQueue_->push(newPair);
+
+									if (smallerAut_->IsStateFinal(smallerState))
+									{	// in case the state from the smaller automaton is final
+										failed_ = true;
+										for (typename LeafType::const_iterator itRhs = rhs.begin();
+											itRhs != rhs.end(); ++itRhs)
+										{
+											if (biggerAut_->IsStateFinal(itRhs->GetElement()))
+											{
+												failed_ = false;
+												break;
+											}
+										}
+									}
+								}
+							}
+						}
+
+						return LeafType();
+					}
+
+					inline bool Failed() const
+					{
+						return failed_;
+					}
+
+					inline size_t getNewNumber()
+					{
+						return counter_++;
+					}
+				};
+
+
+				// the antichain
+				StateToStateSetListHashTableType antichain;
+				// queue of pairs (state, state_set) added to antichain
+				// TODO: try stack here (compare with the queue)
+				PairQueueType pairQueue;
+				// set of numbers of revoked pairs
+				RevokedSetType revokedNumbers;
+
+				CollectorApplyFunctor collector(smallerAut_, biggerAut_, &antichain,
+					&pairQueue, &revokedNumbers);
+
+				SharedMTBDDType* mtbdd = smallerAut_->GetTTWrapper()->GetMTBDD();
+
+				RootType smallerRoot = smallerAut_->getRoot(LeftHandSideType());
+				RootType biggerRoot = biggerAut_->getRoot(LeftHandSideType());
+
+				RootType tmp = mtbdd->Apply(smallerRoot, biggerRoot, &collector);
+
+				// Erase the following line for better performance ;-)
+				//mtbdd->EraseRoot(tmp);
+
+				while (!collector.Failed() && !pairQueue.empty())
+				{
+					AntichainPairType nextPair = pairQueue.front();
+					pairQueue.pop();
+
+					if (revokedNumbers.find(nextPair.second.first) == revokedNumbers.end())
+					{	// in case this pair has not been revoked
+						SFTA_LOGGER_INFO("Processing pair: " + Convert::ToString(nextPair));
+
+						StateType& smallerState = nextPair.first;
+						StateSetType& biggerSet = nextPair.second.second;
+
+						// find all superstates such that 'smallerState' is an element of
+						// these superstates
+						typename LHSRootContainerType::IndexValueArray smallerLhss =
+							smallerAut_->getRootMap().GetItemsWith(smallerState,
+							smallerAut_->getStates());
+
+						for (size_t arity = 0; arity < smallerLhss.size(); ++arity)
+						{	// for each arity of left-hand side in smaller automaton
+							for (size_t smallerIndex = 0;
+								smallerIndex < smallerLhss[arity].size(); ++smallerIndex)
+							{	// for each left-hand side of given arity in smaller automaton
+								const typename LHSRootContainerType::IndexValueType& lhsIV
+									= smallerLhss[arity][smallerIndex];
+								SFTA_LOGGER_INFO("Checking LHS: " + Convert::ToString(lhsIV.first));
+
+								// check if all components of the left-hand side are in the
+								// antichain
+								bool allComponentsInAntichain = true;
+								for (size_t arityIndex = 0; arityIndex < arity; ++arityIndex)
+								{
+									if (antichain.find(lhsIV.first[arityIndex]) == antichain.end())
+									{
+										allComponentsInAntichain = false;
+									}
+								}
+
+								if (allComponentsInAntichain)
+								{
+									SFTA_LOGGER_INFO("All components are in the antichain for LHS " + Convert::ToString(lhsIV.first));
+								}
+							}
+						}
+					}
+					else
+					{
+						SFTA_LOGGER_INFO("Revoked pair: " + Convert::ToString(nextPair));
+					}
+				}
+
+				return !collector.Failed();
+			}
+		};
+
+
 	private:  // Private methods
 
 
@@ -879,11 +1179,28 @@ public:   // Public data types
 		{
 			assert(a1 != static_cast<HierarchyRoot*>(0));
 			assert(a2 != static_cast<HierarchyRoot*>(0));
-			assert(simA1 != static_cast<typename HierarchyRoot::Operation::SimulationRelationType*>(0));
-			assert(simA2 != static_cast<typename HierarchyRoot::Operation::SimulationRelationType*>(0));
 
-			assert(false);
-			return true;
+			// We do not make use of simulation
+			assert(simA1 == static_cast<typename HierarchyRoot::Operation::SimulationRelationType*>(0));
+			assert(simA2 == static_cast<typename HierarchyRoot::Operation::SimulationRelationType*>(0));
+
+			const Type* a1Sym = static_cast<Type*>(0);
+			const Type* a2Sym = static_cast<Type*>(0);
+
+			if ((a1Sym = dynamic_cast<const Type*>(a1)) ==
+				static_cast<const Type*>(0))
+			{	// in case the type is not OK
+				throw std::runtime_error(__func__ + std::string(": Invalid type"));
+			}
+
+			if ((a2Sym = dynamic_cast<const Type*>(a2)) ==
+				static_cast<const Type*>(0))
+			{	// in case the type is not OK
+				throw std::runtime_error(__func__ + std::string(": Invalid type"));
+			}
+
+			InclusionCheckingFunctor inclFunc(a1Sym, a2Sym);
+			return inclFunc();
 		}
 
 	};
