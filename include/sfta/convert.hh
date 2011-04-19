@@ -13,6 +13,7 @@
 
 // Standard library headers
 #include <cassert>
+#include <list>
 #include <map>
 #include <set>
 #include <sstream>
@@ -272,6 +273,42 @@ public:
 		std::ostringstream oss;
 
 		oss << "(" << ToString(pr.first) << ", " << ToString(pr.second) << ")";
+
+		// return the string
+		return oss.str();
+	}
+
+
+	/**
+	 * @brief  Converts an object to string (std::list specialization)
+	 *
+	 * Static method for conversion of a list of objects of any class with the
+	 * << output operator into a string
+	 *
+	 * @param[in]  lst  The list for the conversion
+	 *
+	 * @returns  The string representation of the list
+	 */
+	template <typename T>
+	static std::string ToString(const std::list<T>& lst)
+	{
+		// the output stream for the string
+		std::ostringstream oss;
+
+		oss << "(";		// opening tag
+		for (typename std::list<T>::const_iterator it = lst.begin();
+			it != lst.end(); ++it)
+		{	// for each element of the vector
+			if (it != lst.begin())
+			{	// if we are not at the first element
+				oss << ", ";
+			}
+
+			// the string of the element
+			oss << ToString(*it);
+		}
+
+		oss << ")";		// closing tag
 
 		// return the string
 		return oss.str();
