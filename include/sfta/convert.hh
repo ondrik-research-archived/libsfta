@@ -19,6 +19,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <tr1/unordered_map>
 #include <vector>
 
 
@@ -191,6 +192,42 @@ public:
 		}
 
 		oss << "}";		// closing tag
+
+		// return the string
+		return oss.str();
+	}
+
+
+	/**
+	 * @brief  Converts an object to string (std::tr1::unordered_map specialization)
+	 *
+	 * Static method for conversion of an unordered map of objects of any class with the
+	 * << output operator into a string
+	 *
+	 * @param[in]  unmap  The unordered map for the conversion
+	 *
+	 * @returns  The string representation of the unordered map
+	 */
+	template <typename T, typename U>
+	static std::string ToString(const std::tr1::unordered_map<T, U>& unmap)
+	{
+		// the output stream for the string
+		std::ostringstream oss;
+
+		oss << "[";		// opening tag
+		for (typename std::tr1::unordered_map<T, U>::const_iterator it = unmap.begin();
+			it != unmap.end(); ++it)
+		{	// for each element of the unordered map
+			if (it != unmap.begin())
+			{	// if we are not at the first element
+				oss << ", ";
+			}
+
+			// the string of the element
+			oss << ToString(it->first) << " -> " << ToString(it->second);
+		}
+
+		oss << "]";		// closing tag
 
 		// return the string
 		return oss.str();
