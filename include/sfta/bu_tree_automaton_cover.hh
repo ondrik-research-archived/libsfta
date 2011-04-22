@@ -283,7 +283,25 @@ public:   // Public data types
 			return result;
 		}
 
-		bool DoesLanguageInclusionHold(const Type* lhs, const Type* rhs) const
+		bool DoesLanguageInclusionHoldUpwards(const Type* lhs, const Type* rhs) const
+		{
+			// Assertions
+			assert(lhs != static_cast<Type*>(0));
+			assert(rhs != static_cast<Type*>(0));
+
+			typedef typename NDSymbolicBUTreeAutomaton::HierarchyRoot AbstractAutomaton;
+			typedef typename AbstractAutomaton::Operation InternalOperationType;
+			typedef typename InternalOperationType::SimulationRelationType
+				InternalSimulationType;
+
+			// check language inclusion
+			std::auto_ptr<InternalOperationType> buOper(lhs->getAutomaton()->GetOperation());
+			return buOper->CheckLanguageInclusion(lhs->getAutomaton().get(), rhs->getAutomaton().get(),
+				static_cast<InternalSimulationType*>(0), static_cast<InternalSimulationType*>(0));
+		}
+
+
+		bool DoesLanguageInclusionHoldDownwards(const Type* lhs, const Type* rhs) const
 		{
 			// Assertions
 			assert(lhs != static_cast<Type*>(0));

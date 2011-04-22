@@ -269,18 +269,15 @@ public:   // Public data types
 				{
 					std::vector<AndNode*> parents_;
 					std::vector<AndNode*> disjuncts_;
-					bool needsProcessing_;
 
 					OrNode()
 						: parents_(),
-							disjuncts_(),
-							needsProcessing_(true)
+							disjuncts_()
 					{ }
 
 					OrNode(AndNode* parent)
 						: parents_(1, parent),
-							disjuncts_(),
-							needsProcessing_(true)
+							disjuncts_()
 					{ }
 
 					friend std::ostream& operator<<(std::ostream& os, const OrNode& node)
@@ -728,13 +725,8 @@ public:   // Public data types
 						assert(orNode != static_cast<OrNode*>(0));
 						if (orNode->parents_.empty())
 						{
-							if (isOrNodeLeaf(orNode))
-							{	// leaf nodes cannot be deleted (as they are in the queue),
-								// so just mark them
-								orNode->needsProcessing_ = false;
-							}
-							else
-							{
+							if (!isOrNodeLeaf(orNode))
+							{	// leaf nodes cannot be deleted (as they are in the queue)
 								for (typename std::vector<AndNode*>::iterator itDis
 									= orNode->disjuncts_.begin();
 									itDis != orNode->disjuncts_.end(); ++itDis)
@@ -898,9 +890,10 @@ public:   // Public data types
 						{
 							OrNode* orNode = nodeQueue.front();
 							assert(orNode != static_cast<OrNode*>(0));
+							assert(isOrNodeLeaf(orNode));
 							nodeQueue.pop();
 
-							if (!orNode->needsProcessing_)
+							if (orNode->parents_.empty() && orNode != root)
 							{	// in case the Or node does not need processing
 								assert(isOrNodeLeaf(orNode));
 								for (typename std::vector<AndNode*>::iterator itDis

@@ -267,7 +267,7 @@ public:   // Public data types
 											}
 										}
 
-										assert(!isSubset || (itRhs != rhs.end()));
+										assert(!isSubset || (itRhs != rhs.end()) || rhs.empty());
 
 										if (isSubset)
 										{	// in case we found some subset
@@ -286,11 +286,13 @@ public:   // Public data types
 											itList != biggerSetList.end();
 											itList = incrementIterator? ++itList : itList)
 										{
+											incrementIterator = true;
 											const StateSetType& listItem = itList->second;
 
 											// check if 'rhs' is a subset of 'listItem'
 											bool rhsIsSubset = true;
-											typename StateSetType::const_iterator itAntichainSet = listItem.begin();
+											typename StateSetType::const_iterator itAntichainSet
+												= listItem.begin();
 											for (typename LeafType::const_iterator itRhs = rhs.begin();
 												itRhs != rhs.end(); ++itRhs)
 											{
@@ -327,6 +329,7 @@ public:   // Public data types
 
 								if (addSet)
 								{
+									SFTA_LOGGER_INFO("Adding pair " + Convert::ToString(std::make_pair(smallerState, Convert::ToString(rhs))));
 									for (typename LeafType::const_iterator itRhs = rhs.begin();
 										itRhs != rhs.end(); ++itRhs)
 									{
@@ -350,6 +353,11 @@ public:   // Public data types
 												break;
 											}
 										}
+
+										if (failed_)
+										{
+											SFTA_LOGGER_INFO("Failing pair: " + Convert::ToString(std::make_pair(smallerState, rhs)));
+										}
 									}
 								}
 							}
@@ -369,6 +377,19 @@ public:   // Public data types
 					}
 				};
 
+
+				class UnionApplyFunctor
+					: public SharedMTBDDType::AbstractApplyFunctorType
+				{
+				public:
+					virtual LeafType operator()(const LeafType& lhs, const LeafType& rhs)
+					{
+						return lhs.Union(rhs);
+					}
+				};
+
+
+				UnionApplyFunctor unionFunc;
 
 				// the antichain
 				StateToStateSetListHashTableType antichain;
@@ -396,12 +417,13 @@ public:   // Public data types
 					AntichainPairType nextPair = pairQueue.front();
 					pairQueue.pop();
 
+					SFTA_LOGGER_INFO("Antichain = " + Convert::ToString(antichain));
+
 					if (revokedNumbers.find(nextPair.second.first) == revokedNumbers.end())
 					{	// in case this pair has not been revoked
 						SFTA_LOGGER_INFO("Processing pair: " + Convert::ToString(nextPair));
 
 						StateType& smallerState = nextPair.first;
-						StateSetType& biggerSet = nextPair.second.second;
 
 						// find all superstates such that 'smallerState' is an element of
 						// these superstates
@@ -414,24 +436,154 @@ public:   // Public data types
 							for (size_t smallerIndex = 0;
 								smallerIndex < smallerLhss[arity].size(); ++smallerIndex)
 							{	// for each left-hand side of given arity in smaller automaton
+								assert(arity > 0);    // there should be nothing for ()
+
 								const typename LHSRootContainerType::IndexValueType& lhsIV
 									= smallerLhss[arity][smallerIndex];
 								SFTA_LOGGER_INFO("Checking LHS: " + Convert::ToString(lhsIV.first));
 
-								// check if all components of the left-hand side are in the
-								// antichain
+								// collect vector of lists of possible values
 								bool allComponentsInAntichain = true;
+								std::vector<StateSetListType> listVector;
 								for (size_t arityIndex = 0; arityIndex < arity; ++arityIndex)
 								{
-									if (antichain.find(lhsIV.first[arityIndex]) == antichain.end())
+									typename StateToStateSetListHashTableType::const_iterator itHT;
+									if ((itHT = antichain.find(lhsIV.first[arityIndex])) != antichain.end())
+									{
+										listVector.push_back(itHT->second);
+									}
+									else
 									{
 										allComponentsInAntichain = false;
+										break;
 									}
 								}
 
 								if (allComponentsInAntichain)
 								{
 									SFTA_LOGGER_INFO("All components are in the antichain for LHS " + Convert::ToString(lhsIV.first));
+
+									SFTA_LOGGER_INFO("Respective sets: " + Convert::ToString(listVector));
+
+									assert(listVector.size() == arity);
+
+									// initialize vector of iterators
+									std::vector<typename StateSetListType::const_iterator> vecIterator;
+									for (typename std::vector<StateSetListType>::const_iterator itList
+										= listVector.begin(); itList != listVector.end(); ++itList)
+									{
+										vecIterator.push_back(itList->begin());
+									}
+
+									assert(vecIterator.size() == arity);
+
+									// generate all possible arity-tuples of sets from 'listVector'
+									int index = vecIterator.size() - 1;
+									while (index >= 0)
+									{	// until the most significant component overflows
+
+										std::string tmpString = "(";
+										for (typename std::vector<typename StateSetListType::const_iterator>
+											::const_iterator itItVec = vecIterator.begin();
+											itItVec != vecIterator.end(); ++itItVec)
+										{
+											tmpString += Convert::ToString(**itItVec) + ", ";
+										}
+
+										SFTA_LOGGER_INFO("TODO: Generating.... " + tmpString + ")");
+
+										// generate the cartesian product of the sets
+
+										// initialize vector of set iterators
+										bool setEmpty = false;
+										std::vector<typename StateSetType::const_iterator> setVecIterator;
+										for (typename std::vector<typename StateSetListType::const_iterator>
+											::const_iterator itItVec = vecIterator.begin();
+											itItVec != vecIterator.end(); ++itItVec)
+										{
+//											if ((*itItVec)->second.empty())
+//											{
+//												setEmpty = true;
+//												break;
+//											}
+
+											setVecIterator.push_back((*itItVec)->second.begin());
+										}
+
+										// TODO: this is, like, BAD!!!
+//										if (setEmpty)
+//										{
+//											break;
+//										}
+
+										assert(setVecIterator.size() == arity);
+
+										// generate all possible arity-tuples of sets from 'listVector'
+										RootType unitedRoots = mtbdd->CreateRoot();
+										int setIndex = setVecIterator.size() - 1;
+										while (setIndex >= 0)
+										{
+											// get the left-hand side vector
+											LeftHandSideType biggerLhs;
+											for (typename std::vector<typename StateSetType::const_iterator>
+												::const_iterator itItSetVec = setVecIterator.begin();
+												itItSetVec != setVecIterator.end(); ++itItSetVec)
+											{
+												biggerLhs.push_back(**itItSetVec);
+											}
+
+											SFTA_LOGGER_INFO("Generating.... " + Convert::ToString(biggerLhs));
+
+											tmp = unitedRoots;
+											unitedRoots = mtbdd->Apply(unitedRoots,
+												biggerAut_->getRoot(biggerLhs), &unionFunc);
+
+											// Erase the following line for better performance ;-)
+											// mtbdd->EraseRoot(tmp);
+
+
+											setIndex = setVecIterator.size() - 1;
+
+											do
+											{
+												setVecIterator[setIndex]++;
+
+												if (setVecIterator[setIndex] ==
+													vecIterator[setIndex]->second.end())
+												{
+													setVecIterator[setIndex] = vecIterator[setIndex]->second.begin();
+													--setIndex;
+												}
+												else
+												{
+													break;
+												}
+											} while (setIndex >= 0);
+										}
+
+										tmp = mtbdd->Apply(smallerAut_->getRoot(lhsIV.first),
+											unitedRoots, &collector);
+
+										// Erase the following line for better performance ;-)
+										// mtbdd->EraseRoot(tmp);
+
+										index = vecIterator.size() - 1;
+
+										do
+										{
+											vecIterator[index]++;
+
+											if (vecIterator[index] == listVector[index].end())
+											{
+												vecIterator[index] = listVector[index].begin();
+												--index;
+											}
+											else
+											{
+												break;
+											}
+										} while (index >= 0);
+									}
 								}
 							}
 						}
@@ -943,13 +1095,13 @@ public:   // Public data types
 			// the simulation relation
 			SimType* sim = new SimType();
 
-			SFTA_LOGGER_INFO("Started computing top-down automaton");
+			//SFTA_LOGGER_INFO("Started computing top-down automaton");
 
 			// corresponding TD automaton
 			std::auto_ptr<NDSymbolicTDTreeAutomatonType> topDown(
 				autSym->GetTopDownAutomaton());
 
-			SFTA_LOGGER_INFO("Finished computing top-down automaton");
+			//SFTA_LOGGER_INFO("Finished computing top-down automaton");
 
 			clock_t start = clock() / (CLOCKS_PER_SEC);
 
@@ -1000,7 +1152,7 @@ public:   // Public data types
 			SimulationDetectorApplyFunctor simulationDetector;
 			SimulationRefinementApplyFunctor simulationRefineFunc(sim, &remove, &stateToLhss);
 
-			SFTA_LOGGER_INFO("Started computing initial refinement");
+			//SFTA_LOGGER_INFO("Started computing initial refinement");
 
 			// now we perform initial refinement
 			for (typename std::vector<StateType>::const_iterator itStates = states.begin();
@@ -1088,7 +1240,7 @@ public:   // Public data types
 				}
 			}
 
-			SFTA_LOGGER_INFO("Finished computing initial refinement");
+			//SFTA_LOGGER_INFO("Finished computing initial refinement");
 
 			CountersType cnt(autSym->getSinkSuperState());
 
@@ -1120,10 +1272,10 @@ public:   // Public data types
 			//                           COMPUTATION
 			// ********************************************************************
 
-			SFTA_LOGGER_INFO("Size of remove set: " + Convert::ToString(remove.size()));
+			//SFTA_LOGGER_INFO("Size of remove set: " + Convert::ToString(remove.size()));
 			size_t loopCounter = 0;
 
-			SFTA_LOGGER_INFO("Started computation");
+			//SFTA_LOGGER_INFO("Started computation");
 			while (!remove.empty())
 			{	// while there is a need for backwards propagation of cut simulations
 				StateVectorPair cutRel = *(remove.begin());
@@ -1132,7 +1284,7 @@ public:   // Public data types
 				if (++loopCounter == 1000)
 				{
 					loopCounter = 0;
-					SFTA_LOGGER_INFO("Size of remove set: " + Convert::ToString(remove.size()));
+					//SFTA_LOGGER_INFO("Size of remove set: " + Convert::ToString(remove.size()));
 				}
 
 				const StateVector& qVec = cutRel.first;
@@ -1148,11 +1300,11 @@ public:   // Public data types
 				cnt.SetValue(qVec, tmpRoot);
 			}
 
-			SFTA_LOGGER_INFO("Finished computation");
+			//SFTA_LOGGER_INFO("Finished computation");
 
 			clock_t end = clock() / (CLOCKS_PER_SEC);
 
-			SFTA_LOGGER_INFO("Time spent: " + Convert::ToString(end - start));
+			//SFTA_LOGGER_INFO("Time spent: " + Convert::ToString(end - start));
 
 			// ********************************************************************
 			//                           TIDYING UP
