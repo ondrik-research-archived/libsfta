@@ -329,7 +329,7 @@ public:   // Public data types
 
 								if (addSet)
 								{
-									SFTA_LOGGER_INFO("Adding pair " + Convert::ToString(std::make_pair(smallerState, Convert::ToString(rhs))));
+									//SFTA_LOGGER_INFO("Adding pair " + Convert::ToString(std::make_pair(smallerState, Convert::ToString(rhs))));
 									for (typename LeafType::const_iterator itRhs = rhs.begin();
 										itRhs != rhs.end(); ++itRhs)
 									{
@@ -356,7 +356,7 @@ public:   // Public data types
 
 										if (failed_)
 										{
-											SFTA_LOGGER_INFO("Failing pair: " + Convert::ToString(std::make_pair(smallerState, rhs)));
+											//SFTA_LOGGER_INFO("Failing pair: " + Convert::ToString(std::make_pair(smallerState, rhs)));
 										}
 									}
 								}
@@ -417,11 +417,11 @@ public:   // Public data types
 					AntichainPairType nextPair = pairQueue.front();
 					pairQueue.pop();
 
-					SFTA_LOGGER_INFO("Antichain = " + Convert::ToString(antichain));
+					//SFTA_LOGGER_INFO("Antichain = " + Convert::ToString(antichain));
 
 					if (revokedNumbers.find(nextPair.second.first) == revokedNumbers.end())
 					{	// in case this pair has not been revoked
-						SFTA_LOGGER_INFO("Processing pair: " + Convert::ToString(nextPair));
+						//SFTA_LOGGER_INFO("Processing pair: " + Convert::ToString(nextPair));
 
 						StateType& smallerState = nextPair.first;
 
@@ -440,7 +440,7 @@ public:   // Public data types
 
 								const typename LHSRootContainerType::IndexValueType& lhsIV
 									= smallerLhss[arity][smallerIndex];
-								SFTA_LOGGER_INFO("Checking LHS: " + Convert::ToString(lhsIV.first));
+								//SFTA_LOGGER_INFO("Checking LHS: " + Convert::ToString(lhsIV.first));
 
 								// collect vector of lists of possible values
 								bool allComponentsInAntichain = true;
@@ -461,9 +461,9 @@ public:   // Public data types
 
 								if (allComponentsInAntichain)
 								{
-									SFTA_LOGGER_INFO("All components are in the antichain for LHS " + Convert::ToString(lhsIV.first));
+									//SFTA_LOGGER_INFO("All components are in the antichain for LHS " + Convert::ToString(lhsIV.first));
 
-									SFTA_LOGGER_INFO("Respective sets: " + Convert::ToString(listVector));
+									//SFTA_LOGGER_INFO("Respective sets: " + Convert::ToString(listVector));
 
 									assert(listVector.size() == arity);
 
@@ -490,7 +490,7 @@ public:   // Public data types
 											tmpString += Convert::ToString(**itItVec) + ", ";
 										}
 
-										SFTA_LOGGER_INFO("TODO: Generating.... " + tmpString + ")");
+										//SFTA_LOGGER_INFO("TODO: Generating.... " + tmpString + ")");
 
 										// generate the cartesian product of the sets
 
@@ -501,20 +501,8 @@ public:   // Public data types
 											::const_iterator itItVec = vecIterator.begin();
 											itItVec != vecIterator.end(); ++itItVec)
 										{
-//											if ((*itItVec)->second.empty())
-//											{
-//												setEmpty = true;
-//												break;
-//											}
-
 											setVecIterator.push_back((*itItVec)->second.begin());
 										}
-
-										// TODO: this is, like, BAD!!!
-//										if (setEmpty)
-//										{
-//											break;
-//										}
 
 										assert(setVecIterator.size() == arity);
 
@@ -525,14 +513,27 @@ public:   // Public data types
 										{
 											// get the left-hand side vector
 											LeftHandSideType biggerLhs;
-											for (typename std::vector<typename StateSetType::const_iterator>
-												::const_iterator itItSetVec = setVecIterator.begin();
-												itItSetVec != setVecIterator.end(); ++itItSetVec)
+											bool setEmpty = false;
+											for (size_t iVec = 0; iVec < setVecIterator.size(); ++iVec)
 											{
-												biggerLhs.push_back(**itItSetVec);
+												typename StateSetType::const_iterator& itTmp
+													= setVecIterator[iVec];
+
+												if (itTmp == vecIterator[iVec]->second.end())
+												{	// in case the set is empty
+													setEmpty = true;
+													break;
+												}
+
+												biggerLhs.push_back(*itTmp);
 											}
 
-											SFTA_LOGGER_INFO("Generating.... " + Convert::ToString(biggerLhs));
+											if (setEmpty)
+											{
+												break;
+											}
+
+											//SFTA_LOGGER_INFO("Generating.... " + Convert::ToString(biggerLhs));
 
 											tmp = unitedRoots;
 											unitedRoots = mtbdd->Apply(unitedRoots,
@@ -590,7 +591,7 @@ public:   // Public data types
 					}
 					else
 					{
-						SFTA_LOGGER_INFO("Revoked pair: " + Convert::ToString(nextPair));
+						//SFTA_LOGGER_INFO("Revoked pair: " + Convert::ToString(nextPair));
 					}
 				}
 
