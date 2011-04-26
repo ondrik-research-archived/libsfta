@@ -1192,6 +1192,36 @@ public:   // Public data types
 			return safelyPerformOperation(&Operation::langIntersection, a1, a2);
 		}
 
+		virtual typename HierarchyRoot::Operation::SimulationRelationType*
+			GetIdentityRelation(const HierarchyRoot* aut) const
+		{
+			// Assertions
+			assert(aut != static_cast<Type*>(0));
+
+			typedef OrderedVector<StateType> StateSetType;
+			typedef typename HierarchyRoot::Operation::SimulationRelationType SimType;
+
+			const Type* autSym = static_cast<Type*>(0);
+
+			if ((autSym = dynamic_cast<const Type*>(aut)) ==
+				static_cast<const Type*>(0))
+			{	// in case the type is not OK
+				throw std::runtime_error(__func__ + std::string(": Invalid type"));
+			}
+
+			// the simulation relation
+			SimType* sim = new SimType();
+
+			StateSetType states = autSym->getStates();
+			for (typename StateSetType::const_iterator itStates = states.begin();
+				itStates != states.end(); ++itStates)
+			{
+				sim->insert(std::make_pair(*itStates, *itStates));
+			}
+
+			return sim;
+		}
+
 		virtual SimulationRelationType* ComputeSimulationPreorder(
 			const HierarchyRoot* aut) const
 		{

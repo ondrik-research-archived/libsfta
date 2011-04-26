@@ -174,6 +174,11 @@ protected:// Protected methods
 		return root;
 	}
 
+	inline const StateSetType& getStates() const
+	{
+		return states_;
+	}
+
 	void copyStates(const Type& aut)
 	{
 		states_.insert(aut.states_);

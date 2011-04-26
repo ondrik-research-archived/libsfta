@@ -127,6 +127,18 @@ public:   // Public data types
 
 
 		/**
+		 * @brief  Computation of identity relation on states
+		 *
+		 * This method returns the identity relation on states of the automaton.
+		 *
+		 * @param[in]  aut  Input automaton
+		 *
+		 * @returns  Identity relation on states of the input automaton
+		 */
+		virtual SimulationRelationType* GetIdentityRelation(const Type* aut) const = 0;
+
+
+		/**
 		 * @brief  Computation of simulation relation
 		 *
 		 * This method returns the simulation relation on states of the automaton.

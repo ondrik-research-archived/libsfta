@@ -495,7 +495,6 @@ public:   // Public data types
 										// generate the cartesian product of the sets
 
 										// initialize vector of set iterators
-										bool setEmpty = false;
 										std::vector<typename StateSetType::const_iterator> setVecIterator;
 										for (typename std::vector<typename StateSetListType::const_iterator>
 											::const_iterator itItVec = vecIterator.begin();
@@ -848,6 +847,36 @@ public:   // Public data types
 		}
 
 		virtual typename HierarchyRoot::Operation::SimulationRelationType*
+			GetIdentityRelation(const HierarchyRoot* aut) const
+		{
+			// Assertions
+			assert(aut != static_cast<Type*>(0));
+
+			typedef OrderedVector<StateType> StateSetType;
+			typedef typename HierarchyRoot::Operation::SimulationRelationType SimType;
+
+			const Type* autSym = static_cast<Type*>(0);
+
+			if ((autSym = dynamic_cast<const Type*>(aut)) ==
+				static_cast<const Type*>(0))
+			{	// in case the type is not OK
+				throw std::runtime_error(__func__ + std::string(": Invalid type"));
+			}
+
+			// the simulation relation
+			SimType* sim = new SimType();
+
+			StateSetType states = autSym->getStates();
+			for (typename StateSetType::const_iterator itStates = states.begin();
+				itStates != states.end(); ++itStates)
+			{
+				sim->insert(std::make_pair(*itStates, *itStates));
+			}
+
+			return sim;
+		}
+
+		virtual typename HierarchyRoot::Operation::SimulationRelationType*
 			ComputeSimulationPreorder(const HierarchyRoot* aut) const
 		{
 			// Assertions
@@ -1102,10 +1131,6 @@ public:   // Public data types
 			std::auto_ptr<NDSymbolicTDTreeAutomatonType> topDown(
 				autSym->GetTopDownAutomaton());
 
-			//SFTA_LOGGER_INFO("Finished computing top-down automaton");
-
-			clock_t start = clock() / (CLOCKS_PER_SEC);
-
 			// used MTBDD
 			SharedMTBDDType* mtbdd = autSym->GetTTWrapper()->GetMTBDD();
 
@@ -1300,12 +1325,6 @@ public:   // Public data types
 
 				cnt.SetValue(qVec, tmpRoot);
 			}
-
-			//SFTA_LOGGER_INFO("Finished computation");
-
-			clock_t end = clock() / (CLOCKS_PER_SEC);
-
-			//SFTA_LOGGER_INFO("Time spent: " + Convert::ToString(end - start));
 
 			// ********************************************************************
 			//                           TIDYING UP
