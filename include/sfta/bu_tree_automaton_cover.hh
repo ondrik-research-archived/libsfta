@@ -331,6 +331,39 @@ public:   // Public data types
 				rhsSim.get());
 		}
 
+		bool DoesLanguageInclusionHoldDownwardsNoSimTime(const Type* lhs, const Type* rhs, timespec* start) const
+		{
+			// Assertions
+			assert(lhs != static_cast<Type*>(0));
+			assert(rhs != static_cast<Type*>(0));
+			assert(start != static_cast<timespec*>(0));
+
+			typedef typename NDSymbolicBUTreeAutomaton::HierarchyRoot AbstractAutomaton;
+			typedef typename AbstractAutomaton::Operation InternalOperationType;
+			typedef typename InternalOperationType::SimulationRelationType
+				InternalSimulationType;
+
+			// compute simulations
+			std::auto_ptr<InternalOperationType> oper(lhs->getAutomaton()->GetOperation());
+			std::auto_ptr<InternalSimulationType> lhsSim(
+				oper->ComputeSimulationPreorder((lhs->getAutomaton()).get()));
+			std::auto_ptr<InternalSimulationType> rhsSim(
+				oper->ComputeSimulationPreorder((rhs->getAutomaton()).get()));
+
+			// convert automata to top-down
+			std::auto_ptr<typename NDSymbolicBUTreeAutomaton::NDSymbolicTDTreeAutomatonType>
+				lhsTD(lhs->getAutomaton()->GetTopDownAutomaton());
+			std::auto_ptr<typename NDSymbolicBUTreeAutomaton::NDSymbolicTDTreeAutomatonType>
+				rhsTD(rhs->getAutomaton()->GetTopDownAutomaton());
+
+			clock_gettime(CLOCK_THREAD_CPUTIME_ID, start);
+
+			// check language inclusion
+			std::auto_ptr<InternalOperationType> tdOper(lhsTD.get()->GetOperation());
+			return tdOper->CheckLanguageInclusion(lhsTD.get(), rhsTD.get(), lhsSim.get(),
+				rhsSim.get());
+		}
+
 		bool DoesLanguageInclusionHoldDownwardsWithoutSim(const Type* lhs, const Type* rhs) const
 		{
 			// Assertions

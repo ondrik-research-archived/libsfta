@@ -53,6 +53,7 @@ enum OperationType
 	OPERATION_LOAD,
 	OPERATION_SIMULATION,
 	OPERATION_DOWN_INCLUSION,
+	OPERATION_DOWN_INCLUSION_NOTIME,
 	OPERATION_DOWN_INCLUSION_NOSIM,
 	OPERATION_UP_INCLUSION,
 
@@ -68,6 +69,7 @@ void printHelp(const std::string& programName)
 	std::cout << "   or: " << programName << " (-i|--intersection)          <file1> <file2>\n";
 	std::cout << "   or: " << programName << " (-n|--down-inclusion)        <file1> <file2>\n";
 	std::cout << "   or: " << programName << " (-o|--down-inclusion-nosim)  <file1> <file2>\n";
+	std::cout << "   or: " << programName << " (-w|--down-inclusion-notime) <file1> <file2>\n";
 	std::cout << "   or: " << programName << " (-p|--up-inclusion)          <file1> <file2>\n";
 	std::cout << "\n";
 	std::cout << "    -l, --load             load an automaton from <file1>.\n";
@@ -79,6 +81,9 @@ void printHelp(const std::string& programName)
 	std::cout << "    -n, --down-inclusion   check whether the language of the automaton from\n";
 	std::cout << "                           <file1> is a subset of the language of the automaton\n";
 	std::cout << "                           from <file2> (downward processing).\n";
+	std::cout << "    -w, --down-inclusion-notime  check whether the language of the automaton from\n";
+	std::cout << "                           <file1> is a subset of the language of the automaton\n";
+	std::cout << "                           from <file2> (downward processing, measuring time without simulation).\n";
 	std::cout << "    -o, --down-inclusion-nosim   check whether the language of the automaton from\n";
 	std::cout << "                           <file1> is a subset of the language of the automaton\n";
 	std::cout << "                           from <file2> (downward processing without simulation).\n";
@@ -314,6 +319,50 @@ void performCheckingDownwardInclusion(bool isTopDown, const std::string& lhsFile
 }
 
 
+void performCheckingDownwardInclusionWithoutTime(bool isTopDown, const std::string& lhsFile,
+	const std::string& rhsFile)
+{
+	std::ifstream ifsLhs(lhsFile.c_str());
+	if (ifsLhs.fail())
+	{
+		throw std::runtime_error("Could not open file " + lhsFile);
+	}
+
+	std::ifstream ifsRhs(rhsFile.c_str());
+	if (ifsRhs.fail())
+	{
+		throw std::runtime_error("Could not open file " + rhsFile);
+	}
+
+	if (!isTopDown)
+	{
+		std::auto_ptr<AbstractBUTABuilder> builder(new TimbukBUTABuilder());
+		BUTABuildingDirector director(builder.get());
+
+		std::auto_ptr<BUTreeAutomaton> taLhs(director.Construct(ifsLhs));
+		std::auto_ptr<BUTreeAutomaton> taRhs(director.Construct(ifsRhs));
+
+		std::auto_ptr<BUTreeAutomaton::Operation> op(taLhs->GetOperation());
+
+		bool result;
+
+		timespec start;
+		result = op->DoesLanguageInclusionHoldDownwardsNoSimTime(taLhs.get(), taRhs.get(), &start);
+
+		timespec tmp;
+		clock_gettime(CLOCK_THREAD_CPUTIME_ID, &tmp);
+		double t = (tmp.tv_sec - start.tv_sec) + 1e-9*(tmp.tv_nsec - start.tv_nsec);
+
+		std::cout << (result? "1" : "0") << "\n";
+		std::cerr << t << "\n";
+	}
+	else
+	{
+		assert(false);
+	}
+}
+
+
 void performCheckingDownwardInclusionWithoutSim(bool isTopDown,
 	const std::string& lhsFile, const std::string& rhsFile)
 {
@@ -430,7 +479,7 @@ int main(int argc, char* argv[])
 	{
 		startLogger();
 
-		const char* getoptString = "uihlbtsnop";
+		const char* getoptString = "uihlbtsnwop";
 		option longOptions[] = {
 			{"union",                      0, static_cast<int*>(0), 'u'},
 			{"intersection",               0, static_cast<int*>(0), 'i'},
@@ -440,6 +489,7 @@ int main(int argc, char* argv[])
 			{"top-down",                   0, static_cast<int*>(0), 't'},
 			{"simulation",                 0, static_cast<int*>(0), 's'},
 			{"down-inclusion",             0, static_cast<int*>(0), 'n'},
+			{"down-inclusion-notime",      0, static_cast<int*>(0), 'w'},
 			{"down-inclusion-nosim",       0, static_cast<int*>(0), 'o'},
 			{"up-inclusion",               0, static_cast<int*>(0), 'p'},
 
@@ -461,6 +511,7 @@ int main(int argc, char* argv[])
 				case 'l': specifyOperation(operation, OPERATION_LOAD); break;
 				case 's': specifyOperation(operation, OPERATION_SIMULATION); break;
 				case 'n': specifyOperation(operation, OPERATION_DOWN_INCLUSION); break;
+				case 'w': specifyOperation(operation, OPERATION_DOWN_INCLUSION_NOTIME); break;
 				case 'p': specifyOperation(operation, OPERATION_UP_INCLUSION); break;
 				case 'o': specifyOperation(operation, OPERATION_DOWN_INCLUSION_NOSIM); break;
 				case 'b': isTopDown = false; break;
@@ -514,6 +565,11 @@ int main(int argc, char* argv[])
 			case OPERATION_DOWN_INCLUSION:
 				needsArguments(inputs.size(), 2);
 				performCheckingDownwardInclusion(isTopDown, inputs[0], inputs[1]);
+				break;
+
+			case OPERATION_DOWN_INCLUSION_NOTIME:
+				needsArguments(inputs.size(), 2);
+				performCheckingDownwardInclusionWithoutTime(isTopDown, inputs[0], inputs[1]);
 				break;
 
 			case OPERATION_DOWN_INCLUSION_NOSIM:
