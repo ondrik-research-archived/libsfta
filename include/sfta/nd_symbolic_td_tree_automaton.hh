@@ -413,6 +413,20 @@ public:   // Public data types
 
 			bool isInclusionCached(const DisjunctType& disjunct) const
 			{
+				// check whether there exists some state in disjunct.second that
+				// simulates disjunct.first
+				for (typename StateSetType::const_iterator itDis = disjunct.second.begin();
+					itDis != disjunct.second.end(); ++itDis)
+				{
+					if (simSmaller_->is_in(std::make_pair(disjunct.first, *itDis)))
+					{
+						if (biggerAut_->getStates().find(*itDis) != biggerAut_->getStates().end())
+						{
+							return true;
+						}
+					}
+				}
+
 				// TODO: search for smaller sets
 				typename StateToStateSetListHashTableType::const_iterator itHashTable;
 				if ((itHashTable = includedNodes_.find(disjunct.first)) != includedNodes_.end())
