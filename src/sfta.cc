@@ -493,9 +493,8 @@ void performCheckingDownwardInclusionWithoutSim(bool isTopDown,
 		bool result;
 
 		timespec start;
-		clock_gettime(CLOCK_THREAD_CPUTIME_ID, &start);
 
-		result = op->DoesLanguageInclusionHoldDownwardsWithoutSim(taLhs.get(), taRhs.get());
+		result = op->DoesLanguageInclusionHoldDownwardsWithoutSim(taLhs.get(), taRhs.get(), &start);
 
 		timespec tmp;
 		clock_gettime(CLOCK_THREAD_CPUTIME_ID, &tmp);

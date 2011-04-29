@@ -423,7 +423,7 @@ public:   // Public data types
 				rhsSim.get());
 		}
 
-		bool DoesLanguageInclusionHoldDownwardsWithoutSim(const Type* lhs, const Type* rhs) const
+		bool DoesLanguageInclusionHoldDownwardsWithoutSim(const Type* lhs, const Type* rhs, timespec* start) const
 		{
 			// Assertions
 			assert(lhs != static_cast<Type*>(0));
@@ -446,6 +446,8 @@ public:   // Public data types
 				lhsTD(lhs->getAutomaton()->GetTopDownAutomaton());
 			std::auto_ptr<typename NDSymbolicBUTreeAutomaton::NDSymbolicTDTreeAutomatonType>
 				rhsTD(rhs->getAutomaton()->GetTopDownAutomaton());
+
+			clock_gettime(CLOCK_THREAD_CPUTIME_ID, start);
 
 			// check language inclusion
 			std::auto_ptr<InternalOperationType> tdOper(lhsTD.get()->GetOperation());
