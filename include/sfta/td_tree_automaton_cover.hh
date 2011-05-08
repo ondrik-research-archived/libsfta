@@ -283,7 +283,7 @@ public:   // Public methods
 
 	void AddSymbol(const SymbolType& symbol)
 	{
-		assert(false);
+		symbolDict_->Translate(symbol);
 	}
 
 	void AddTransition(const LeftHandSideType& lhs, const SymbolType& symbol,
