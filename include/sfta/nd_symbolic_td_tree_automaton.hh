@@ -578,11 +578,11 @@ public:   // Public data types
 
 			bool expandDisjunct(const DisjunctType& disjunct)
 			{
-				if (isInclusionCached(disjunct))
+/*				if (isInclusionCached(disjunct))
 				{
 					return true;
 				}
-				else if (isNoninclusionCached(disjunct))
+				else */if (isNoninclusionCached(disjunct))
 				{
 					return false;
 				}
@@ -592,7 +592,7 @@ public:   // Public data types
 				}
 				else if (expandSubset(disjunct))
 				{
-					cacheInclusion(disjunct);
+//					cacheInclusion(disjunct);
 					return true;
 				}
 				else
