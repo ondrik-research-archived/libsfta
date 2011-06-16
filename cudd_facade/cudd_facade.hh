@@ -12,11 +12,14 @@
 #ifndef _SFTA_CUDD_FACADE_HH_
 #define _SFTA_CUDD_FACADE_HH_
 
+// standard library header files
 #include <map>
 #include <string>
 #include <vector>
 
-#include "abstract_mtbdd_facade.hh"
+// SFTA header files
+#include <sfta/sfta.hh>
+#include <sfta/abstract_mtbdd_facade.hh>
 
 
 // insert the class into proper namespace
@@ -34,9 +37,11 @@ namespace SFTA { namespace Private { class CUDDFacade; } }
  * to a single CUDD manager and handles its construction and destruction. It
  * also takes care not to let any CUDD-specific type spoil global namespace.
  */
+GCC_DIAG_OFF(effc++)
 class SFTA::Private::CUDDFacade
 	: public SFTA::Private::AbstractMTBDDFacade<unsigned>
 {
+GCC_DIAG_ON(effc++)
 public:  // Public types
 
 

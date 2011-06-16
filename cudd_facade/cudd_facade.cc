@@ -45,7 +45,7 @@ namespace SFTA
 		 *
 		 * @returns  SFTA Manager pointer
 		 */
-		CUDDFacade::Manager* fromCUDD(DdManager* cudd_value)
+		inline CUDDFacade::Manager* fromCUDD(DdManager* cudd_value)
 		{
 			return reinterpret_cast<CUDDFacade::Manager*>(cudd_value);
 		}
@@ -61,7 +61,7 @@ namespace SFTA
 		 *
 		 * @returns  SFTA Node pointer
 		 */
-		CUDDFacade::Node* fromCUDD(DdNode* cudd_value)
+		inline CUDDFacade::Node* fromCUDD(DdNode* cudd_value)
 		{
 			return reinterpret_cast<CUDDFacade::Node*>(cudd_value);
 		}
@@ -77,7 +77,7 @@ namespace SFTA
 		 *
 		 * @returns  CUDD DdManager pointer
 		 */
-		DdManager* toCUDD(CUDDFacade::Manager* sfta_value)
+		inline DdManager* toCUDD(CUDDFacade::Manager* sfta_value)
 		{
 			return reinterpret_cast<DdManager*>(sfta_value);
 		}
@@ -93,9 +93,42 @@ namespace SFTA
 		 *
 		 * @returns  CUDD DdNode pointer
 		 */
-		DdNode* toCUDD(CUDDFacade::Node* sfta_value)
+		inline DdNode* toCUDD(CUDDFacade::Node* sfta_value)
 		{
 			return reinterpret_cast<DdNode*>(sfta_value);
+		}
+
+
+		/**
+		 * @brief  Is the CUDD node constant?
+		 *
+		 * Returns Boolean value determining  whether the passed CUDD node is
+		 * constant.
+		 *
+		 * @param[in]  cudd_value  CUDD DdNode pointer
+		 *
+		 * @returns  True if cudd_value is constant
+		 */
+		inline bool isConstantCUDD(DdNode* cudd_value)
+		{
+			GCC_DIAG_OFF(old-style-cast);
+			return cuddIsConstant(cudd_value);
+			GCC_DIAG_ON(old-style-cast);
+		}
+
+		/**
+		 * @brief  Is the SFTA node constant?
+		 *
+		 * Returns Boolean value determining  whether the passed SFTA node is
+		 * constant.
+		 *
+		 * @param[in]  sfta_value  SFTA CUDDFacade::Node pointer
+		 *
+		 * @returns  True if sfta_value is constant
+		 */
+		inline bool isConstantSFTA(CUDDFacade::Node* sfta_value)
+		{
+			return isConstantCUDD(toCUDD(sfta_value));
 		}
 	}
 }
@@ -230,7 +263,7 @@ CUDDFacade::Node* CUDDFacade::Times(Node* lhs, Node* rhs) const
 {
 	// Assertions
 	assert(manager_ != static_cast<Manager*>(0));
-	assert(!(cuddIsConstant(toCUDD(lhs)) && cuddIsConstant(toCUDD(rhs))));
+	assert(!(isConstantSFTA(lhs) && isConstantSFTA(rhs)));
 
 // Note: This piece of code was used for testing the speed difference between
 // the cached and uncached version of times operation
@@ -275,7 +308,7 @@ DdNode* applyCallback(DdManager* dd, DdNode** f, DdNode** g, void* data)
 	assert(F    != static_cast<DdNode*>(0));
 	assert(G    != static_cast<DdNode*>(0));
 
-	if (cuddIsConstant(F) && cuddIsConstant(G))
+	if (isConstantCUDD(F) && isConstantCUDD(G))
 	{	// in case we are at leaves
 
 		// get the functor from the container
@@ -315,7 +348,7 @@ DdNode* ternaryApplyCallback(DdManager* dd, DdNode** f, DdNode** g, DdNode** h, 
 	assert(G    != static_cast<DdNode*>(0));
 	assert(H    != static_cast<DdNode*>(0));
 
-	if (cuddIsConstant(F) && cuddIsConstant(G) && cuddIsConstant(H))
+	if (isConstantCUDD(F) && isConstantCUDD(G) && isConstantCUDD(H))
 	{	// in case we are at leaves
 
 		// get the functor from the container
@@ -343,7 +376,7 @@ DdNode* monadicApplyCallback(DdManager* dd, DdNode* f, void* data)
 	assert(f    != static_cast<DdNode*>(0));
 	assert(data != static_cast<void*>(0));
 
-	if (cuddIsConstant(f))
+	if (isConstantCUDD(f))
 	{	// in case we are at leaves
 
 		// get the functor from the container
@@ -446,7 +479,7 @@ bool CUDDFacade::IsNodeConstant(Node* node) const
 	// Assertions
 	assert(manager_ != static_cast<Manager*>(0));
 
-	return Cudd_IsConstant(node);
+	return isConstantSFTA(node);
 }
 
 
@@ -603,9 +636,11 @@ std::string CUDDFacade::StoreToString(
 			arrVarNames[i] = const_cast<char*>(varNames[i].c_str());
 		}
 
+		GCC_DIAG_OFF(old-style-cast)
 		if (!Dddmp_cuddAddArrayStore(toCUDD(manager_), static_cast<char*>(0),
 			nodeDictionary.size(), arrNodes, arrRootNames, arrVarNames, static_cast<int*>(0),
 			DDDMP_MODE_TEXT, DDDMP_VARDEFAULT, static_cast<char*>(0), ff.OpenWrite()))
+		GCC_DIAG_ON(old-style-cast)
 		{	// in case there was a problem with storing the BDD
 			throw std::runtime_error("Could not store BDD to string!");
 		}
@@ -684,10 +719,12 @@ std::pair<CUDDFacade*, CUDDFacade::StringNodeMapType>
 
 	DdNode** roots = static_cast<DdNode**>(0);
 
+	GCC_DIAG_OFF(old-style-cast)
 	int rootCount = Dddmp_cuddAddArrayLoad(toCUDD(facade->manager_),
 		DDDMP_ROOT_MATCHNAMES, arrRootNames, DDDMP_VAR_MATCHIDS, varNames,
 		static_cast<int*>(0), static_cast<int*>(0), DDDMP_MODE_TEXT,
 		static_cast<char*>(0), ff.OpenRead(str), &roots);
+	GCC_DIAG_ON(old-style-cast)
 
 	if (rootCount <= 0)
 	{	// in case there was an error loading the MTBDD
