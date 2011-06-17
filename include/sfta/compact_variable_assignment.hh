@@ -24,10 +24,6 @@ namespace SFTA
 {
 	namespace Private
 	{
-		template
-		<
-			size_t MaxSize
-		>
 		struct CompactVariableAssignment;
 	}
 }
@@ -41,21 +37,10 @@ namespace SFTA
  * A class that represents assignments to Boolean variables in a compact way.
  * Assigned values can be one of '0', '1' and 'X', where 'X' means <em>don't
  * care</em>.
- *
- * @tparam  Variables  The number of Boolean variables.
  */
-template
-<
-	size_t Variables
->
 struct SFTA::Private::CompactVariableAssignment
 {
 public:   // Public data types
-
-	enum
-	{
-		VariablesCount = Variables
-	};
 
 
 	enum
@@ -81,13 +66,6 @@ private:  // Private data types
 		BitsInChar = 8
 	};
 
-
-	enum
-	{
-		NumberOfChars = (VariablesCount*BitsPerVariable - 1) / BitsInChar + 1
-	};
-
-
 	enum
 	{
 		DefaultMask = 0x03
@@ -96,25 +74,30 @@ private:  // Private data types
 
 private:  // Private data members
 
+
+	/**
+	 * @brief  Number of variables of the assignment
+	 *
+	 * The number of variables of the assignment, i. e., the index of the
+	 * variable with the highest index - 1.
+	 */
+	size_t variablesCount_;
+
+
 	/**
 	 * @brief  The value of the assignment
 	 *
 	 * Array of characters representing the value of the assignment.
 	 */
-	char vars_[NumberOfChars];
-
-
-	/**
-	 * @brief  The name of the Log4cpp category for logging
-	 *
-	 * The name of the Log4cpp category used for logging messages from this
-	 * class.
-	 */
-	static const char* LOG_CATEGORY_NAME;
+	std::vector<char> vars_;
 
 
 private:  // Private methods
 
+	static inline size_t numberOfChars(size_t varCount)
+	{
+		return (varCount * BitsPerVariable - 1) / BitsInChar + 1;
+	}
 
 	/**
 	 * @brief  Gets index of @c char at given variable index
@@ -154,7 +137,7 @@ private:  // Private methods
 	static void getAllSymbols(CompactVariableAssignment& var,
 		std::vector<CompactVariableAssignment>& vec, size_t pos)
 	{
-		if (pos == var.Size())
+		if (pos == var.VariablesCount())
 		{
 			vec.push_back(var);
 		}
@@ -176,19 +159,21 @@ private:  // Private methods
 
 public:   // Public methods
 
-	CompactVariableAssignment()
-		: vars_()
+	explicit CompactVariableAssignment(size_t size)
+		: variablesCount_(size),
+			vars_(numberOfChars(size))
 	{
-		for (size_t i = 0; i < Size(); ++i)
+		for (size_t i = 0; i < size; ++i)
 		{	// for each variable
 			SetIthVariableValue(i, DONT_CARE);
 		}
 	}
 
-	CompactVariableAssignment(size_t n)
-		: vars_()
+	CompactVariableAssignment(size_t size, size_t n)
+		: variablesCount_(size),
+			vars_(numberOfChars(size))
 	{
-		for (size_t i = 0; i < Size(); ++i)
+		for (size_t i = 0; i < size; ++i)
 		{	// for each variable
 			SetIthVariableValue(i, ((n & (1 << i)) != 0)? ONE : ZERO);
 		}
@@ -204,12 +189,10 @@ public:   // Public methods
 	 * @param[in]  value  The string with the value of variables
 	 */
 	explicit CompactVariableAssignment(const std::string& value)
-		: vars_()
+		: variablesCount_(value.length()),
+			vars_(numberOfChars(value.length()))
 	{
-		// Assertions
-		assert(value.length() == VariablesCount);
-
-		for (size_t i = 0; i < VariablesCount; ++i)
+		for (size_t i = 0; i < value.length(); ++i)
 		{	// load the string into the array of variables
 			char val = 0;
 			switch (value[i])
@@ -247,7 +230,7 @@ public:   // Public methods
 	inline char GetIthVariableValue(size_t i) const
 	{
 		// Assertions
-		assert(i < VariablesCount);
+		assert(i < VariablesCount());
 
 		return (vars_[getIndexOfChar(i)] >> getIndexInsideChar(i)) & DefaultMask;
 	}
@@ -256,7 +239,7 @@ public:   // Public methods
 	inline void SetIthVariableValue(size_t i, char value)
 	{
 		// Assertions
-		assert(i < VariablesCount);
+		assert(i < VariablesCount());
 
 		switch (value)
 		{
@@ -287,9 +270,9 @@ public:   // Public methods
 	 *
 	 * @returns  The number of variables of the variable assignment
 	 */
-	inline size_t Size() const
+	inline size_t VariablesCount() const
 	{
-		return VariablesCount;
+		return variablesCount_;
 	}
 
 
@@ -306,7 +289,7 @@ public:   // Public methods
 	{
 		std::string result;
 
-		for (size_t i = 0; i < VariablesCount; ++i)
+		for (size_t i = 0; i < VariablesCount(); ++i)
 		{	// append all variables to the string
 			switch (GetIthVariableValue(i))
 			{
@@ -321,10 +304,21 @@ public:   // Public methods
 	}
 
 
-	static AssignmentList GetAllAssignments()
+	/**
+	 * @brief  Returns all assignments of given variables
+	 *
+	 * This static class method returns all assignments for all variables with
+	 * index lvoer than te parameter.
+	 *
+	 * @param[in]  variablesCount  Index denoting that all variables with smaller
+	 *                             index should be assigned.
+	 *
+	 * @returns  The list of all assignments to given variables
+	 */
+	static AssignmentList GetAllAssignments(size_t variablesCount)
 	{
 		std::string str;
-		for (size_t i = 0; i < VariablesCount; ++i)
+		for (size_t i = 0; i < variablesCount; ++i)
 		{	// for all variables
 			str += 'X';
 		}
@@ -337,7 +331,7 @@ public:   // Public methods
 
 	CompactVariableAssignment& operator++()
 	{
-		for (size_t i = 0; i < Size(); ++i)
+		for (size_t i = 0; i < VariablesCount(); ++i)
 		{	// for each variable
 			char value = GetIthVariableValue(i);
 			if (value == ZERO)
@@ -393,12 +387,12 @@ public:   // Public methods
 		const CompactVariableAssignment& rhs)
 	{
 		// Assertions
-		assert(lhs.Size() == rhs.Size());
+		assert(lhs.VariablesCount() == rhs.VariablesCount());
 
-		for (size_t i = 0; i < lhs.Size(); ++i)
+		for (size_t i = 0; i < lhs.VariablesCount(); ++i)
 		{
-			char lhsIthValue = lhs.GetIthVariableValue(lhs.Size() - i - 1);
-			char rhsIthValue = rhs.GetIthVariableValue(rhs.Size() - i - 1);
+			char lhsIthValue = lhs.GetIthVariableValue(lhs.VariablesCount() - i - 1);
+			char rhsIthValue = rhs.GetIthVariableValue(rhs.VariablesCount() - i - 1);
 
 			switch (lhsIthValue)
 			{
@@ -447,7 +441,7 @@ public:   // Public static methods
 
 	static CompactVariableAssignment GetUniversalSymbol()
 	{
-		return CompactVariableAssignment();
+		return CompactVariableAssignment(0);
 	}
 };
 
