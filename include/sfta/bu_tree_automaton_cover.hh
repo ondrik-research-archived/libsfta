@@ -130,8 +130,7 @@ public:   // Public data types
 private:  // Private data types
 
 	typedef unsigned InternalStateType;
-	typedef SFTA::Private::CompactVariableAssignment<SymbolLength>
-		InternalSymbolType;
+	typedef SFTA::Private::CompactVariableAssignment InternalSymbolType;
 	typedef SFTA::Vector<InternalStateType> InternalLeftHandSideType;
 
 	typedef SFTA::Private::ElemOrVector<InternalStateType> InternalDualStateType;

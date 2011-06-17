@@ -686,7 +686,7 @@ private:  // Private methods
 		CUDDFacade::Node* node = cudd_.AddConst(leaf);
 		cudd_.Ref(node);
 
-		for (size_t i = 0; i < vars.Size(); ++i)
+		for (size_t i = 0; i < vars.VariablesCount(); ++i)
 		{	// for all variables
 			CUDDFacade::Node* var = static_cast<CUDDFacade::Node*>(0);
 			if ((var = getNodeForVariableAssignmentValue(i,
@@ -723,7 +723,7 @@ private:  // Private methods
 		CUDDFacade::Node* node = cudd_.AddConst(1);
 		cudd_.Ref(node);
 
-		for (size_t i = 0; i < vars.Size(); ++i)
+		for (size_t i = 0; i < vars.VariablesCount(); ++i)
 		{	// for all variables
 			CUDDFacade::Node* var = static_cast<CUDDFacade::Node*>(0);
 			if ((var = getNodeForVariableAssignmentValue(i,
@@ -1056,9 +1056,11 @@ public:   // Public methods
 	}
 
 
-	virtual RootType RenameVariables(const RootType& root,
-		AbstractVariableRenamingFunctorType* func)
+	virtual RootType RenameVariables(const RootType& /*root*/,
+		AbstractVariableRenamingFunctorType* /*func*/)
 	{
+		assert(false);
+		/*
 		// Assertions
 		assert(func != static_cast<AbstractVariableRenamingFunctorType*>(0));
 
@@ -1078,6 +1080,7 @@ public:   // Public methods
 		}
 
 		return RA::allocateRoot(newRoot);
+		*/
 	}
 
 	virtual RootType TrimVariables(const RootType& root,

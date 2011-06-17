@@ -162,7 +162,7 @@ public:   // public types
 	 *
 	 * Type for variable assignment used in the test.
 	 */
-	typedef SFTA::Private::CompactVariableAssignment<NUM_VARIABLES> MyVariableAssignment;
+	typedef SFTA::Private::CompactVariableAssignment MyVariableAssignment;
 
 	/**
 	 * @brief  Abstract MTBDD type
@@ -303,7 +303,7 @@ protected:// protected methods
 	MyVariableAssignment varListToAsgn(
 		const FormulaParser::VariableListType& varList)
 	{
-		MyVariableAssignment asgn;
+		MyVariableAssignment asgn(NUM_VARIABLES);
 
 		for (FormulaParser::VariableListType::const_iterator itVar =
 			varList.begin(); itVar != varList.end(); ++itVar)
