@@ -407,7 +407,8 @@ public:   // Public data types
 				RootType smallerRoot = smallerAut_->getRoot(LeftHandSideType());
 				RootType biggerRoot = biggerAut_->getRoot(LeftHandSideType());
 
-				RootType tmp = mtbdd->Apply(smallerRoot, biggerRoot, &collector);
+				//RootType tmp =
+				mtbdd->Apply(smallerRoot, biggerRoot, &collector);
 
 				// Erase the following line for better performance ;-)
 				//mtbdd->EraseRoot(tmp);
@@ -534,13 +535,12 @@ public:   // Public data types
 
 											//SFTA_LOGGER_INFO("Generating.... " + Convert::ToString(biggerLhs));
 
-											tmp = unitedRoots;
+											//RootType tmpUnited = unitedRoots;
 											unitedRoots = mtbdd->Apply(unitedRoots,
 												biggerAut_->getRoot(biggerLhs), &unionFunc);
 
 											// Erase the following line for better performance ;-)
-											// mtbdd->EraseRoot(tmp);
-
+											// mtbdd->EraseRoot(tmpUnited);
 
 											setIndex = setVecIterator.size() - 1;
 
@@ -561,11 +561,12 @@ public:   // Public data types
 											} while (setIndex >= 0);
 										}
 
-										tmp = mtbdd->Apply(smallerAut_->getRoot(lhsIV.first),
+										//RootType tmpApplied =
+										mtbdd->Apply(smallerAut_->getRoot(lhsIV.first),
 											unitedRoots, &collector);
 
 										// Erase the following line for better performance ;-)
-										// mtbdd->EraseRoot(tmp);
+										// mtbdd->EraseRoot(tmpApplied);
 
 										index = vecIterator.size() - 1;
 
