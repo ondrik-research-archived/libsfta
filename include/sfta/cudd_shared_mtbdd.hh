@@ -684,6 +684,8 @@ private:  // Private methods
 	CUDDFacade::Node* createMTBDDForVariableAssignment(
 		const VariableAssignmentType& vars, const LeafType& value)
 	{
+		assert(vars.VariablesCount() <= GetMaxSize());
+
 		CUDDFacade::ValueType leaf = LA::createLeaf(value);
 		CUDDFacade::Node* node = cudd_.AddConst(leaf);
 		cudd_.Ref(node);
@@ -722,6 +724,8 @@ private:  // Private methods
 	CUDDFacade::Node* createMTBDDForVariableProjection(
 		const VariableAssignmentType& vars)
 	{
+		assert(vars.VariablesCount() <= GetMaxSize());
+
 		CUDDFacade::Node* node = cudd_.AddConst(1);
 		cudd_.Ref(node);
 
@@ -789,6 +793,16 @@ private:  // Private methods
 				VariableAssignmentType::ZERO);
 			getNodeDescription(cudd_.GetElseChild(node), asgn, desc);
 		}
+	}
+
+
+	size_t GetMaxSize() const
+	{
+		// TODO: declare a private field maxSize_ that remembers the maximum
+		// possible size of the MTBDD, i.e., if a new variable is first
+		// referenced, the value is increased, and if a variable is removed (or
+		// renamed), the value is possibly decreased.
+		return 64;
 	}
 
 public:   // Public methods
@@ -1058,18 +1072,16 @@ public:   // Public methods
 	}
 
 
-	virtual RootType RenameVariables(const RootType& /*root*/,
-		AbstractVariableRenamingFunctorType* /*func*/)
+	virtual RootType RenameVariables(const RootType& root,
+		AbstractVariableRenamingFunctorType* func)
 	{
-		assert(false);
-		/*
 		// Assertions
 		assert(func != static_cast<AbstractVariableRenamingFunctorType*>(0));
 
 		CUDDFacade::Node* newRoot = RA::getHandleOfRoot(root);
 		cudd_.Ref(newRoot);
 
-		for (VariableType i = 0; i < VariableAssignmentType::VariablesCount; ++i)
+		for (VariableType i = 0; i < GetMaxSize(); ++i)
 		{	// rename all variables according to given renaming functor
 			VariableType newName;
 			if ((newName = (*func)(i)) != i)
@@ -1082,7 +1094,6 @@ public:   // Public methods
 		}
 
 		return RA::allocateRoot(newRoot);
-		*/
 	}
 
 	virtual RootType TrimVariables(const RootType& root,
