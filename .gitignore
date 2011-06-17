@@ -1,5 +1,6 @@
 **/*.o
 **/*.a
+**/.*.swp
 **/tags
 session.vim
 doc
@@ -7,4 +8,3 @@ CMakeFiles
 **/CMakeFiles
 cmake_install.cmake
 **/cmake_install.cmake
-**/.*.swp
