@@ -31,8 +31,8 @@
 
 
 
-typedef SFTA::BUTreeAutomatonCover<64> BUTreeAutomaton;
-typedef SFTA::TDTreeAutomatonCover<64> TDTreeAutomaton;
+typedef SFTA::BUTreeAutomatonCover BUTreeAutomaton;
+typedef SFTA::TDTreeAutomatonCover TDTreeAutomaton;
 
 typedef SFTA::TABuildingDirector<BUTreeAutomaton> BUTABuildingDirector;
 typedef SFTA::TABuildingDirector<TDTreeAutomaton> TDTABuildingDirector;

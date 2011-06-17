@@ -19,6 +19,9 @@
 #include <queue>
 #include <tr1/unordered_map>
 
+// Boost libraries
+#include <boost/functional/hash.hpp>
+
 
 // insert the class into proper namespace
 namespace SFTA

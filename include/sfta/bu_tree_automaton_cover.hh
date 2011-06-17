@@ -35,10 +35,6 @@
 // insert the class into proper namespace
 namespace SFTA
 {
-	template
-	<
-		size_t SymbolLength = 8//64
-	>
 	class BUTreeAutomatonCover;
 }
 
@@ -110,18 +106,11 @@ namespace std
  * Class that provides nice interface to nondeterministic bottom-up finite
  * tree automaton.
  */
-template
-<
-	size_t SymbolLength
->
 class SFTA::BUTreeAutomatonCover
 {
 public:   // Public data types
 
-	typedef BUTreeAutomatonCover
-		<
-			SymbolLength
-		> Type;
+	typedef BUTreeAutomatonCover Type;
 
 	typedef std::string StateType;
 	typedef std::string SymbolType;

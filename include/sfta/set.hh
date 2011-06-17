@@ -12,6 +12,7 @@
 #define _SFTA_SET_HH_
 
 // SFTA header files
+#include <sfta/sfta.hh>
 #include <sfta/convert.hh>
 
 // Standard library header files
