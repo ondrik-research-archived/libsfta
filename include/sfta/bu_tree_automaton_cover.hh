@@ -66,10 +66,12 @@ namespace std
 {
 	namespace tr1
 	{
+		GCC_DIAG_OFF(effc++)
 		template <typename T>
 		struct hash<SFTA::OrderedVector<SFTA::Private::ElemOrVector<T> > >
 			: public std::unary_function<SFTA::OrderedVector<SFTA::Private::ElemOrVector<T> >, size_t>
 		{
+		GCC_DIAG_ON(effc++)
 			std::size_t operator()(const SFTA::OrderedVector<SFTA::Private::ElemOrVector<T> >& val) const
 			{
 				//return boost::hash_range(val.begin(), val.end());

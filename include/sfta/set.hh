@@ -40,6 +40,7 @@ namespace SFTA
  *
  * @tparam  T   Contained data type.
  */
+GCC_DIAG_OFF(effc++)
 template
 <
 	typename T
@@ -47,6 +48,7 @@ template
 class SFTA::Set
 	: public std::set<T>
 {
+GCC_DIAG_ON(effc++)
 private:   // Private data types
 
 	typedef std::set<T> ParentClass;

@@ -63,6 +63,7 @@ namespace SFTA
  *                              should generate handles that are also equal.
  * @tparam  RootAllocator       The allocator for root nodes of MTBDDs.
  */
+GCC_DIAG_OFF(effc++)
 template
 <
 	typename Root,
@@ -90,6 +91,7 @@ class SFTA::CUDDSharedMTBDD
 			SFTA::Private::CUDDFacade::Node*
 		>
 {
+GCC_DIAG_ON(effc++)
 public:    // Public data types
 
 
