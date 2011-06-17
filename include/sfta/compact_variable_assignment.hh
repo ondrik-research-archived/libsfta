@@ -96,7 +96,14 @@ private:  // Private methods
 
 	static inline size_t numberOfChars(size_t varCount)
 	{
-		return (varCount * BitsPerVariable - 1) / BitsInChar + 1;
+		if (varCount == 0)
+		{
+			return 0;
+		}
+		else
+		{
+			return (varCount * BitsPerVariable - 1) / BitsInChar + 1;
+		}
 	}
 
 	/**
