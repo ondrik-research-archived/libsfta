@@ -35,7 +35,9 @@ add_library(libsfta STATIC
   convert.cc
   fake_file.cc
   formula_parser.cc
-  td_tree_automaton_cover.cc)
+  td_tree_automaton_cover.cc
+  bu_tree_automaton_cover.cc
+)
 set_target_properties(libsfta PROPERTIES
    OUTPUT_NAME sfta
    CLEAN_DIRECT_OUTPUT 1

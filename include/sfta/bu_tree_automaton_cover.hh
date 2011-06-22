@@ -205,8 +205,11 @@ public:   // Public data types
 		bool DoesLanguageInclusionHoldDownwardsSimBothNoSimTime(const Type* lhs,
 			const Type* rhs, timespec* start) const;
 
+		bool DoesLanguageInclusionHoldDownwardsNoSimTime(const Type* lhs,
+			const Type* rhs, timespec* start) const;
+
 		bool DoesLanguageInclusionHoldDownwardsWithoutSim(const Type* lhs,
-			const Type* rhs, timespec* start) const
+			const Type* rhs, timespec* start) const;
 	};
 
 
