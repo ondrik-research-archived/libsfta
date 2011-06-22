@@ -133,6 +133,8 @@ private:  // Private data members
 
 	SymbolDictionaryPtrType symbolDict_;
 
+	size_t bddSize_;
+
 	InternalSymbolType nextSymbol_;
 
 
@@ -160,25 +162,28 @@ private:  // Private methods
 
 public:   // Public methods
 
-	TDTreeAutomatonCover()
+	TDTreeAutomatonCover(size_t bddSize)
 		: automaton_(new NDSymbolicTDTreeAutomaton()),
 			state2internalStateMap_(),
 			symbolDict_(),
-			nextSymbol_(0)
+			bddSize_(bddSize),
+			nextSymbol_(bddSize, 0)
 	{ }
 
-	TDTreeAutomatonCover(TTWrapperPtr wrapper, SymbolDictionaryPtrType symbolDict)
+	TDTreeAutomatonCover(size_t bddSize, TTWrapperPtr wrapper, SymbolDictionaryPtrType symbolDict)
 		: automaton_(new NDSymbolicTDTreeAutomaton(wrapper)),
 			state2internalStateMap_(),
 			symbolDict_(symbolDict),
-			nextSymbol_(0)
+			bddSize_(bddSize),
+			nextSymbol_(bddSize, 0)
 	{ }
 
-	TDTreeAutomatonCover(NDSymbolicTDTreeAutomaton* automaton, SymbolDictionaryPtrType symbolDict)
+	TDTreeAutomatonCover(size_t bddSize, NDSymbolicTDTreeAutomaton* automaton, SymbolDictionaryPtrType symbolDict)
 		: automaton_(automaton),
 			state2internalStateMap_(),
 			symbolDict_(symbolDict),
-			nextSymbol_(0)
+			bddSize_(bddSize),
+			nextSymbol_(bddSize, 0)
 	{ }
 
 
@@ -190,6 +195,11 @@ public:   // Public methods
 		const RightHandSideType& rhs);
 
 	void SetStateInitial(const StateType& state);
+
+	inline size_t GetBDDSize() const
+	{
+		return bddSize_;
+	}
 
 	inline TTWrapperPtr GetTTWrapper()
 	{

@@ -77,7 +77,7 @@ public:   // Public methods
 
 
 	explicit TABuildingDirector(AbstractTABuilderType* builder)
-		: defaultTa_(),
+		: defaultTa_(64 /* TODO: horrible constant */),
 			builder_(builder),
 			symbolDic_(new SymbolDictionaryType())
 	{ }
@@ -85,8 +85,8 @@ public:   // Public methods
 
 	TreeAutomatonType* Construct(std::istream& is)
 	{
-		TreeAutomatonType* result =
-			new TreeAutomatonType(defaultTa_.GetTTWrapper(), symbolDic_);
+		TreeAutomatonType* result = new TreeAutomatonType(defaultTa_.GetBDDSize(),
+			defaultTa_.GetTTWrapper(), symbolDic_);
 
 		builder_->Build(is, result);
 

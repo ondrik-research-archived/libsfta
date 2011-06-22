@@ -250,6 +250,15 @@ std::vector<SFTA::TDTreeAutomatonCover::SymbolType>
 SFTA::TDTreeAutomatonCover::Type*
 	SFTA::TDTreeAutomatonCover::Operation::Union(Type* lhs, Type* rhs) const
 {
+	// Assertion
+	assert(lhs != static_cast<Type*>(0));
+	assert(rhs != static_cast<Type*>(0));
+
+	if (lhs->GetBDDSize() != rhs->GetBDDSize())
+	{	// in case the BDD sizes do not match
+		throw std::runtime_error("BDD sizes do not match!");
+	}
+
 	typedef typename NDSymbolicTDTreeAutomaton::HierarchyRoot AbstractAutomaton;
 	std::auto_ptr<typename AbstractAutomaton::Operation> oper(
 		lhs->getAutomaton()->GetOperation());
@@ -264,13 +273,22 @@ SFTA::TDTreeAutomatonCover::Type*
 			std::string(": cannot convert to proper type"));
 	}
 
-	return new Type(result, lhs->GetSymbolDictionary());
+	return new Type(lhs->GetBDDSize(), result, lhs->GetSymbolDictionary());
 }
 
 
 SFTA::TDTreeAutomatonCover::Type*
 	SFTA::TDTreeAutomatonCover::Operation::Intersection(Type* lhs, Type* rhs) const
 {
+	// Assertion
+	assert(lhs != static_cast<Type*>(0));
+	assert(rhs != static_cast<Type*>(0));
+
+	if (lhs->GetBDDSize() != rhs->GetBDDSize())
+	{	// in case the BDD sizes do not match
+		throw std::runtime_error("BDD sizes do not match!");
+	}
+
 	typedef typename NDSymbolicTDTreeAutomaton::HierarchyRoot AbstractAutomaton;
 	std::auto_ptr<typename AbstractAutomaton::Operation> oper(
 		lhs->getAutomaton()->GetOperation());
@@ -285,5 +303,5 @@ SFTA::TDTreeAutomatonCover::Type*
 			std::string(": cannot convert to proper type"));
 	}
 
-	return new Type(result, lhs->GetSymbolDictionary());
+	return new Type(lhs->GetBDDSize(), result, lhs->GetSymbolDictionary());
 }
