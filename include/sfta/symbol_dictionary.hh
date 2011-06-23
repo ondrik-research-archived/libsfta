@@ -66,10 +66,10 @@ private:  // Private data members
 public:   // Public methods
 
 
-	SymbolDictionary()
+	SymbolDictionary(const OutputSymbolType& initialSymbol)
 		: i2o_(),
 			o2i_(),
-			nextSymbol_(0)
+			nextSymbol_(initialSymbol)
 	{ }
 
 

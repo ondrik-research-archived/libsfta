@@ -786,6 +786,7 @@ private:  // Private methods
 		}
 		else
 		{
+			asgn.AddVariablesUpTo(cudd_.GetNodeIndex(node));
 			asgn.SetIthVariableValue(cudd_.GetNodeIndex(node),
 				VariableAssignmentType::ONE);
 			getNodeDescription(cudd_.GetThenChild(node), asgn, desc);

@@ -79,7 +79,8 @@ public:   // Public methods
 	explicit TABuildingDirector(AbstractTABuilderType* builder)
 		: defaultTa_(64 /* TODO: horrible constant */),
 			builder_(builder),
-			symbolDic_(new SymbolDictionaryType())
+			symbolDic_(new SymbolDictionaryType(
+				typename SymbolDictionaryType::OutputSymbolType(64 /* TODO: also change to something nice */, 0)))
 	{ }
 
 

@@ -243,7 +243,7 @@ public:   // Public methods
 	}
 
 
-	inline void SetIthVariableValue(size_t i, char value)
+	void SetIthVariableValue(size_t i, char value)
 	{
 		// Assertions
 		assert(i < VariablesCount());
@@ -267,6 +267,22 @@ public:   // Public methods
 
 		// insert the value of given bits
 		vars_[getIndexOfChar(i)] |= value;
+	}
+
+	void AddVariablesUpTo(size_t maxVariableIndex)
+	{
+		size_t newVariablesCount = maxVariableIndex + 1;
+		if (newVariablesCount > VariablesCount())
+		{
+			size_t oldVariablesCount = variablesCount_;
+			variablesCount_ = newVariablesCount;
+			vars_.resize(numberOfChars(newVariablesCount));
+
+			for (size_t i = oldVariablesCount; i < newVariablesCount; ++i)
+			{
+				SetIthVariableValue(i, DONT_CARE);
+			}
+		}
 	}
 
 
@@ -393,8 +409,11 @@ public:   // Public methods
 	friend bool operator<(const CompactVariableAssignment& lhs,
 		const CompactVariableAssignment& rhs)
 	{
-		// Assertions
-		assert(lhs.VariablesCount() == rhs.VariablesCount());
+		if ((lhs.VariablesCount() < rhs.VariablesCount()) ||
+			rhs.VariablesCount() < lhs.VariablesCount())
+		{
+			return lhs.VariablesCount() < rhs.VariablesCount();
+		}
 
 		for (size_t i = 0; i < lhs.VariablesCount(); ++i)
 		{
