@@ -29,7 +29,12 @@ include_directories(../include)
 
 add_library(tests log_fixture.cc)
 
-set(TESTS "cudd_facade_test" "cudd_shared_mtbdd_cc_test" "cudd_shared_mtbdd_uv_test")
+set(TESTS
+  "cudd_facade_test"
+  "cudd_shared_mtbdd_cc_test"
+  "cudd_shared_mtbdd_uv_test"
+  "ondriks_mtbdd_c_test"
+)
 foreach (TEST ${TESTS})
   add_executable(${TEST} ${TEST}.cc)
 
@@ -38,6 +43,7 @@ foreach (TEST ${TESTS})
   target_link_libraries(${TEST} tests)
   target_link_libraries(${TEST} ${LOG4CPP_LIBRARIES})
   target_link_libraries(${TEST} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+	target_link_libraries(${TEST} ${LOKI_LIBRARY})
 
   add_test(${TEST} ${CMAKE_CURRENT_BINARY_DIR}/${TEST})
 endforeach(TEST)
