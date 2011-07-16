@@ -397,10 +397,14 @@ protected:// protected methods
 
 			virtual DataType DataOperation(const DataType& data1, const DataType& data2)
 			{
-				// Assertion
-				assert(data1 == getMTBDD1().GetDefaultValue());
-
-				return data2;
+				if (data2 == getMTBDD2().GetDefaultValue())
+				{
+					return data1;
+				}
+				else
+				{
+					return data2;
+				}
 			}
 		};
 

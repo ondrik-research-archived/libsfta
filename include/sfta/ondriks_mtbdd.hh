@@ -17,6 +17,7 @@
 #include	<stdint.h>
 #include	<stdexcept>
 #include	<vector>
+#include  <tr1/unordered_set>
 
 // SFTA headers
 #include	<sfta/compact_variable_assignment.hh>
@@ -100,12 +101,14 @@ namespace SFTA
 				template <class NodeType>
 				inline bool isLeaf(const NodeType* node)
 				{
+					assert(node != static_cast<NodeType*>(0));
 					return (reinterpret_cast<uintptr_t>(node) % 2);
 				}
 
 				template <class NodeType>
 				inline bool isInternal(const NodeType* node)
 				{
+					assert(node != static_cast<NodeType*>(0));
 					return !(isLeaf(node));
 				}
 
@@ -113,6 +116,7 @@ namespace SFTA
 				inline NodeType* leafToNode(NodeType* node)
 				{
 					// Assertions
+					assert(node != static_cast<NodeType*>(0));
 					assert(isLeaf(node));
 
 					return reinterpret_cast<NodeType*>(
@@ -123,6 +127,7 @@ namespace SFTA
 				inline NodeType* internalToNode(NodeType* node)
 				{
 					// Assertions
+					assert(node != static_cast<NodeType*>(0));
 					assert(isInternal(node));
 
 					return node;
@@ -133,6 +138,7 @@ namespace SFTA
 					const NodeType* node)
 				{
 					// Assertions
+					assert(node != static_cast<NodeType*>(0));
 					assert(isLeaf(node));
 
 					return leafToNode(node)->data;
@@ -143,6 +149,7 @@ namespace SFTA
 					const NodeType* node)
 				{
 					// Assertions
+					assert(node != static_cast<NodeType*>(0));
 					assert(isInternal(node));
 
 					return internalToNode(node)->internal.var;
@@ -152,6 +159,17 @@ namespace SFTA
 				inline const NodeType* getLowFromInternal(const NodeType* node)
 				{
 					// Assertions
+					assert(node != static_cast<NodeType*>(0));
+					assert(isInternal(node));
+
+					return internalToNode(node)->internal.low;
+				}
+
+				template <class NodeType>
+				inline NodeType* getLowFromInternal(NodeType* node)
+				{
+					// Assertions
+					assert(node != static_cast<NodeType*>(0));
 					assert(isInternal(node));
 
 					return internalToNode(node)->internal.low;
@@ -161,6 +179,17 @@ namespace SFTA
 				inline const NodeType* getHighFromInternal(const NodeType* node)
 				{
 					// Assertions
+					assert(node != static_cast<NodeType*>(0));
+					assert(isInternal(node));
+
+					return internalToNode(node)->internal.high;
+				}
+
+				template <class NodeType>
+				inline NodeType* getHighFromInternal(NodeType* node)
+				{
+					// Assertions
+					assert(node != static_cast<NodeType*>(0));
 					assert(isInternal(node));
 
 					return internalToNode(node)->internal.high;
@@ -198,6 +227,9 @@ namespace SFTA
 				template <class NodeType>
 				inline void deleteNode(NodeType* node)
 				{
+					// Assertions
+					assert(node != static_cast<NodeType*>(0));
+
 					if (isLeaf(node))
 					{
 						delete leafToNode(node);
@@ -213,15 +245,37 @@ namespace SFTA
 				}
 
 				template <class NodeType>
-				void deleteNodeRecursively(NodeType* node)
+				void traverseMTBDDdagAndCollectNodes(NodeType* node,
+						std::tr1::unordered_set<NodeType*>& ht)
 				{
+					// Assertions
+					assert(node != static_cast<NodeType*>(0));
+
+					ht.insert(node);
+
 					if (isInternal(node))
 					{
-						deleteNodeRecursively(makeInternal(node)->internal.low);
-						deleteNodeRecursively(makeInternal(node)->internal.high);
+						traverseMTBDDdagAndCollectNodes(getLowFromInternal(node), ht);
+						traverseMTBDDdagAndCollectNodes(getHighFromInternal(node), ht);
 					}
+				}
 
-					deleteNode(node);
+				template <class NodeType>
+				void deleteMTBDDdag(NodeType* root)
+				{
+					// Assertions
+					assert(root != static_cast<NodeType*>(0));
+
+					typedef std::tr1::unordered_set<NodeType*> NodeHashTable;
+
+					NodeHashTable ht;
+					traverseMTBDDdagAndCollectNodes(root, ht);
+
+					for (typename NodeHashTable::iterator iNodes = ht.begin();
+						iNodes != ht.end(); ++iNodes)
+					{	// delete all nodes
+						deleteNode(*iNodes);
+					}
 				}
 			}
 		}
@@ -437,7 +491,7 @@ public:   // public methods
 		if (&mtbdd == this)
 			return *this;
 
-		deleteNodeRecursively(root_);
+		deleteMTBDDdag(root_);
 
 		root_ = mtbdd.root_;
 
@@ -481,15 +535,30 @@ public:   // public methods
 	 */
 	const DataType& GetValue(const VariableAssignment& asgn) const
 	{
-		assert(false);
-		assert(&asgn == 0);
+		NodeType* node = root_;
+
+		while (!isLeaf(node))
+		{	// try to proceed according to the assignment
+			const VarType& var = getVarFromInternal(node);
+
+			if (asgn.GetIthVariableValue(var) == VariableAssignment::ONE)
+			{	// if one
+				node = getHighFromInternal(node);
+			}
+			else
+			{	// if zero or don't care
+				node = getLowFromInternal(node);
+			}
+		}
+
+		return getDataFromLeaf(node);
 	}
 
 	~OndriksMTBDD()
 	{
 		if (root_ != static_cast<NodeType*>(0))
 		{
-			deleteNodeRecursively(root_);
+			deleteMTBDDdag(root_);
 		}
 	}
 };
