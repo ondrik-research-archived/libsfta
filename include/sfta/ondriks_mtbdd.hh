@@ -82,16 +82,17 @@ namespace SFTA
 				inline NodeType* makeLeaf(NodeType* node)
 				{
 					// Assertions
-					assert(isLeaf(node));
+					assert(node != static_cast<NodeType*>(0));
 
-					return node | 1;
+					return reinterpret_cast<NodeType*>(
+						reinterpret_cast<uintptr_t>(node) | 1);
 				}
 
 				template <class NodeType>
 				inline NodeType* makeInternal(NodeType* node)
 				{
 					// Assertions
-					assert(isInternal(node));
+					assert(node != static_cast<NodeType*>(0));
 
 					return node;
 				}
@@ -127,10 +128,49 @@ namespace SFTA
 					return node;
 				}
 
+				template <class NodeType>
+				inline const typename NodeType::DataType& getDataFromLeaf(
+					const NodeType* node)
+				{
+					// Assertions
+					assert(isLeaf(node));
+
+					return leafToNode(node)->data;
+				}
 
 				template <class NodeType>
-				NodeType* createLeaf(const typename NodeType::DataType& data)
+				inline const typename NodeType::VarType& getVarFromInternal(
+					const NodeType* node)
 				{
+					// Assertions
+					assert(isInternal(node));
+
+					return internalToNode(node)->internal.var;
+				}
+
+				template <class NodeType>
+				inline const NodeType* getLowFromInternal(const NodeType* node)
+				{
+					// Assertions
+					assert(isInternal(node));
+
+					return internalToNode(node)->internal.low;
+				}
+
+				template <class NodeType>
+				inline const NodeType* getHighFromInternal(const NodeType* node)
+				{
+					// Assertions
+					assert(isInternal(node));
+
+					return internalToNode(node)->internal.high;
+				}
+
+				template <typename DataType>
+				MTBDDNode<DataType>* createLeaf(const DataType& data)
+				{
+					typedef MTBDDNode<DataType> NodeType;
+
 					// TODO: create allocator						
 					NodeType* newNode = new NodeType;
 					newNode->data = data;
@@ -148,15 +188,15 @@ namespace SFTA
 
 					// TODO: create allocator
 					NodeType* newNode = new NodeType;
-					newNode->low = low;
-					newNode->high = high;
-					newNode->var = var;
+					newNode->internal.low = low;
+					newNode->internal.high = high;
+					newNode->internal.var = var;
 
 					return makeInternal(newNode);
 				}
 
 				template <class NodeType>
-				void deleteNode(NodeType* node)
+				inline void deleteNode(NodeType* node)
 				{
 					if (isLeaf(node))
 					{
@@ -204,30 +244,115 @@ template <
 >
 class SFTA::Private::MTBDDPkg::OndriksMTBDD
 {
+	template <typename, typename, typename>
+	friend class AbstractApply2Functor;
+
 public:   // public data types
 
 	typedef Data DataType;
-
-	typedef SFTA::Private::MTBDDPkg::MTBDDNodePkg::MTBDDNode<DataType> MTBDDNode;
-
-	typedef std::vector<typename MTBDDNode::VarType> PermutationTable;
-
+	typedef SFTA::Private::MTBDDPkg::MTBDDNodePkg::MTBDDNode<DataType> NodeType;
+	typedef typename NodeType::VarType VarType;
+	typedef std::vector<typename NodeType::VarType> PermutationTable;
 	typedef Loki::SmartPtr<PermutationTable> PermutationTablePtr;
-
 	typedef CompactVariableAssignment VariableAssignment;
 
 private: // private data members
 
 	// TODO: add something different than simple pointer (e.g. smart pointer
 	// with destructive copy
-	MTBDDNode* root_;
+	NodeType* root_;
 
 	DataType defaultValue_;
 
+	/**
+	 * @brief  Permutation table representing variable ordering
+	 *
+	 * The table gives variable ordering. Semantics is that at index @p i there
+	 * is the @p i -th variable. The ordering is bottom-up, i.e., MTBDD node
+	 * labelled with variable 0 is directly above a leaf.
+	 */
 	PermutationTablePtr varOrdering_;
 
 
-public:  // public methods
+private:  // private methods
+
+
+	/**
+	 * @brief  Function for constructing an MTBDD
+	 *
+	 * This function is used for constructing a new MTBDD according to the given
+	 * variable ordering @p varOrdering, such that the variable assignment @p
+	 * asgn is set to @p value and all other assignments are set to @p
+	 * defaultValue.
+	 *
+	 * @param  asgn          Variable assignment to be set to @p value
+	 * @param  value         Value to be set for assignment @p asgn
+	 * @param  defaultValue  Value to be set for all assignments other than @p
+	 *                       asgn
+	 * @param  varOrdering   Ordering of variables
+	 *
+	 * @return  The constructed MTBDD
+	 */
+	static NodeType* constructMTBDD(const VariableAssignment& asgn,
+		const DataType& value, const DataType& defaultValue,
+		const PermutationTablePtr& varOrdering)
+	{
+		using namespace SFTA::Private::MTBDDPkg::MTBDDNodePkg;
+
+		if (value == defaultValue)
+		{	// in case an MTBDD with a single leaf is desired
+			return createLeaf(value);
+		}
+
+		// bottom leaves
+		NodeType* leaf = createLeaf(value);
+		NodeType* sink = createLeaf(defaultValue);
+
+		// working node
+		NodeType* node = leaf;
+
+		for (size_t i = 0; i < varOrdering->size(); ++i)
+		{	// construct the MTBDD according to the variable ordering
+			VarType var =	(*varOrdering)[i];
+			if (asgn.GetIthVariableValue(var) == VariableAssignment::ONE)
+			{	// in case the variable is 1
+				node = createInternal(sink, node, var);
+			}
+			else if (asgn.GetIthVariableValue(var) == VariableAssignment::ZERO)
+			{	// in case the variable is 0
+				node = createInternal(node, sink, var);
+			}
+			// otherwise don't care about the variable
+		}
+
+		if (node == leaf)
+		{	// in case the MTBDD is with a single leaf
+			deleteNode(sink);
+		}
+
+		return node;
+	}
+
+protected:// Protected methods
+
+	OndriksMTBDD(NodeType* root, const DataType& defaultValue,
+		const PermutationTablePtr& varOrdering)
+		: root_(root),
+			defaultValue_(defaultValue),
+			varOrdering_(varOrdering)
+	{
+		// Assertions
+		assert(root_ != static_cast<NodeType*>(0));
+	}
+
+
+	const NodeType* getRoot() const
+	{
+		return root_;
+	}
+
+
+public:   // public methods
 
 
 	/**
@@ -244,13 +369,22 @@ public:  // public methods
 	 */
 	OndriksMTBDD(const VariableAssignment& asgn,
 		const DataType& value, const DataType& defaultValue)
-		: root_(static_cast<MTBDDNode*>(0)),
+		: root_(),
 			defaultValue_(defaultValue),
-			varOrdering_(static_cast<PermutationTable*>(0))
+			varOrdering_()
 	{
-		assert(false);
-		assert(&asgn != 0);
-		assert(&value != 0);
+		// create the variable permutation table (the variable ordering)
+		PermutationTable* varOrd = new PermutationTable(asgn.VariablesCount());
+
+		for (size_t i = 0; i < varOrd->size(); ++i)
+		{	// fill the permutation table with the natural ordering
+			(*varOrd)[i] = i;
+		}
+
+		varOrdering_ = varOrd;
+
+		// create the MTBDD
+		root_ = constructMTBDD(asgn, value, defaultValue_, varOrdering_);
 	}
 
 
@@ -258,32 +392,65 @@ public:  // public methods
 	 * @brief  Constructor with given variable ordering
 	 *
 	 * This constructor creates a new MTBDD with the variable ordering given as
-	 * @p table, such that the variable assignment @p asgn is set to @p value
-	 * and all other assignments are set to @p defaultValue.
+	 * @p varOrdering, such that the variable assignment @p asgn is set to @p
+	 * value and all other assignments are set to @p defaultValue.
 	 *
 	 * @param  asgn          Variable assignment to be set to @p value
 	 * @param  value         Value to be set for assignment @p asgn
 	 * @param  defaultValue  Value to be set for all assignments other than @p
 	 *                       asgn
-	 * @param  table         Permutation table for variable ordering
+	 * @param  varOrdering   Ordering of variables
 	 */
 	OndriksMTBDD(const VariableAssignment& asgn, const DataType& value,
-		const DataType& defaultValue, const PermutationTablePtr& table)
-		: defaultValue_(defaultValue)
+		const DataType& defaultValue, const PermutationTablePtr& varOrdering)
+		:	root_(),
+			defaultValue_(defaultValue),
+			varOrdering_(varOrdering)
 	{
-		if (asgn.VariablesCount() > table.size())
+		if (asgn.VariablesCount() > varOrdering->size())
 		{
 			throw std::runtime_error(
 				"Variable assignment contains variables with an unknown ordering");
 		}
 
-		assert(false);
+		// create the MTBDD
+		root_ = constructMTBDD(asgn, value, defaultValue_, varOrdering_);
 	}
 
-	OndriksMTBDD(const OndriksMTBDD&);
-	OndriksMTBDD& operator=(const OndriksMTBDD&);
+	OndriksMTBDD(const OndriksMTBDD& mtbdd)
+		: root_(mtbdd.root_),
+			defaultValue_(mtbdd.defaultValue_),
+			varOrdering_(mtbdd.varOrdering_)
+	{
+		// Assertions
+		assert(root_ != static_cast<NodeType*>(0));
 
-	inline const DataType& DefaultValue() const
+		// destroy the original MTBDD
+		const_cast<OndriksMTBDD&>(mtbdd).root_ = static_cast<NodeType*>(0);
+	}
+
+	OndriksMTBDD& operator=(const OndriksMTBDD& mtbdd)
+	{
+		// Assertions
+		assert(root_ != static_cast<NodeType*>(0));
+
+		if (&mtbdd == this)
+			return *this;
+
+		deleteNodeRecursively(root_);
+
+		root_ = mtbdd.root_;
+
+		// destroy the original MTBDD
+		const_cast<OndriksMTBDD&>(mtbdd).root_ = static_cast<NodeType*>(0);
+
+		defaultValue_ = mtbdd.defaultValue_;
+		varOrdering_ = mtbdd.varOrdering_;
+
+		return *this;
+	}
+
+	inline const DataType& GetDefaultValue() const
 	{
 		return defaultValue_;
 	}
@@ -293,7 +460,7 @@ public:  // public methods
 		return varOrdering_.size();
 	}
 
-	inline PermutationTablePtr GetVarOrdering() const
+	inline const PermutationTablePtr& GetVarOrdering() const
 	{
 		return varOrdering_;
 	}
@@ -315,14 +482,15 @@ public:  // public methods
 	const DataType& GetValue(const VariableAssignment& asgn) const
 	{
 		assert(false);
-		assert(&asgn != 0);
+		assert(&asgn == 0);
 	}
 
 	~OndriksMTBDD()
 	{
-		assert(root_ != static_cast<MTBDDNode*>(0));
-
-		deleteNodeRecursively(root_);
+		if (root_ != static_cast<NodeType*>(0))
+		{
+			deleteNodeRecursively(root_);
+		}
 	}
 };
 
@@ -343,30 +511,166 @@ public:   // Public data types
 	typedef OndriksMTBDD<Data2Type> MTBDD2Type;
 	typedef OndriksMTBDD<DataOutType> MTBDDOutType;
 
+	typedef typename MTBDD1Type::NodeType Node1Type;
+	typedef typename MTBDD2Type::NodeType Node2Type;
+	typedef typename MTBDDOutType::NodeType NodeOutType;
+
+	typedef typename MTBDDOutType::VarType VarType;
+
 private:  // Private data members
 
-	const MTBDD1Type* pMtbdd1;
-	const MTBDD2Type* pMtbdd2;
+	const MTBDD1Type* mtbdd1_;
+	const MTBDD2Type* mtbdd2_;
 
 private:  // Private methods
 
 	AbstractApply2Functor(const AbstractApply2Functor&);
 	AbstractApply2Functor& operator=(const AbstractApply2Functor&);
 
+
+	inline static char classifyCase(const Node1Type* node1, const Node2Type* node2)
+	{
+		if (isInternal(node1))
+		{	// node1 is internal
+			VarType var1 = getVarFromInternal(node1);
+
+			if (isInternal(node2))
+			{	// node2 is also internal
+				VarType var2 = getVarFromInternal(node2);
+
+				if (var1 == var2)
+				{	// in case the variables match
+					return 'E';  // "Equal" variables
+				}
+				if (var1 > var2)
+				{
+					return 'B';  // node1 is "Bigger" than node2
+				}
+				else
+				{
+					assert(var1 < var2);
+					return 'S';  // node1 is "Smaller" than node2
+				}
+			}
+			else
+			{	// node2 is a leaf
+				assert(isLeaf(node2));
+				return 'B';  // node1 is "Bigger" than node2
+			}
+		}
+		else if (isInternal(node2))
+		{	// node1 is a leaf
+			assert(isLeaf(node1));
+			return 'S';  // node1 is "Smaller" than node2
+		}
+		else
+		{	// for the terminal case
+			assert(isLeaf(node1) && isLeaf(node2));
+			return 'T';  // "Terminal" case
+		}
+	}
+
+	typename MTBDDOutType::NodeType* recDescend(
+		const Node1Type* node1, const Node2Type* node2)
+	{
+		// Assertions
+		assert(node1 != static_cast<Node1Type*>(0));
+		assert(node2 != static_cast<Node2Type*>(0));
+
+		using namespace SFTA::Private::MTBDDPkg::MTBDDNodePkg;
+
+		// TODO: caching!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+		VarType var;
+		NodeOutType* lowTree = static_cast<NodeOutType*>(0);
+		NodeOutType* highTree = static_cast<NodeOutType*>(0);
+
+		char relation = classifyCase(node1, node2);
+		switch (relation)
+		{
+			// for both leaves
+			case 'T': {
+					NodeOutType* result = createLeaf(DataOperation(
+						getDataFromLeaf(node1), getDataFromLeaf(node2)));
+
+					// TODO: cache!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+					return result;
+				}
+
+			// for internal nodes with the same variable
+			case 'E': {
+					var = getVarFromInternal(node1);
+					lowTree = recDescend(getLowFromInternal(node1), getLowFromInternal(node2));
+					highTree = recDescend(getHighFromInternal(node1), getHighFromInternal(node2));
+					break;
+				}
+
+			// for internal nodes with node1 above node2
+			case 'B': {
+					var = getVarFromInternal(node1);
+					lowTree = recDescend(getLowFromInternal(node1), node2);
+					highTree = recDescend(getHighFromInternal(node1), node2);
+					break;
+				}
+
+			// for internal nodes with node1 below node2
+			case 'S': {
+					var = getVarFromInternal(node2);
+					lowTree = recDescend(node1, getLowFromInternal(node2));
+					highTree = recDescend(node1, getHighFromInternal(node2));
+					break;
+				}
+
+			// this should never happen
+			default: {
+					assert(false);
+					break;
+				}
+		}
+
+		if (lowTree == highTree)
+		{	// in case both trees are isomorphic (when caching is enabled)
+			// TODO: cache!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+			return lowTree;
+		}
+		else
+		{	// in case both trees are distinct
+			NodeOutType* result = createInternal(lowTree, highTree, var);
+
+			// TODO: cache!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+			return result;
+		}
+	}
+
 public:   // Public methods
 
 	AbstractApply2Functor()
-		: pMtbdd1(static_cast<MTBDD1Type*>(0)),
-			pMtbdd2(static_cast<MTBDD2Type*>(0))
+		: mtbdd1_(static_cast<MTBDD1Type*>(0)),
+			mtbdd2_(static_cast<MTBDD2Type*>(0))
 	{ }
 
 	MTBDDOutType operator()(const MTBDD1Type& mtbdd1, const MTBDD2Type& mtbdd2)
 	{
-		assert(false);
-		assert(&mtbdd1 != 0);
-		assert(&mtbdd2 != 0);
+		// store the MTBDDs
+		mtbdd1_ = &mtbdd1;
+		mtbdd2_ = &mtbdd2;
 
-		// check ordering
+		if (mtbdd1_->GetVarOrdering() != mtbdd2_->GetVarOrdering())
+		{	// in case the MTBDDs have a different variable ordering
+			assert(false);
+			// TODO
+		}
+
+		// recursively descend the MTBDD and generate a new one
+		typename MTBDDOutType::NodeType* root = recDescend(mtbdd1_->getRoot(),
+			mtbdd2_->getRoot());
+
+		// compute the new default value
+		DataOutType defaultValue = DataOperation(mtbdd1_->GetDefaultValue(),
+			mtbdd2_->GetDefaultValue());
+
+		// wrap it all up
+		return MTBDDOutType(root, defaultValue, mtbdd1_->GetVarOrdering());
 	}
 
 	virtual DataOutType DataOperation(
@@ -374,10 +678,16 @@ public:   // Public methods
 
 protected:// Protected methods
 
-	inline const MTBDD1Type& GetMTBDD1() const
+	inline const MTBDD1Type& getMTBDD1() const
 	{
-		assert(pMtbdd1 != static_cast<MTBDD1Type*>(0));
-		return *pMtbdd1;
+		assert(mtbdd1_ != static_cast<MTBDD1Type*>(0));
+		return *mtbdd1_;
+	}
+
+	inline const MTBDD2Type& getMTBDD2() const
+	{
+		assert(mtbdd2_ != static_cast<MTBDD2Type*>(0));
+		return *mtbdd2_;
 	}
 
 

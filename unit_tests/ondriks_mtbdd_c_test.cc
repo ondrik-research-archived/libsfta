@@ -398,17 +398,15 @@ protected:// protected methods
 			virtual DataType DataOperation(const DataType& data1, const DataType& data2)
 			{
 				// Assertion
-				assert(data1 == GetMTBDD1().DefaultValue());
+				assert(data1 == getMTBDD1().GetDefaultValue());
 
 				return data2;
 			}
-
-
 		};
 
 		CopyApply2Functor copyFunc;
 
-		MTBDD bdd(VariableAssignment(0), DEFAULT_DATA_VALUE, DEFAULT_DATA_VALUE);
+		MTBDD bdd(VariableAssignment(64), DEFAULT_DATA_VALUE, DEFAULT_DATA_VALUE);
 
 		for (ListOfTestCasesType::const_iterator itTests = testCases.begin();
 			itTests != testCases.end(); ++itTests)
@@ -418,7 +416,7 @@ protected:// protected methods
 			DataType leafValue = static_cast<DataType>(prsRes.first);
 			VariableAssignment asgn = varListToAsgn(prsRes.second);
 
-			MTBDD tmp(asgn, leafValue, DEFAULT_DATA_VALUE);
+			MTBDD tmp(asgn, leafValue, DEFAULT_DATA_VALUE, bdd.GetVarOrdering());
 			bdd = copyFunc(bdd, tmp);
 		}
 
@@ -460,7 +458,7 @@ BOOST_AUTO_TEST_CASE(setters_and_getters_test)
 				FormulaParser::ParseExpressionUnsigned(*itFailed);
 			VariableAssignment failedAsgn = varListToAsgn(prsFailedRes.second);
 
-			BOOST_CHECK_MESSAGE(bdd.GetValue(failedAsgn) == bdd.DefaultValue(),
+			BOOST_CHECK_MESSAGE(bdd.GetValue(failedAsgn) == bdd.GetDefaultValue(),
 				testCases[i] + " == " + Convert::ToString(bdd.GetValue(failedAsgn)));
 		}
 	}
